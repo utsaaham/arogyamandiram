@@ -222,3 +222,18 @@ input[type='time']::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
   cursor: pointer;
 }
+
+/* ---------- Date Input (iOS alignment & size) ---------- */
+input[type='date'] {
+  text-align: left;
+}
+input[type='date'].date-input {
+  font-size: 0.875rem;
+  min-height: 2.25rem;
+  max-height: 2.5rem;
+}
+@media (max-width: 640px) {
+  input[type='date'].date-input {
+    max-width: 100%;
+  }
+}

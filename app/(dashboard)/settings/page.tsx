@@ -305,9 +305,13 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-text-muted">Date of birth</label>
-                  <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-                    max={new Date().toISOString().split('T')[0]} />
+                  <input
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    className="glass-input date-input mt-1 w-full max-w-[220px] rounded-xl px-3 py-2 text-left text-sm"
+                    max={new Date().toISOString().split('T')[0]}
+                  />
                   {dateOfBirth && (
                     <p className="mt-1 text-xs text-text-muted">
                       Age: {(() => {
