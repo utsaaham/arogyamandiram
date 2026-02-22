@@ -46,6 +46,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <Sidebar />
       <MobileNav />
+      {/* Top fade mask (mobile): content fades into background when scrolling */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed left-0 right-0 top-0 z-40 lg:hidden"
+        style={{
+          height: '2rem',
+          paddingTop: 'env(safe-area-inset-top)',
+          background: 'linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%)',
+        }}
+      />
+      {/* Bottom fade mask (mobile): content fades into nav so bar doesn't look like a sticker */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 lg:hidden"
+        style={{
+          height: 'max(3rem, calc(env(safe-area-inset-bottom) + 2rem))',
+          background: 'linear-gradient(to top, var(--bg-surface) 0%, transparent 100%)',
+        }}
+      />
       <main className="pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
