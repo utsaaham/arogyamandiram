@@ -13,6 +13,8 @@ import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday, getAgeFromDateOfBirth } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 async function getOpenAIKey(userId: string): Promise<string | null> {
   await connectDB();
   const user = await User.findById(userId).select('+apiKeys.openai').lean();

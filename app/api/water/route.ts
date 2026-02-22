@@ -9,6 +9,8 @@ import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/water - Add water intake
 export async function POST(req: NextRequest) {
   try {

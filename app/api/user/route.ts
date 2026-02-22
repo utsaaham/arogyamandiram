@@ -8,6 +8,8 @@ import User from '@/models/User';
 import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/user - Get current user profile (masked)
 export async function GET() {
   try {

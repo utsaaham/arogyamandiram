@@ -10,6 +10,8 @@ import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { generateHealthPlanTargets, getOpenAIKeyForHealthPlan } from '@/lib/aiHealthPlan';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(_req: NextRequest) {
   try {
     const userId = await getAuthUserId();
