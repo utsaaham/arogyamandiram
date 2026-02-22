@@ -32,6 +32,15 @@ interface WorkoutEntry {
   notes?: string;
 }
 
+interface SleepEntry {
+  _id?: string;
+  bedtime: string;
+  wakeTime: string;
+  duration: number;
+  quality: number;
+  notes?: string;
+}
+
 export interface DailyLogData {
   _id: string;
   date: string;
@@ -39,6 +48,7 @@ export interface DailyLogData {
   waterIntake: number;
   meals: MealEntry[];
   workouts: WorkoutEntry[];
+  sleep?: SleepEntry;
   totalCalories: number;
   totalProtein: number;
   totalCarbs: number;

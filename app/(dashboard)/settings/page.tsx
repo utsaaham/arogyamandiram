@@ -11,6 +11,8 @@ import {
   EyeOff,
   Shield,
   CheckCircle2,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
@@ -45,6 +47,7 @@ export default function SettingsPage() {
   const { user, loading, refetch } = useUser();
   const [tab, setTab] = useState<SettingsTab>('profile');
   const [saving, setSaving] = useState(false);
+  const [regeneratingPlan, setRegeneratingPlan] = useState(false);
 
   // Profile state (dateOfBirth is source of truth; age shown when no DOB for legacy)
   const [name, setName] = useState('');
@@ -197,6 +200,28 @@ export default function SettingsPage() {
       showToast('Failed to save targets', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const regenerateHealthPlan = async () => {
+    setRegeneratingPlan(true);
+    try {
+      const res = await api.generateHealthPlan();
+      if (res.success && res.data) {
+        const data = res.data as { user?: { targets?: Record<string, number> }; explanations?: Record<string, string> };
+        showToast('AI health plan updated', 'success');
+        refetch();
+        if (data.explanations && Object.keys(data.explanations).length > 0) {
+          const first = Object.entries(data.explanations)[0];
+          showToast(first[1], 'info');
+        }
+      } else {
+        showToast(res.error || 'Failed to generate health plan', 'error');
+      }
+    } catch {
+      showToast('Failed to generate health plan', 'error');
+    } finally {
+      setRegeneratingPlan(false);
     }
   };
 
@@ -448,8 +473,30 @@ export default function SettingsPage() {
             <div className="space-y-5">
               <h2 className="text-base font-semibold text-text-primary">Daily Targets</h2>
               <p className="text-xs text-text-muted">
-                These were auto-calculated during onboarding. Adjust as needed.
+                These were auto-calculated during onboarding. Adjust as needed, or regenerate with AI for personalized recommendations.
               </p>
+
+              {user?.hasOpenAiKey && (
+                <div className="flex flex-col gap-2 rounded-xl border border-accent-violet/20 bg-accent-violet/5 p-4">
+                  <p className="text-sm font-medium text-text-primary">AI Health Plan</p>
+                  <p className="text-xs text-text-muted">
+                    Generate personalized targets (calories, water, macros, ideal weight, workout duration, sleep) based on your profile.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={regenerateHealthPlan}
+                    disabled={regeneratingPlan}
+                    className="glass-button-primary mt-1 flex w-fit items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+                  >
+                    {regeneratingPlan ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    Regenerate AI Health Plan
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>

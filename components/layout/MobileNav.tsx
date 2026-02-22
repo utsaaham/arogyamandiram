@@ -7,6 +7,7 @@ import {
   Utensils,
   Droplets,
   Dumbbell,
+  Moon,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ const mobileNav = [
   { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
+  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/settings', icon: Settings, label: 'More' },
 ];
 

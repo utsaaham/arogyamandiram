@@ -21,6 +21,7 @@ import AddWorkoutModal from '@/components/workout/AddWorkoutModal';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
+import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import {
   cn,
@@ -54,6 +55,7 @@ const categoryTextColors: Record<string, string> = {
 };
 
 export default function WorkoutPage() {
+  const { user } = useUser();
   const { log, loading, refetch } = useDailyLog();
   const [showAdd, setShowAdd] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -122,8 +124,8 @@ export default function WorkoutPage() {
     );
   }
 
-  // Calorie burn goal (a reasonable default)
-  const burnGoal = 400;
+  const burnGoal = user?.targets?.dailyCalorieBurn ?? 400;
+  const recommendedMinutes = user?.targets?.dailyWorkoutMinutes ?? 30;
   const burnPercent = burnGoal > 0 ? Math.min(Math.round((totalBurned / burnGoal) * 100), 100) : 0;
 
   return (
@@ -287,6 +289,9 @@ export default function WorkoutPage() {
               {burnPercent >= 100
                 ? '🔥 Burn goal achieved!'
                 : `${formatNumber(Math.max(burnGoal - totalBurned, 0))} kcal to go`}
+            </p>
+            <p className="mt-1 text-center text-xs text-text-muted">
+              Recommended: {recommendedMinutes} min activity today · {totalDuration} min done
             </p>
           </div>
 

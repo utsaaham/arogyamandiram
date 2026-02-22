@@ -94,16 +94,19 @@ export async function POST(req: NextRequest) {
 User Profile: ${profile.name}, ${age}y, ${profile.gender}, ${profile.height}cm, ${profile.weight}kg
 Activity: ${profile.activityLevel}, Goal: ${profile.goal}, Target Weight: ${profile.targetWeight}kg
 Daily Targets: ${targets.dailyCalories} kcal, ${targets.protein}g protein, ${targets.carbs}g carbs, ${targets.fat}g fat, ${targets.dailyWater}ml water
+Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended workout ${targets.dailyWorkoutMinutes ?? '—'} min/day, daily calorie burn goal ${targets.dailyCalorieBurn ?? '—'} kcal, recommended sleep ${targets.sleepHours ?? '—'} hours
     `.trim();
 
+    type LogWithSleep = { date: string; totalCalories?: number; waterIntake?: number; weight?: number; caloriesBurned?: number; sleep?: { duration?: number; quality?: number; bedtime?: string; wakeTime?: string } };
     const recentContext = recentLogs.length > 0
       ? `Recent 7-day data: ${JSON.stringify(
-          recentLogs.map((l) => ({
+          (recentLogs as LogWithSleep[]).map((l) => ({
             date: l.date,
             cal: l.totalCalories,
             water: l.waterIntake,
             weight: l.weight,
             burned: l.caloriesBurned,
+            sleep: l.sleep ? { duration: l.sleep.duration, quality: l.sleep.quality, bedtime: l.sleep.bedtime, wakeTime: l.sleep.wakeTime } : undefined,
           }))
         )}`
       : 'No recent tracking data available.';
@@ -119,21 +122,28 @@ Daily Targets: ${targets.dailyCalories} kcal, ${targets.protein}g protein, ${tar
       }
 
       case 'workout': {
-        const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal and fitness level. Always respond with JSON: { "plan": { "name": string, "description": string, "exercises": [{ "name": string, "sets": number, "reps": string, "restSeconds": number, "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }`;
-        const userPrompt = `${profileContext}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Duration: 30-45 minutes'}`;
+        const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided. Always respond with JSON: { "plan": { "name": string, "description": string, "exercises": [{ "name": string, "sets": number, "reps": string, "restSeconds": number, "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }. Align duration and estimated calories with the user's daily targets when possible.`;
+        const userPrompt = `${profileContext}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Use their recommended daily workout duration if provided'}`;
         result = await callOpenAI(apiKey, systemPrompt, userPrompt);
         break;
       }
 
       case 'insights': {
-        const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's recent tracking data and provide actionable insights. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest.`;
+        const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's recent tracking data and provide actionable insights. Use their extended targets (ideal weight, recommended workout minutes, daily calorie burn goal, recommended sleep) when relevant. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest. Reference how they are doing vs their ideal weight, workout goal, and sleep target when applicable.`;
         const userPrompt = `${profileContext}\n${recentContext}\nProvide weekly insights and recommendations.`;
         result = await callOpenAI(apiKey, systemPrompt, userPrompt);
         break;
       }
 
+      case 'sleep': {
+        const systemPrompt = `You are a sleep coach AI for Arogyamandiram health app. Analyze the user's sleep data (duration, quality, consistency of bed/wake times) and their target sleep hours. Always respond with JSON: { "summary": string, "tips": [{ "title": string, "description": string }] }. Provide 4-6 personalized tips. Include advice on: bedtime routine, caffeine cutoff, screen time, consistency, sleep environment, or stress if relevant. Be encouraging. If they have little or no sleep data, give general evidence-based sleep hygiene tips.`;
+        const userPrompt = `${profileContext}\n${recentContext}\nProvide personalized sleep analysis and actionable tips.`;
+        result = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        break;
+      }
+
       default:
-        return errorResponse('Invalid recommendation type. Use: meal, workout, or insights', 400);
+        return errorResponse('Invalid recommendation type. Use: meal, workout, insights, or sleep', 400);
     }
 
     return maskedResponse(result);
