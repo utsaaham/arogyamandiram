@@ -88,8 +88,8 @@ export default function SettingsPage() {
     if (p) {
       setName(p.name || '');
       if (p.dateOfBirth) {
-        const d = p.dateOfBirth;
-        setDateOfBirth(d);
+        const d = String(p.dateOfBirth);
+        setDateOfBirth(d.includes('T') ? d.split('T')[0] : d);
         setAge('');
       } else {
         setDateOfBirth('');

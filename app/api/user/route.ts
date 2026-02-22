@@ -15,7 +15,10 @@ export async function GET() {
     if (!isUserId(userId)) return userId; // Returns error response
 
     await connectDB();
-    const user = await User.findById(userId).lean();
+    // Include apiKeys so maskUser can compute hasOpenAiKey/hasEdamamKey (values are never sent to client)
+    const user = await User.findById(userId)
+      .select('+apiKeys.openai +apiKeys.edamam.appId +apiKeys.edamam.appKey')
+      .lean();
 
     if (!user) return errorResponse('User not found', 404);
 

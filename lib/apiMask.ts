@@ -37,10 +37,13 @@ export function maskUser(user: IUser | Record<string, unknown>): SafeUser {
   const settings = u.settings as Record<string, unknown> | undefined;
   const targets = u.targets as Record<string, unknown> | undefined;
 
-  // Compute age from dateOfBirth when present so profile always has current age
+  // Compute age and normalize dateOfBirth to YYYY-MM-DD for client (e.g. input type="date")
   if (profile.dateOfBirth) {
-    const dob = profile.dateOfBirth instanceof Date ? profile.dateOfBirth : String(profile.dateOfBirth);
-    profile.age = getAgeFromDateOfBirth(dob);
+    const dob = profile.dateOfBirth instanceof Date ? profile.dateOfBirth : new Date(String(profile.dateOfBirth));
+    if (!Number.isNaN(dob.getTime())) {
+      profile.age = getAgeFromDateOfBirth(dob);
+      profile.dateOfBirth = dob.toISOString().split('T')[0];
+    }
   }
 
   return {

@@ -58,8 +58,8 @@ export default function OnboardingPage() {
         const p = (res.data as { profile: { name?: string; dateOfBirth?: string } }).profile;
         if (p.name) setName((n) => n || p.name || '');
         if (p.dateOfBirth) {
-          const d = p.dateOfBirth;
-          setDateOfBirth((prev) => prev || d);
+          const d = String(p.dateOfBirth);
+          setDateOfBirth((prev) => prev || (d.includes('T') ? d.split('T')[0] : d));
         }
       }
     });
