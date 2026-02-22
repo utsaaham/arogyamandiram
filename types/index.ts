@@ -1,0 +1,212 @@
+// ============================================
+// AROGYAMANDIRAM - Type Definitions
+// ============================================
+
+import { Types } from 'mongoose';
+
+// ---------- User Types ----------
+
+export type Gender = 'male' | 'female' | 'other';
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+export type Goal = 'lose' | 'maintain' | 'gain';
+export type UnitSystem = 'metric' | 'imperial';
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type WorkoutCategory = 'cardio' | 'strength' | 'flexibility' | 'sports' | 'other';
+
+export interface UserProfile {
+  name: string;
+  /** Computed from dateOfBirth when present; otherwise stored value (legacy). */
+  age?: number;
+  /** Source of truth for age; age is derived from this. */
+  dateOfBirth?: string; // ISO date YYYY-MM-DD
+  gender: Gender;
+  height: number;       // cm (metric) or inches (imperial)
+  weight: number;       // kg (metric) or lbs (imperial)
+  activityLevel: ActivityLevel;
+  goal: Goal;
+  targetWeight: number;
+  avatarUrl?: string;
+}
+
+export interface UserApiKeys {
+  openai?: string;       // AES-256 encrypted
+  edamam?: {
+    appId: string;       // AES-256 encrypted
+    appKey: string;      // AES-256 encrypted
+  };
+}
+
+export interface UserSettings {
+  theme: 'dark' | 'light';
+  units: UnitSystem;
+  notifications: {
+    water: boolean;
+    meals: boolean;
+    weighIn: boolean;
+    workout: boolean;
+  };
+}
+
+export interface UserTargets {
+  dailyCalories: number;
+  dailyWater: number;     // ml
+  protein: number;        // grams
+  carbs: number;          // grams
+  fat: number;            // grams
+}
+
+export interface IUser {
+  _id: Types.ObjectId;
+  email: string;
+  password: string;
+  profile: UserProfile;
+  apiKeys: UserApiKeys;
+  settings: UserSettings;
+  targets: UserTargets;
+  onboardingComplete: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ---------- Daily Log Types ----------
+
+export interface MealEntry {
+  _id?: string;
+  foodId?: string;        // reference to food database
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  quantity: number;
+  unit: string;           // g, ml, piece, cup, tbsp, etc.
+  mealType: MealType;
+  time: string;           // HH:mm format
+  isCustom: boolean;      // user-added food
+}
+
+export interface WorkoutEntry {
+  _id?: string;
+  exercise: string;
+  category: WorkoutCategory;
+  duration: number;       // minutes
+  caloriesBurned: number;
+  sets?: number;
+  reps?: number;
+  weight?: number;        // kg or lbs
+  notes?: string;
+}
+
+export interface IDailyLog {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  date: string;           // YYYY-MM-DD
+  weight?: number;
+  waterIntake: number;    // total ml
+  meals: MealEntry[];
+  workouts: WorkoutEntry[];
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  caloriesBurned: number;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ---------- Food Database Types ----------
+
+export interface FoodItem {
+  id: string;
+  name: string;
+  nameHindi?: string;
+  category: FoodCategory;
+  servingSize: number;
+  servingUnit: string;
+  calories: number;       // per serving
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  isVegetarian: boolean;
+  isVegan: boolean;
+  tags: string[];
+}
+
+export type FoodCategory =
+  | 'curry'
+  | 'dal'
+  | 'bread'
+  | 'rice'
+  | 'sweet'
+  | 'snack'
+  | 'beverage'
+  | 'chutney'
+  | 'raita'
+  | 'salad'
+  | 'breakfast'
+  | 'street_food'
+  | 'non_veg'
+  | 'seafood'
+  | 'dry_fruit'
+  | 'fruit'
+  | 'other';
+
+// ---------- API Response Types ----------
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// Safe user (no sensitive fields) - sent to client
+export interface SafeUser {
+  id: string;
+  email: string;
+  profile: UserProfile;
+  settings: UserSettings;
+  targets: UserTargets;
+  onboardingComplete: boolean;
+  hasOpenAiKey: boolean;    // boolean only, never the actual key
+  hasEdamamKey: boolean;    // boolean only
+}
+
+// ---------- AI Types ----------
+
+export interface AiMealSuggestion {
+  name: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  mealType: MealType;
+  ingredients: string[];
+  isVegetarian: boolean;
+}
+
+export interface AiWorkoutPlan {
+  name: string;
+  description: string;
+  exercises: {
+    name: string;
+    sets: number;
+    reps: string;
+    restSeconds: number;
+    category: WorkoutCategory;
+  }[];
+  estimatedCalories: number;
+  durationMinutes: number;
+}
+
+export interface AiInsight {
+  title: string;
+  description: string;
+  type: 'success' | 'warning' | 'info' | 'tip';
+  metric?: string;
+  value?: string;
+}
