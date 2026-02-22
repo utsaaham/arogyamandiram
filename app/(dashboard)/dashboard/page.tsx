@@ -117,15 +117,15 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/food"
-          className="glass-button-primary mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0"
+          className="glass-button-primary mt-2 hidden items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0 sm:flex"
         >
           <Plus className="h-4 w-4" />
           Log Food
         </Link>
       </div>
 
-      {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+      {/* Stat Cards Row — hidden on mobile; nutrition/hydration/meals/quick actions cover logging */}
+      <div className="hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4 lg:grid-cols-5">
         <StatCard
           icon={Flame}
           label="Net Calories"
