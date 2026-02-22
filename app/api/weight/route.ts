@@ -9,6 +9,8 @@ import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/weight?days=30 - Get weight history
 export async function GET(req: NextRequest) {
   try {

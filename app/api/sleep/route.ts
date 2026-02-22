@@ -10,6 +10,8 @@ import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
 import type { SleepQuality } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 function getDateDaysAgo(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() - days);
