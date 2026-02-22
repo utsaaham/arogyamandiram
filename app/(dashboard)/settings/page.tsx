@@ -309,7 +309,7 @@ export default function SettingsPage() {
                     type="date"
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="glass-input date-input mt-1 w-full max-w-[220px] rounded-xl px-3 py-2 text-left text-sm"
+                    className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2 text-left text-sm"
                     max={new Date().toISOString().split('T')[0]}
                   />
                   {dateOfBirth && (
