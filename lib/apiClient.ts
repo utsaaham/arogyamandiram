@@ -168,6 +168,16 @@ export const api = {
       body: JSON.stringify({ date, workoutId }),
     }),
 
+  // Sleep
+  logSleep: (date: string, sleepData: Record<string, unknown>) =>
+    apiFetch('/sleep', {
+      method: 'POST',
+      body: JSON.stringify({ date, ...sleepData }),
+    }),
+
+  getSleepHistory: (days: number = 30) =>
+    apiFetch(`/sleep?days=${days}`),
+
   // AI
   getMealSuggestions: (context: Record<string, unknown>) =>
     apiFetch('/ai/recommendations', {
@@ -185,6 +195,12 @@ export const api = {
     apiFetch('/ai/recommendations', {
       method: 'POST',
       body: JSON.stringify({ type: 'insights' }),
+    }),
+
+  getSleepTips: () =>
+    apiFetch('/ai/recommendations', {
+      method: 'POST',
+      body: JSON.stringify({ type: 'sleep' }),
     }),
 
   generateHealthPlan: () =>

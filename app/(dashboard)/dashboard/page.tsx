@@ -125,7 +125,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
         <StatCard
           icon={Flame}
           label="Net Calories"
@@ -153,6 +153,13 @@ export default function DashboardPage() {
           value={`${meals.length}`}
           subtitle={`${formatCalories(totalCal)} total`}
           iconColor="text-accent-emerald"
+        />
+        <StatCard
+          icon={Moon}
+          label="Sleep"
+          value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+          subtitle={log?.sleep ? `${log.sleep.quality}/5 quality` : `of ${targets.sleepHours}h target`}
+          iconColor="text-accent-violet"
         />
       </div>
 
@@ -347,6 +354,7 @@ export default function DashboardPage() {
                 { href: '/water', icon: Droplets, label: 'Add Water', color: 'text-accent-cyan' },
                 { href: '/weight', icon: Scale, label: 'Log Weight', color: 'text-accent-amber' },
                 { href: '/workout', icon: Dumbbell, label: 'Add Workout', color: 'text-accent-rose' },
+                { href: '/sleep', icon: Moon, label: 'Log Sleep', color: 'text-accent-violet' },
                 { href: '/ai-insights', icon: Sparkles, label: 'AI Insights', color: 'text-accent-violet' },
               ].map((action) => (
                 <Link

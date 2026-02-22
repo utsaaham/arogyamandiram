@@ -5,6 +5,7 @@ import {
   Sparkles,
   Utensils,
   Dumbbell,
+  Moon,
   TrendingUp,
   Loader2,
   AlertCircle,
@@ -58,12 +59,13 @@ interface Insight {
   value?: string;
 }
 
-type TabKey = 'insights' | 'meals' | 'workout';
+type TabKey = 'insights' | 'meals' | 'workout' | 'sleep';
 
 const tabs: { key: TabKey; label: string; icon: typeof Sparkles }[] = [
   { key: 'insights', label: 'Insights', icon: TrendingUp },
   { key: 'meals', label: 'Meal Ideas', icon: Utensils },
   { key: 'workout', label: 'Workout Plan', icon: Dumbbell },
+  { key: 'sleep', label: 'Sleep Coach', icon: Moon },
 ];
 
 const insightIcons = {
@@ -96,6 +98,7 @@ export default function AiInsightsPage() {
   const [insights, setInsights] = useState<Insight[] | null>(null);
   const [meals, setMeals] = useState<MealSuggestion[] | null>(null);
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
+  const [sleepData, setSleepData] = useState<{ summary?: string; tips?: { title: string; description: string }[] } | null>(null);
 
   // Meal preferences
   const [mealType, setMealType] = useState('');
@@ -167,11 +170,30 @@ export default function AiInsightsPage() {
     }
   };
 
+  const fetchSleepTips = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.getSleepTips();
+      if (res.success && res.data) {
+        const data = res.data as { summary?: string; tips?: { title: string; description: string }[] };
+        setSleepData({ summary: data.summary, tips: data.tips || [] });
+      } else {
+        setError(res.error || 'Failed to fetch sleep tips');
+      }
+    } catch {
+      setError('Failed to fetch sleep tips');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerate = () => {
     setError(null);
     if (activeTab === 'insights') fetchInsights();
     else if (activeTab === 'meals') fetchMeals();
     else if (activeTab === 'workout') fetchWorkout();
+    else if (activeTab === 'sleep') fetchSleepTips();
   };
 
   if (userLoading) {
@@ -496,6 +518,61 @@ export default function AiInsightsPage() {
                 <Dumbbell className="h-10 w-10 text-text-muted" />
                 <p className="text-sm text-text-muted">Get a custom workout plan</p>
                 <p className="text-xs text-text-muted">Tailored to your goals and fitness level</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Sleep Coach Tab */}
+        {activeTab === 'sleep' && (
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-text-primary">AI Sleep Coach</h2>
+              <button
+                onClick={handleGenerate}
+                disabled={loading || !hasApiKey}
+                className="glass-button-primary flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Moon className="h-4 w-4" />}
+                {sleepData ? 'Refresh' : 'Get Tips'}
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="flex flex-col items-center gap-3 py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-accent-violet" />
+                <p className="text-sm text-text-muted">Analyzing your sleep patterns...</p>
+              </div>
+            ) : sleepData ? (
+              <div className="space-y-4">
+                {sleepData.summary && (
+                  <div className="rounded-xl border border-accent-violet/20 bg-accent-violet/5 p-4">
+                    <p className="text-sm leading-relaxed text-text-secondary">{sleepData.summary}</p>
+                  </div>
+                )}
+                {sleepData.tips && sleepData.tips.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-text-primary">Personalized tips</p>
+                    {sleepData.tips.map((tip, i) => (
+                      <div
+                        key={i}
+                        className="flex gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4"
+                      >
+                        <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-accent-amber" />
+                        <div>
+                          <p className="text-sm font-semibold text-text-primary">{tip.title}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-text-secondary">{tip.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-16 text-center">
+                <Moon className="h-10 w-10 text-text-muted" />
+                <p className="text-sm text-text-muted">Get AI-powered sleep analysis and tips</p>
+                <p className="text-xs text-text-muted">Based on your sleep log and targets</p>
               </div>
             )}
           </div>
