@@ -248,23 +248,23 @@ export default function SleepPage() {
               Log Sleep
             </h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="min-w-0">
                   <label className="text-xs font-medium text-text-muted">Bedtime</label>
                   <input
                     type="time"
                     value={bedtime}
                     onChange={(e) => setBedtime(e.target.value)}
-                    className="glass-input mt-1 w-full rounded-xl px-3 py-2.5"
+                    className="glass-input mt-1 w-full min-w-0 rounded-xl px-3 py-2.5"
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="text-xs font-medium text-text-muted">Wake time</label>
                   <input
                     type="time"
                     value={wakeTime}
                     onChange={(e) => setWakeTime(e.target.value)}
-                    className="glass-input mt-1 w-full rounded-xl px-3 py-2.5"
+                    className="glass-input mt-1 w-full min-w-0 rounded-xl px-3 py-2.5"
                   />
                 </div>
               </div>
@@ -324,18 +324,19 @@ export default function SleepPage() {
         {/* Right: Chart + AI Tips + Recent */}
         <div className="space-y-6">
           {/* Weekly Sleep Chart */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card overflow-visible rounded-2xl p-6">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
               <Sunrise className="h-4 w-4 text-accent-amber" />
               Last 7 Days
             </h2>
             {historyLoading ? (
-              <div className="flex h-52 items-center justify-center">
+              <div className="flex min-h-[220px] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
               </div>
             ) : chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+              <div className="min-h-[220px] w-full">
+                <ResponsiveContainer width="100%" height={220} minHeight={220}>
+                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis
                     dataKey="date"
@@ -375,9 +376,10 @@ export default function SleepPage() {
                     radius={[6, 6, 0, 0]}
                   />
                 </BarChart>
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              </div>
             ) : (
-              <div className="flex h-52 items-center justify-center text-sm text-text-muted">
+              <div className="flex min-h-[220px] items-center justify-center text-sm text-text-muted">
                 Log sleep to see your weekly trend
               </div>
             )}
