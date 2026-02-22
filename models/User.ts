@@ -80,12 +80,10 @@ const UserSchema = new Schema<IUserDocument>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret) {
-        // Always strip sensitive fields on JSON serialization
-        delete ret.password;
-        delete ret.apiKeys;
-        delete ret.__v;
-        return ret;
+      transform(_doc, ret: Record<string, unknown>) {
+        // Always strip sensitive fields on JSON serialization (omit instead of delete for strict TS)
+        const { password, apiKeys, __v, ...safe } = ret;
+        return safe;
       },
     },
   }
