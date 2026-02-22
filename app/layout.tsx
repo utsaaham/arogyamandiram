@@ -40,6 +40,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: '#08080d',
+  viewportFit: 'cover',
 };
 
 // ---------- Root Layout ----------
