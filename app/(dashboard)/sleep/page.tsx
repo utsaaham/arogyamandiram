@@ -336,7 +336,7 @@ export default function SleepPage() {
             ) : chartData.length > 0 ? (
               <div className="min-h-[220px] w-full">
                 <ResponsiveContainer width="100%" height={220} minHeight={220}>
-                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis
                     dataKey="date"
@@ -345,18 +345,19 @@ export default function SleepPage() {
                       return `${p[1]}/${p[2]}`;
                     }}
                     stroke="rgba(255,255,255,0.15)"
-                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                    tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <YAxis
                     domain={[0, 12]}
                     stroke="rgba(255,255,255,0.15)"
-                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                    tick={{ fill: 'rgba(255,255,255,0.85)', fontSize: 12 }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(v) => `${v}h`}
-                    width={32}
+                    width={36}
+                    tickMargin={8}
                   />
                   <Tooltip
                     contentStyle={{
