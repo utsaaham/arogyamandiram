@@ -9,6 +9,7 @@ import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { generateTargets } from '@/lib/health';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
+import { generateHealthPlanTargets, getOpenAIKeyForHealthPlan } from '@/lib/aiHealthPlan';
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
       profile.goal || 'maintain'
     );
 
-    const user = await User.findByIdAndUpdate(
+    let user = await User.findByIdAndUpdate(
       userId,
       {
         $set: {
@@ -70,7 +71,24 @@ export async function POST(req: NextRequest) {
 
     if (!user) return errorResponse('User not found', 404);
 
-    return maskedResponse(maskUser(user), { message: 'Welcome to Arogyamandiram!' });
+    // If user has OpenAI API key, refine targets with AI health plan (non-blocking for UX)
+    const hasKey = await getOpenAIKeyForHealthPlan(userId);
+    if (hasKey) {
+      try {
+        const aiResult = await generateHealthPlanTargets(userId);
+        if (aiResult?.targets) {
+          user = await User.findByIdAndUpdate(
+            userId,
+            { $set: { targets: aiResult.targets } },
+            { new: true, runValidators: true }
+          ).lean();
+        }
+      } catch {
+        // Keep formula-based targets on AI failure
+      }
+    }
+
+    return maskedResponse(maskUser(user!), { message: 'Welcome to Arogyamandiram!' });
   } catch (err) {
     console.error('[Onboarding Error]:', err);
     return errorResponse('Failed to complete onboarding', 500);

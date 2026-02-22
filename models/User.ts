@@ -68,8 +68,12 @@ const UserSchema = new Schema<IUserDocument>(
       dailyCalories: { type: Number, default: 2000 },
       dailyWater: { type: Number, default: 2500 },  // ml
       protein: { type: Number, default: 150 },       // g
-      carbs: { type: Number, default: 200 },          // g
-      fat: { type: Number, default: 67 },             // g
+      carbs: { type: Number, default: 200 },        // g
+      fat: { type: Number, default: 67 },            // g
+      idealWeight: { type: Number, default: 70 },   // kg
+      dailyWorkoutMinutes: { type: Number, default: 30 },
+      dailyCalorieBurn: { type: Number, default: 400 },
+      sleepHours: { type: Number, default: 8 },
     },
     onboardingComplete: { type: Boolean, default: false },
   },

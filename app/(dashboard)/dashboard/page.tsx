@@ -72,7 +72,17 @@ export default function DashboardPage() {
     );
   }
 
-  const targets = user?.targets || { dailyCalories: 2000, dailyWater: 2500, protein: 120, carbs: 250, fat: 65 };
+  const targets = user?.targets ?? {
+    dailyCalories: 2000,
+    dailyWater: 2500,
+    protein: 150,
+    carbs: 200,
+    fat: 67,
+    idealWeight: 70,
+    dailyWorkoutMinutes: 30,
+    dailyCalorieBurn: 400,
+    sleepHours: 8,
+  };
   const totalCal = log?.totalCalories || 0;
   const burned = log?.caloriesBurned || 0;
   const netCal = totalCal - burned;
@@ -107,15 +117,15 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/food"
-          className="glass-button-primary mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0"
+          className="glass-button-primary mt-2 hidden items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0 sm:flex"
         >
           <Plus className="h-4 w-4" />
           Log Food
         </Link>
       </div>
 
-      {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Stat Cards Row — hidden on mobile; nutrition/hydration/meals/quick actions cover logging */}
+      <div className="hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4 lg:grid-cols-5">
         <StatCard
           icon={Flame}
           label="Net Calories"
@@ -143,6 +153,13 @@ export default function DashboardPage() {
           value={`${meals.length}`}
           subtitle={`${formatCalories(totalCal)} total`}
           iconColor="text-accent-emerald"
+        />
+        <StatCard
+          icon={Moon}
+          label="Sleep"
+          value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+          subtitle={log?.sleep ? `${log.sleep.quality}/5 quality` : `of ${targets.sleepHours}h target`}
+          iconColor="text-accent-violet"
         />
       </div>
 
@@ -337,6 +354,7 @@ export default function DashboardPage() {
                 { href: '/water', icon: Droplets, label: 'Add Water', color: 'text-accent-cyan' },
                 { href: '/weight', icon: Scale, label: 'Log Weight', color: 'text-accent-amber' },
                 { href: '/workout', icon: Dumbbell, label: 'Add Workout', color: 'text-accent-rose' },
+                { href: '/sleep', icon: Moon, label: 'Log Sleep', color: 'text-accent-violet' },
                 { href: '/ai-insights', icon: Sparkles, label: 'AI Insights', color: 'text-accent-violet' },
               ].map((action) => (
                 <Link

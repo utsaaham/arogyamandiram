@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Minus,
   Target,
+  Heart,
   Calendar,
   ArrowDown,
   ArrowUp,
@@ -100,6 +101,7 @@ export default function WeightPage() {
 
   const units = user?.settings?.units || 'metric';
   const targetWeight = user?.profile?.targetWeight;
+  const idealWeight = user?.targets?.idealWeight;
   const currentWeight = history.length > 0 ? history[history.length - 1].weight : user?.profile?.weight;
   const startWeight = history.length > 0 ? history[0].weight : currentWeight;
 
@@ -216,6 +218,13 @@ export default function WeightPage() {
           value={targetWeight ? formatWeight(targetWeight, units) : '—'}
           subtitle={targetWeight && currentWeight ? `${formatWeight(Math.abs(currentWeight - targetWeight), units).replace(' kg', '').replace(' lbs', '')} to go` : undefined}
           iconColor="text-accent-cyan"
+        />
+        <StatCard
+          icon={Heart}
+          label="Ideal"
+          value={idealWeight != null ? formatWeight(idealWeight, units) : '—'}
+          subtitle={idealWeight != null && currentWeight ? `${formatWeight(Math.abs(currentWeight - idealWeight), units).replace(' kg', '').replace(' lbs', '')} from ideal` : 'Recommended for your height'}
+          iconColor="text-accent-emerald"
         />
         <StatCard
           icon={Ruler}

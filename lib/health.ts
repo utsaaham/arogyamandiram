@@ -119,6 +119,53 @@ export function calculateWaterTarget(weight: number, activityLevel: ActivityLeve
 }
 
 /**
+ * Calculate ideal body weight (kg) using Devine formula.
+ * height in cm.
+ */
+export function calculateIdealWeight(height: number, gender: Gender): number {
+  const heightInches = height / 2.54;
+  const base = gender === 'male' ? 50 : 45.5;
+  const idealKg = base + 2.3 * Math.max(0, heightInches - 60);
+  return Math.round(idealKg * 10) / 10;
+}
+
+/**
+ * Recommended daily workout duration (minutes) by goal and activity level.
+ */
+export function calculateDailyWorkoutMinutes(goal: Goal, activityLevel: ActivityLevel): number {
+  const byGoal: Record<Goal, number> = {
+    lose: 45,
+    maintain: 30,
+    gain: 40,
+  };
+  let mins = byGoal[goal];
+  if (activityLevel === 'sedentary' || activityLevel === 'light') mins = Math.min(mins + 10, 60);
+  if (activityLevel === 'very_active') mins = Math.max(mins - 5, 25);
+  return mins;
+}
+
+/**
+ * Recommended daily calories to burn via exercise (kcal).
+ */
+export function calculateDailyCalorieBurn(goal: Goal): number {
+  const byGoal: Record<Goal, number> = {
+    lose: 450,
+    maintain: 300,
+    gain: 250,
+  };
+  return byGoal[goal];
+}
+
+/**
+ * Recommended sleep hours by age.
+ */
+export function calculateSleepHours(age: number): number {
+  if (age < 18) return 8;
+  if (age >= 65) return 7.5;
+  return 8;
+}
+
+/**
  * Generate all user targets from profile data.
  */
 export function generateTargets(
@@ -134,10 +181,18 @@ export function generateTargets(
   const dailyCalories = calculateCalorieTarget(tdee, goal);
   const macros = calculateMacros(dailyCalories, weight, goal);
   const dailyWater = calculateWaterTarget(weight, activityLevel);
+  const idealWeight = calculateIdealWeight(height, gender);
+  const dailyWorkoutMinutes = calculateDailyWorkoutMinutes(goal, activityLevel);
+  const dailyCalorieBurn = calculateDailyCalorieBurn(goal);
+  const sleepHours = calculateSleepHours(age);
 
   return {
     dailyCalories,
     dailyWater,
     ...macros,
+    idealWeight,
+    dailyWorkoutMinutes,
+    dailyCalorieBurn,
+    sleepHours,
   };
 }
