@@ -180,7 +180,17 @@ export default function FoodLogPage() {
     );
   }
 
-  const targets = user?.targets || { dailyCalories: 2000, protein: 120, carbs: 250, fat: 65 };
+  const targets = user?.targets ?? {
+    dailyCalories: 2000,
+    dailyWater: 2500,
+    protein: 150,
+    carbs: 200,
+    fat: 67,
+    idealWeight: 70,
+    dailyWorkoutMinutes: 30,
+    dailyCalorieBurn: 400,
+    sleepHours: 8,
+  };
   const totalCal = log?.totalCalories || 0;
   const calPercent = calcPercent(totalCal, targets.dailyCalories);
   const meals = log?.meals || [];

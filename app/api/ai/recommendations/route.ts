@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
 User Profile: ${profile.name}, ${age}y, ${profile.gender}, ${profile.height}cm, ${profile.weight}kg
 Activity: ${profile.activityLevel}, Goal: ${profile.goal}, Target Weight: ${profile.targetWeight}kg
 Daily Targets: ${targets.dailyCalories} kcal, ${targets.protein}g protein, ${targets.carbs}g carbs, ${targets.fat}g fat, ${targets.dailyWater}ml water
+Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended workout ${targets.dailyWorkoutMinutes ?? '—'} min/day, daily calorie burn goal ${targets.dailyCalorieBurn ?? '—'} kcal, recommended sleep ${targets.sleepHours ?? '—'} hours
     `.trim();
 
     const recentContext = recentLogs.length > 0
@@ -119,14 +120,14 @@ Daily Targets: ${targets.dailyCalories} kcal, ${targets.protein}g protein, ${tar
       }
 
       case 'workout': {
-        const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal and fitness level. Always respond with JSON: { "plan": { "name": string, "description": string, "exercises": [{ "name": string, "sets": number, "reps": string, "restSeconds": number, "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }`;
-        const userPrompt = `${profileContext}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Duration: 30-45 minutes'}`;
+        const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided. Always respond with JSON: { "plan": { "name": string, "description": string, "exercises": [{ "name": string, "sets": number, "reps": string, "restSeconds": number, "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }. Align duration and estimated calories with the user's daily targets when possible.`;
+        const userPrompt = `${profileContext}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Use their recommended daily workout duration if provided'}`;
         result = await callOpenAI(apiKey, systemPrompt, userPrompt);
         break;
       }
 
       case 'insights': {
-        const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's recent tracking data and provide actionable insights. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest.`;
+        const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's recent tracking data and provide actionable insights. Use their extended targets (ideal weight, recommended workout minutes, daily calorie burn goal, recommended sleep) when relevant. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest. Reference how they are doing vs their ideal weight, workout goal, and sleep target when applicable.`;
         const userPrompt = `${profileContext}\n${recentContext}\nProvide weekly insights and recommendations.`;
         result = await callOpenAI(apiKey, systemPrompt, userPrompt);
         break;

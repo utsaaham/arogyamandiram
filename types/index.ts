@@ -53,6 +53,10 @@ export interface UserTargets {
   protein: number;        // grams
   carbs: number;          // grams
   fat: number;            // grams
+  idealWeight: number;   // kg - recommended ideal weight
+  dailyWorkoutMinutes: number;  // recommended daily exercise duration
+  dailyCalorieBurn: number;     // recommended daily calories to burn via exercise
+  sleepHours: number;    // recommended sleep hours
 }
 
 export interface IUser {

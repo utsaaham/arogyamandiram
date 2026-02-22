@@ -44,7 +44,7 @@ export default function WaterPage() {
   const [animateWave, setAnimateWave] = useState(false);
 
   const today = getToday();
-  const target = user?.targets?.dailyWater || 2500;
+  const target = user?.targets?.dailyWater ?? 2500;
   const current = log?.waterIntake || 0;
   const percent = calcPercent(current, target);
   const remaining = Math.max(target - current, 0);
@@ -93,7 +93,7 @@ export default function WaterPage() {
     );
   }
 
-  // Glasses count (250ml per glass)
+  // Glass size for display (standard 250ml glass; target is from user profile)
   const glassSize = 250;
   const glasses = Math.floor(current / glassSize);
   const targetGlasses = Math.ceil(target / glassSize);

@@ -187,6 +187,12 @@ export const api = {
       body: JSON.stringify({ type: 'insights' }),
     }),
 
+  generateHealthPlan: () =>
+    apiFetch('/ai/health-plan', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+
   // Onboarding
   completeOnboarding: (data: Record<string, unknown>) =>
     apiFetch('/user/onboarding', {
