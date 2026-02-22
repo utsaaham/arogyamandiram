@@ -99,11 +99,22 @@ A full-stack health tracking web app built with Next.js 14, featuring Indian foo
 - (Optional) OpenAI API key for AI features
 - (Optional) Edamam API key for international food search
 
+**What you need to provide:**
+
+| Item | Required? | Where to get it |
+|------|-----------|-----------------|
+| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) — create a free cluster, copy connection string |
+| `NEXTAUTH_SECRET` | Yes | Run `openssl rand -base64 32` |
+| `ENCRYPTION_KEY` | Yes | Run `openssl rand -hex 32` |
+| `NEXTAUTH_URL` | Yes | Use `http://localhost:3000` for local dev |
+| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) — for AI insights |
+| `EDAMAM_APP_ID` & `EDAMAM_APP_KEY` | Optional | [Edamam](https://developer.edamam.com/) — for international food search |
+
 ### Installation
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/utsaaham/arogyamandiram.git
 cd arogyamandiram
 
 # Install dependencies

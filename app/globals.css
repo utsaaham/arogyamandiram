@@ -231,9 +231,11 @@ input[type='date'].date-input {
   font-size: 0.875rem;
   min-height: 2.25rem;
   max-height: 2.5rem;
+  color-scheme: dark;
 }
 @media (max-width: 640px) {
   input[type='date'].date-input {
+    font-size: 16px; /* prevents iOS zoom on focus */
     max-width: 100%;
   }
 }

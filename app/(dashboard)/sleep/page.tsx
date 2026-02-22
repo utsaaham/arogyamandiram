@@ -73,8 +73,17 @@ export default function SleepPage() {
   const [aiTips, setAiTips] = useState<AiSleepTip[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [chartHeight, setChartHeight] = useState(220);
 
   const currentSleep = log?.sleep;
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 640px)');
+    const update = () => setChartHeight(mq.matches ? 220 : 180);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
   const durationHours = computeDurationHours(bedtime, wakeTime);
 
   const fetchHistory = useCallback(async () => {
@@ -176,9 +185,9 @@ export default function SleepPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="h-10" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
           <CardSkeleton className="h-80" />
           <CardSkeleton className="h-80" />
         </div>
@@ -187,7 +196,7 @@ export default function SleepPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in sm:space-y-6">
       {/* Header */}
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold text-text-primary">
@@ -197,26 +206,28 @@ export default function SleepPage() {
         <p className="text-sm text-text-muted">{formatDate(today)}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
         {/* Left: Progress + Logger */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Progress Ring + Sleep Score */}
-          <div className="glass-card flex flex-col items-center rounded-2xl p-6 sm:flex-row sm:justify-around">
-            <ProgressRing
-              progress={percent}
-              size={140}
-              strokeWidth={10}
-              color={
-                percent >= 100
-                  ? 'stroke-accent-emerald'
-                  : percent >= 70
-                    ? 'stroke-accent-violet'
-                    : 'stroke-accent-amber'
-              }
-              value={currentSleep ? `${currentSleep.duration.toFixed(1)}h` : '—'}
-              label="slept"
-              sublabel={`of ${targetHours}h goal`}
-            />
+          <div className="glass-card flex flex-col items-center rounded-2xl p-4 sm:flex-row sm:justify-around sm:p-6">
+            <div className="scale-[0.8] origin-center sm:scale-100">
+              <ProgressRing
+                progress={percent}
+                size={140}
+                strokeWidth={10}
+                color={
+                  percent >= 100
+                    ? 'stroke-accent-emerald'
+                    : percent >= 70
+                      ? 'stroke-accent-violet'
+                      : 'stroke-accent-amber'
+                }
+                value={currentSleep ? `${currentSleep.duration.toFixed(1)}h` : '—'}
+                label="slept"
+                sublabel={`of ${targetHours}h goal`}
+              />
+            </div>
             <div className="mt-4 flex flex-col items-center sm:mt-0">
               {sleepScore != null && (
                 <div
@@ -229,7 +240,7 @@ export default function SleepPage() {
                         : 'border-accent-rose/30 bg-accent-rose/10 text-accent-rose'
                   )}
                 >
-                  <p className="text-2xl font-bold">{(sleepScore as number)}</p>
+                  <p className="text-xl font-bold sm:text-2xl">{(sleepScore as number)}</p>
                   <p className="text-xs font-medium opacity-90">Sleep Score</p>
                 </div>
               )}
@@ -242,7 +253,7 @@ export default function SleepPage() {
           </div>
 
           {/* Sleep Logger */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-4 sm:p-6">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
               <BedDouble className="h-4 w-4 text-accent-violet" />
               Log Sleep
@@ -322,20 +333,20 @@ export default function SleepPage() {
         </div>
 
         {/* Right: Chart + AI Tips + Recent */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Weekly Sleep Chart */}
-          <div className="glass-card overflow-visible rounded-2xl p-6">
+          <div className="glass-card overflow-visible rounded-2xl p-4 sm:p-6">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
               <Sunrise className="h-4 w-4 text-accent-amber" />
               Last 7 Days
             </h2>
             {historyLoading ? (
-              <div className="flex min-h-[220px] items-center justify-center">
+              <div className="flex items-center justify-center" style={{ minHeight: chartHeight }}>
                 <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
               </div>
             ) : chartData.length > 0 ? (
-              <div className="min-h-[220px] w-full">
-                <ResponsiveContainer width="100%" height={220} minHeight={220}>
+              <div className="w-full" style={{ minHeight: chartHeight }}>
+                <ResponsiveContainer width="100%" height={chartHeight} minHeight={chartHeight}>
                   <BarChart data={chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis
@@ -380,7 +391,7 @@ export default function SleepPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex min-h-[220px] items-center justify-center text-sm text-text-muted">
+              <div className="flex items-center justify-center text-sm text-text-muted" style={{ minHeight: chartHeight }}>
                 Log sleep to see your weekly trend
               </div>
             )}
