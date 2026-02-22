@@ -244,7 +244,7 @@ export default function FoodLogPage() {
           </div>
 
           {/* Category Filters */}
-          <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-1">
+          <div className="hide-scrollbar flex gap-2 overflow-x-auto p-1">
             {categories.map((cat) => (
               <button
                 key={cat.key}

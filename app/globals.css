@@ -33,7 +33,9 @@ html {
 body {
   background-color: var(--bg-primary);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
 }
 
 /* ---------- Noise Texture Overlay ---------- */
@@ -190,7 +192,7 @@ body::before {
   display: none;
 }
 
-/* ---------- Water Fill Animation ---------- */
+/* ---------- Water Fill Scale Animation ---------- */
 @keyframes water-fill {
   0% { transform: scaleY(0.95); }
   50% { transform: scaleY(1.02); }
@@ -218,6 +220,11 @@ select {
 }
 
 /* ---------- Time Input ---------- */
+input[type='time'] {
+  appearance: none;
+  -webkit-appearance: none;
+  max-width: 100%;
+}
 input[type='time']::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
   cursor: pointer;
@@ -225,17 +232,12 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 /* ---------- Date Input (iOS alignment & size) ---------- */
 input[type='date'] {
+  appearance: none;
+  -webkit-appearance: none;
   text-align: left;
 }
 input[type='date'].date-input {
   font-size: 0.875rem;
   min-height: 2.25rem;
   max-height: 2.5rem;
-  color-scheme: dark;
-}
-@media (max-width: 640px) {
-  input[type='date'].date-input {
-    font-size: 16px; /* prevents iOS zoom on focus */
-    max-width: 100%;
-  }
 }

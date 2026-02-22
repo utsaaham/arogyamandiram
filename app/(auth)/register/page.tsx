@@ -150,7 +150,7 @@ export default function RegisterPage() {
               type="date"
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
-              className="glass-input date-input"
+              className="glass-input"
               max={new Date().toISOString().split('T')[0]}
               required
             />
