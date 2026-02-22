@@ -9,6 +9,7 @@ import {
   Droplets,
   Scale,
   Dumbbell,
+  Moon,
   Sparkles,
   Settings,
   LogOut,
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/workout', icon: Dumbbell, label: 'Workouts' },
+  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];

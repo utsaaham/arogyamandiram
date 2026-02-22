@@ -102,6 +102,17 @@ export interface WorkoutEntry {
   notes?: string;
 }
 
+export type SleepQuality = 1 | 2 | 3 | 4 | 5;
+
+export interface SleepEntry {
+  _id?: string;
+  bedtime: string;        // ISO datetime or HH:mm
+  wakeTime: string;       // ISO datetime or HH:mm
+  duration: number;       // hours (decimal, e.g. 7.5)
+  quality: SleepQuality;  // 1-5 star rating
+  notes?: string;
+}
+
 export interface IDailyLog {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
@@ -110,6 +121,7 @@ export interface IDailyLog {
   waterIntake: number;    // total ml
   meals: MealEntry[];
   workouts: WorkoutEntry[];
+  sleep?: SleepEntry;     // single entry per day
   totalCalories: number;
   totalProtein: number;
   totalCarbs: number;
@@ -213,4 +225,10 @@ export interface AiInsight {
   type: 'success' | 'warning' | 'info' | 'tip';
   metric?: string;
   value?: string;
+}
+
+export interface AiSleepAnalysis {
+  score: number;         // 0-100 sleep score
+  summary: string;
+  tips: { title: string; description: string }[];
 }
