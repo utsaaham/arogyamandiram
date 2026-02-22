@@ -11,6 +11,8 @@ import { generateTargets } from '@/lib/health';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { generateHealthPlanTargets, getOpenAIKeyForHealthPlan } from '@/lib/aiHealthPlan';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const userId = await getAuthUserId();

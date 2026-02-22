@@ -9,6 +9,8 @@ import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/daily-log/meal - Add a meal
 export async function POST(req: NextRequest) {
   try {

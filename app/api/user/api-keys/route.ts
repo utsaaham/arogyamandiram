@@ -11,6 +11,8 @@ import { encrypt } from '@/lib/encryption';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 
+export const dynamic = 'force-dynamic';
+
 // PUT /api/user/api-keys - Save/update API keys
 export async function PUT(req: NextRequest) {
   try {
