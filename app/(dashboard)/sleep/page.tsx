@@ -26,7 +26,7 @@ import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
-import { cn, formatDate, getToday } from '@/lib/utils';
+import { cn, formatDate, getYesterday } from '@/lib/utils';
 import type { SleepEntry as SleepEntryType } from '@/types';
 
 interface SleepHistoryItem {
@@ -59,8 +59,8 @@ function displayTime(t: string): string {
 
 export default function SleepPage() {
   const { user, loading: userLoading } = useUser();
-  const { log, loading: logLoading, refetch } = useDailyLog();
-  const today = getToday();
+  const lastNightDate = getYesterday(); // "Last night" = yesterday's sleep
+  const { log, loading: logLoading, refetch } = useDailyLog(lastNightDate);
   const targetHours = user?.targets?.sleepHours ?? 8;
 
   const [history, setHistory] = useState<SleepHistoryItem[]>([]);
@@ -114,7 +114,7 @@ export default function SleepPage() {
     }
     setSaving(true);
     try {
-      const res = await api.logSleep(today, {
+      const res = await api.logSleep(lastNightDate, {
         bedtime,
         wakeTime,
         duration: Math.round(dur * 10) / 10,
@@ -194,7 +194,7 @@ export default function SleepPage() {
           <Moon className="h-6 w-6 text-accent-violet" />
           Sleep Tracker
         </h1>
-        <p className="text-sm text-text-muted">{formatDate(today)}</p>
+        <p className="text-sm text-text-muted">Last night · {formatDate(lastNightDate)}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -213,25 +213,19 @@ export default function SleepPage() {
                     ? 'stroke-accent-violet'
                     : 'stroke-accent-amber'
               }
-              value={currentSleep ? `${currentSleep.duration.toFixed(1)}h` : '—'}
-              label="slept"
-              sublabel={`of ${targetHours}h goal`}
+              value={currentSleep ? String(sleepScore ?? '—') : undefined}
+              label={currentSleep ? 'Sleep score' : 'Log sleep'}
+              sublabel={
+                currentSleep
+                  ? `${currentSleep.duration.toFixed(1)}h slept · ${targetHours}h goal`
+                  : 'to see score'
+              }
             />
             <div className="mt-4 flex flex-col items-center sm:mt-0">
-              {sleepScore != null && (
-                <div
-                  className={cn(
-                    'rounded-2xl border px-4 py-2',
-                    sleepScore >= 70
-                      ? 'border-accent-emerald/30 bg-accent-emerald/10 text-accent-emerald'
-                      : sleepScore >= 50
-                        ? 'border-accent-amber/30 bg-accent-amber/10 text-accent-amber'
-                        : 'border-accent-rose/30 bg-accent-rose/10 text-accent-rose'
-                  )}
-                >
-                  <p className="text-2xl font-bold">{(sleepScore as number)}</p>
-                  <p className="text-xs font-medium opacity-90">Sleep Score</p>
-                </div>
+              {currentSleep && (
+                <p className="text-sm text-text-muted">
+                  {currentSleep.duration.toFixed(1)}h slept last night
+                </p>
               )}
               {!currentSleep && (
                 <p className="text-sm text-text-muted">

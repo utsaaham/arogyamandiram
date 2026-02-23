@@ -189,6 +189,7 @@ export interface SafeUser {
   onboardingComplete: boolean;
   hasOpenAiKey: boolean;    // boolean only, never the actual key
   hasEdamamKey: boolean;    // boolean only
+  createdAt?: string;      // ISO date string, for "at least one week" checks
 }
 
 // ---------- AI Types ----------

@@ -60,7 +60,7 @@ export default function MetricChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.25} />
@@ -88,7 +88,7 @@ export default function MetricChart({
           tickLine={false}
           axisLine={false}
           tickFormatter={formatY || ((v: number) => `${v}${unit}`)}
-          width={50}
+          width={52}
         />
 
         <Tooltip

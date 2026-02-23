@@ -101,12 +101,13 @@ DailyLogSchema.index({ userId: 1, date: 1 }, { unique: true });
 DailyLogSchema.index({ 'meals.name': 'text' });
 
 // Pre-save: auto-calculate totals from meals
+// Note: meal.calories (and macros) are already the total for the logged quantity from the frontend
 DailyLogSchema.pre('save', function (next) {
   if (this.meals && this.meals.length > 0) {
-    this.totalCalories = this.meals.reduce((sum, m) => sum + (m.calories * m.quantity), 0);
-    this.totalProtein = this.meals.reduce((sum, m) => sum + (m.protein * m.quantity), 0);
-    this.totalCarbs = this.meals.reduce((sum, m) => sum + (m.carbs * m.quantity), 0);
-    this.totalFat = this.meals.reduce((sum, m) => sum + (m.fat * m.quantity), 0);
+    this.totalCalories = this.meals.reduce((sum, m) => sum + m.calories, 0);
+    this.totalProtein = this.meals.reduce((sum, m) => sum + m.protein, 0);
+    this.totalCarbs = this.meals.reduce((sum, m) => sum + m.carbs, 0);
+    this.totalFat = this.meals.reduce((sum, m) => sum + m.fat, 0);
   } else {
     this.totalCalories = 0;
     this.totalProtein = 0;

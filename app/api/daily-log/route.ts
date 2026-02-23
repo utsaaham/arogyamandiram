@@ -7,7 +7,7 @@ import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
-import { getToday } from '@/lib/utils';
+import { getToday, recalcTotalsFromMeals } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +42,20 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return maskedResponse(stripSensitive(log as unknown as Record<string, unknown>));
+    // Recalculate totals from meals (meal.calories is already total for logged amount)
+    const meals = (log as { meals?: Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }> }).meals ?? [];
+    const totals = recalcTotalsFromMeals(meals);
+    const logWithRecalc = {
+      ...log,
+      ...totals,
+      caloriesBurned:
+        ((log as { workouts?: { caloriesBurned?: number }[] }).workouts ?? []).reduce(
+          (s, w) => s + (Number(w?.caloriesBurned) || 0),
+          0
+        ),
+    };
+
+    return maskedResponse(stripSensitive(logWithRecalc as unknown as Record<string, unknown>));
   } catch (err) {
     console.error('[DailyLog GET Error]:', err);
     return errorResponse('Failed to fetch daily log', 500);

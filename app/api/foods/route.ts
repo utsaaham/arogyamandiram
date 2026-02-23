@@ -5,7 +5,8 @@
 // If user has Edamam API key, also searches Edamam.
 
 import { NextRequest } from 'next/server';
-import { searchFoods, getFoodCategories } from '@/lib/indianFoods';
+import { searchFoods, getFoodsByCategory, getFoodCategories, INDIAN_FOODS } from '@/lib/indianFoods';
+import type { FoodCategory } from '@/types';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import connectDB from '@/lib/db';
@@ -14,22 +15,36 @@ import { decrypt } from '@/lib/encryption';
 
 export const dynamic = 'force-dynamic';
 
+const VALID_CATEGORIES: FoodCategory[] = [
+  'curry', 'dal', 'bread', 'rice', 'sweet', 'snack', 'beverage', 'chutney',
+  'raita', 'salad', 'breakfast', 'street_food', 'non_veg', 'seafood', 'dry_fruit', 'fruit', 'other',
+];
+
 export async function GET(req: NextRequest) {
   try {
     const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
 
     const { searchParams } = new URL(req.url);
-    const query = searchParams.get('q') || '';
-    const category = searchParams.get('category') || '';
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const query = (searchParams.get('q') || '').trim();
+    const category = (searchParams.get('category') || '').trim();
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10) || 50, 200);
 
-    // 1. Search built-in Indian food database
-    let results = searchFoods(query, limit);
-
-    // Filter by category if specified
-    if (category) {
-      results = results.filter((f) => f.category === category);
+    // 1. Get base list: when user clicks a category, return ALL items in that category
+    let results: typeof INDIAN_FOODS;
+    if (category && VALID_CATEGORIES.includes(category as FoodCategory)) {
+      results = getFoodsByCategory(category as FoodCategory);
+      if (query) {
+        const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+        results = results.filter((f) => {
+          const name = f.name.toLowerCase();
+          const tags = (f.tags || []).join(' ').toLowerCase();
+          return terms.some((t) => name.includes(t) || tags.includes(t));
+        });
+      }
+      // No limit when category filter is on — show all items under that category
+    } else {
+      results = searchFoods(query, limit);
     }
 
     // 2. If user has Edamam key and query is specific enough, also search Edamam

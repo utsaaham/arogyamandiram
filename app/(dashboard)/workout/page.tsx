@@ -23,11 +23,13 @@ import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { computeBaselineBurn } from '@/lib/calorieBurn';
 import {
   cn,
   formatNumber,
   getToday,
   formatDate,
+  getAgeFromDateOfBirth,
 } from '@/lib/utils';
 
 const categoryIcons: Record<string, typeof Dumbbell> = {
@@ -128,6 +130,25 @@ export default function WorkoutPage() {
   const recommendedMinutes = user?.targets?.dailyWorkoutMinutes ?? 30;
   const burnPercent = burnGoal > 0 ? Math.min(Math.round((totalBurned / burnGoal) * 100), 100) : 0;
 
+  // Ideal / baseline calorie burn from user profile (BMR + TDEE)
+  const profile = user?.profile;
+  const age =
+    profile?.dateOfBirth != null
+      ? getAgeFromDateOfBirth(profile.dateOfBirth)
+      : (typeof profile?.age === 'number' ? profile.age : undefined);
+  const baselineBurn =
+    profile &&
+    profile.weight > 0 &&
+    profile.height > 0
+      ? computeBaselineBurn({
+          weightKg: profile.weight,
+          heightCm: profile.height,
+          age,
+          gender: profile.gender,
+          activityLevel: profile.activityLevel,
+        })
+      : null;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -149,9 +170,9 @@ export default function WorkoutPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
           icon={Flame}
-          label="Calories Burned"
+          label={baselineBurn ? 'Workout burn' : 'Calories Burned'}
           value={formatNumber(Math.round(totalBurned))}
-          subtitle="kcal today"
+          subtitle="kcal from exercise"
           iconColor="text-accent-rose"
         />
         <StatCard
@@ -237,15 +258,22 @@ export default function WorkoutPage() {
 
                           {/* Stats row */}
                           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="h-3 w-3 text-text-muted" />
-                              <span className="text-xs text-text-secondary">{workout.duration} min</span>
-                            </div>
+                            {workout.duration > 0 ? (
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="h-3 w-3 text-text-muted" />
+                                <span className="text-xs text-text-secondary">{workout.duration} min</span>
+                              </div>
+                            ) : workout.reps != null && workout.reps > 0 ? (
+                              <div className="flex items-center gap-1.5">
+                                <TrendingUp className="h-3 w-3 text-text-muted" />
+                                <span className="text-xs text-text-secondary">{workout.reps} reps</span>
+                              </div>
+                            ) : null}
                             <div className="flex items-center gap-1.5">
                               <Flame className="h-3 w-3 text-accent-rose" />
                               <span className="text-xs text-text-secondary">{workout.caloriesBurned} kcal</span>
                             </div>
-                            {workout.sets && (
+                            {workout.sets && workout.duration > 0 && (
                               <div className="flex items-center gap-1.5">
                                 <TrendingUp className="h-3 w-3 text-text-muted" />
                                 <span className="text-xs text-text-secondary">
@@ -270,28 +298,61 @@ export default function WorkoutPage() {
               </div>
             )}
           </div>
+
+          {/* Baseline / ideal calorie burn — in main column; total daily burn = TDEE + workouts */}
+          {baselineBurn && (
+            <div className="glass-card rounded-2xl p-5">
+              <h3 className="mb-3 text-sm font-semibold text-text-primary">Ideal calorie burn</h3>
+              <p className="mb-3 text-xs leading-relaxed text-text-muted">
+                Based on your profile (BMR + activity). Your body burns this without exercise; adding workouts increases total burn.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">BMR (at rest)</span>
+                  <span className="text-sm font-semibold text-text-primary">{formatNumber(baselineBurn.bmr)} kcal/day</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">Daily baseline (TDEE)</span>
+                  <span className="text-sm font-semibold text-accent-amber">{formatNumber(baselineBurn.tdee)} kcal/day</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">Sitting (per hour)</span>
+                  <span className="text-sm font-medium text-text-primary">~{baselineBurn.sittingPerHour} kcal</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between rounded-lg border border-accent-rose/30 bg-accent-rose/5 px-3 py-2.5">
+                  <span className="text-xs font-medium text-text-secondary">Estimated total burn today</span>
+                  <span className="text-sm font-bold text-accent-rose">
+                    {formatNumber(baselineBurn.tdee + Math.round(totalBurned))} kcal
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted">
+                  Baseline ({formatNumber(baselineBurn.tdee)}) + workout burn ({formatNumber(Math.round(totalBurned))}) = total calories burned today.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar */}
         <div className="space-y-4">
-          {/* Burn Goal Ring */}
+          {/* Burn Goal Ring — workout goal; show total burn when baseline exists */}
           <div className="glass-card flex flex-col items-center rounded-2xl p-6">
             <ProgressRing
               progress={burnPercent}
               size={130}
               strokeWidth={10}
               color="stroke-accent-rose"
-              value={`${formatNumber(Math.round(totalBurned))}`}
-              label="kcal burned"
-              sublabel={`of ${formatNumber(burnGoal)} goal`}
+              value={baselineBurn ? formatNumber(baselineBurn.tdee + Math.round(totalBurned)) : formatNumber(Math.round(totalBurned))}
+              label={baselineBurn ? 'Total burn today' : 'kcal burned'}
+              sublabel={baselineBurn ? `baseline + ${formatNumber(Math.round(totalBurned))} workout` : `of ${formatNumber(burnGoal)} goal`}
             />
             <p className="mt-3 text-center text-sm font-medium text-text-secondary">
               {burnPercent >= 100
-                ? '🔥 Burn goal achieved!'
-                : `${formatNumber(Math.max(burnGoal - totalBurned, 0))} kcal to go`}
+                ? '🔥 Workout burn goal achieved!'
+                : `${formatNumber(Math.max(burnGoal - totalBurned, 0))} kcal to go (exercise)`}
             </p>
             <p className="mt-1 text-center text-xs text-text-muted">
-              Recommended: {recommendedMinutes} min activity today · {totalDuration} min done
+              Recommended: {recommendedMinutes} min activity · {totalDuration} min done
             </p>
           </div>
 

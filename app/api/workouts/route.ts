@@ -20,8 +20,10 @@ export async function POST(req: NextRequest) {
     const { date, workout } = await req.json();
     const logDate = date || getToday();
 
-    if (!workout || !workout.exercise || !workout.duration) {
-      return errorResponse('Exercise name and duration are required', 400);
+    const hasDuration = typeof workout?.duration === 'number' && workout.duration > 0;
+    const hasReps = typeof workout?.reps === 'number' && workout.reps > 0;
+    if (!workout?.exercise || (!hasDuration && !hasReps)) {
+      return errorResponse('Exercise name and either duration (min) or reps (number) are required', 400);
     }
 
     await connectDB();
