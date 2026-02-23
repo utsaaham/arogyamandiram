@@ -287,14 +287,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Energy balance: 3 circles — Workouts, Baseline, Net Result */}
-          <div className="glass-card rounded-2xl p-6">
-            <h2 className="mb-4 text-base font-semibold text-text-primary">Energy balance</h2>
-            <div className="grid grid-cols-3 place-items-center gap-4">
+          <div className="glass-card rounded-2xl p-6 pb-8">
+            <h2 className="mb-6 sm:mb-8 text-base font-semibold text-text-primary">Energy balance</h2>
+            <div className="grid grid-cols-3 place-items-center gap-6 [&>*]:scale-[0.82] sm:gap-4 sm:[&>*]:scale-[1.15]">
               {/* 1. Workouts — calories burned from exercise (overflow when exceeding goal) */}
               <ProgressRing
                 progress={targets.dailyCalorieBurn > 0 ? Math.round((burned / targets.dailyCalorieBurn) * 100) : 0}
-                size={120}
-                strokeWidth={8}
+                size={140}
+                strokeWidth={10}
                 color="stroke-accent-rose"
                 overflowColor="stroke-accent-violet"
                 value={formatNumber(Math.round(burned))}
@@ -304,8 +304,8 @@ export default function DashboardPage() {
               {/* 2. Baseline — time-proportional TDEE burned so far today */}
               <ProgressRing
                 progress={baselineBurn ? calcPercent(baselineSoFar, baselineBurn.tdee) : 0}
-                size={120}
-                strokeWidth={8}
+                size={140}
+                strokeWidth={10}
                 color="stroke-accent-amber"
                 value={baselineBurn ? formatNumber(baselineSoFar) : '—'}
                 label="Baseline"
@@ -314,8 +314,8 @@ export default function DashboardPage() {
               {/* 3. Net Result — deficit or surplus */}
               <ProgressRing
                 progress={100}
-                size={120}
-                strokeWidth={8}
+                size={140}
+                strokeWidth={10}
                 color={netResult >= 0 ? 'stroke-accent-emerald' : 'stroke-accent-rose'}
                 value={netResult >= 0 ? `-${formatNumber(netResult)}` : `+${formatNumber(-netResult)}`}
                 label={netResult >= 0 ? 'Deficit' : 'Surplus'}

@@ -417,6 +417,14 @@ const proteinShakes: FoodItem[] = [
   { id: 'pro_001', name: 'Optimum Nutrition Protein Shake (Vanilla Ice Cream)', category: 'beverage', servingSize: 1, servingUnit: 'scoop', calories: 185, protein: 27, carbs: 8, fat: 5, fiber: 0, isVegetarian: true, isVegan: false, tags: ['optimum', 'protein shake', 'vanilla ice cream', 'whey', 'scoop', '24g protein per scoop', 'milk'] },
 ];
 
+// ---------- DAIRY (Homemade from Amul Gold 6% milk) ----------
+const dairy: FoodItem[] = [
+  { id: 'dry_100', name: 'Curd / Dahi (Full-Fat, 100g)', category: 'other', servingSize: 100, servingUnit: 'g', calories: 100, protein: 3.5, carbs: 4.5, fat: 6, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium'] },
+  { id: 'dry_101', name: 'Curd / Dahi (Full-Fat, 1 cup ~245g)', category: 'other', servingSize: 245, servingUnit: 'g', calories: 245, protein: 9, carbs: 11, fat: 15, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium', '1 cup'] },
+  { id: 'dry_102', name: 'Curd / Dahi (Full-Fat, 200g)', category: 'other', servingSize: 200, servingUnit: 'g', calories: 200, protein: 7, carbs: 9, fat: 12, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium'] },
+  { id: 'dry_103', name: 'Curd / Dahi (Full-Fat, 150g)', category: 'other', servingSize: 150, servingUnit: 'g', calories: 150, protein: 5, carbs: 7, fat: 9, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium'] },
+];
+
 // ---------- AMERICAN (USDA-style per serving) ----------
 const american: FoodItem[] = [
   { id: 'usa_001', name: 'Cheeseburger (1 piece)', category: 'other', servingSize: 180, servingUnit: 'g', calories: 354, protein: 20, carbs: 32, fat: 17, fiber: 1, isVegetarian: false, isVegan: false, tags: ['american', 'burger', 'fast food'] },
@@ -525,6 +533,7 @@ export const INDIAN_FOODS: FoodItem[] = [
   ...moreFruitsDryFruits,
   ...indianSalads,
   ...proteinShakes,
+  ...dairy,
   ...american,
   ...mexican,
   ...japanese,
