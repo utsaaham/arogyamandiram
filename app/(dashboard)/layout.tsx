@@ -43,7 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!session) return null;
 
   return (
-    <div className="fixed inset-0 overflow-y-auto overscroll-behavior-y-contain">
+    <div className="hide-scrollbar fixed inset-0 overflow-y-auto overscroll-behavior-y-contain">
       <Sidebar />
       <MobileNav />
       <main className="min-h-full pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
