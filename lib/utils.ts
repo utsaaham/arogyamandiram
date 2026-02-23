@@ -36,9 +36,24 @@ export function formatWeight(kg: number, unit: 'metric' | 'imperial' = 'metric')
   return `${kg.toFixed(1)} kg`;
 }
 
-/** Get today's date as YYYY-MM-DD */
+/** Convert a Date to local YYYY-MM-DD */
+export function toLocalDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Get today's date as YYYY-MM-DD (local time) */
 export function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return toLocalDateString(new Date());
+}
+
+/** Get yesterday's date as YYYY-MM-DD (local time, for "last night" sleep) */
+export function getYesterday(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return toLocalDateString(d);
 }
 
 /** Calculate age in years from date of birth (ISO date string or Date). */
@@ -103,5 +118,20 @@ export function debounce<T extends (...args: unknown[]) => void>(
   return (...args: Parameters<T>) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/** Recalculate daily log totals from meals. Meal calories/macros are already totals for the logged amount. */
+export function recalcTotalsFromMeals(
+  meals: Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>
+): { totalCalories: number; totalProtein: number; totalCarbs: number; totalFat: number } {
+  if (!meals?.length) {
+    return { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 };
+  }
+  return {
+    totalCalories: meals.reduce((s, m) => s + (Number(m.calories) || 0), 0),
+    totalProtein: meals.reduce((s, m) => s + (Number(m.protein) || 0), 0),
+    totalCarbs: meals.reduce((s, m) => s + (Number(m.carbs) || 0), 0),
+    totalFat: meals.reduce((s, m) => s + (Number(m.fat) || 0), 0),
   };
 }

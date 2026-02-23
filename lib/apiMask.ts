@@ -46,6 +46,14 @@ export function maskUser(user: IUser | Record<string, unknown>): SafeUser {
     }
   }
 
+  const createdAt = u.createdAt as Date | string | undefined;
+  const createdAtStr =
+    createdAt instanceof Date
+      ? createdAt.toISOString()
+      : typeof createdAt === 'string'
+        ? createdAt
+        : undefined;
+
   return {
     id: String(u._id),
     email: u.email as string,
@@ -53,13 +61,13 @@ export function maskUser(user: IUser | Record<string, unknown>): SafeUser {
     settings: settings as unknown as SafeUser['settings'],
     targets: targets as unknown as SafeUser['targets'],
     onboardingComplete: u.onboardingComplete as boolean,
-    // Only expose boolean flags - NEVER the actual keys
     hasOpenAiKey: Boolean(apiKeys?.openai),
     hasEdamamKey: Boolean(
       apiKeys?.edamam &&
         (apiKeys.edamam as Record<string, unknown>).appId &&
         (apiKeys.edamam as Record<string, unknown>).appKey
     ),
+    ...(createdAtStr && { createdAt: createdAtStr }),
   };
 }
 

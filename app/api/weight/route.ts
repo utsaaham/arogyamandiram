@@ -7,7 +7,7 @@ import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
-import { getToday } from '@/lib/utils';
+import { getToday, toLocalDateString } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    const startStr = startDate.toISOString().split('T')[0];
+    const startStr = toLocalDateString(startDate);
 
     const logs = await DailyLog.find(
       {

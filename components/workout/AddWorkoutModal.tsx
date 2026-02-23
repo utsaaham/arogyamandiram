@@ -37,12 +37,28 @@ const workoutCategories = [
   { key: 'other', label: 'Other', icon: Bike },
 ];
 
-const presetExercises: Record<string, { name: string; calPerMin: number }[]> = {
+// Rep-based: measured by number of reps only (no duration)
+const REP_BASED_EXERCISES = new Set([
+  'Push-ups',
+  'Flat Bench Sit-ups',
+  'Decline Bench Sit-ups',
+  'Standing Cross Crunch',
+  'Standing Toe Touch',
+  'Pogo Jumps',
+  'High Knees',
+  'Dumbbell Side Bends',
+  'Lateral Raise',
+  'Dumbbell Biceps Curl with Rotation',
+]);
+
+const presetExercises: Record<string, { name: string; calPerMin?: number; calPerRep?: number }[]> = {
   cardio: [
     { name: 'Running', calPerMin: 10 },
     { name: 'Brisk Walking', calPerMin: 5 },
     { name: 'Cycling', calPerMin: 8 },
     { name: 'Swimming', calPerMin: 9 },
+    { name: 'Pogo Jumps', calPerRep: 0.24 }, // light jumping in place, ~2 s/rep
+    { name: 'High Knees', calPerRep: 0.28 }, // running in place, knees up, ~1.5–2 s/rep
     { name: 'Jump Rope', calPerMin: 12 },
     { name: 'HIIT', calPerMin: 13 },
     { name: 'Stair Climbing', calPerMin: 8 },
@@ -51,8 +67,14 @@ const presetExercises: Record<string, { name: string; calPerMin: number }[]> = {
     { name: 'Rowing', calPerMin: 8 },
   ],
   strength: [
+    { name: 'Push-ups', calPerRep: 0.4 },
+    { name: 'Flat Bench Sit-ups', calPerRep: 0.35 },
+    { name: 'Decline Bench Sit-ups', calPerRep: 0.4 },
+    { name: 'Standing Cross Crunch', calPerRep: 0.15 }, // dynamic core, ~2 s/rep
+    { name: 'Dumbbell Side Bends', calPerRep: 0.12 }, // oblique bends with weight, ~2 s/rep
+    { name: 'Lateral Raise', calPerRep: 0.1 }, // shoulder isolation, ~2 s/rep
+    { name: 'Dumbbell Biceps Curl with Rotation', calPerRep: 0.12 }, // curl + supination, ~2 s/rep
     { name: 'Weight Training', calPerMin: 6 },
-    { name: 'Push-ups', calPerMin: 7 },
     { name: 'Pull-ups', calPerMin: 8 },
     { name: 'Squats', calPerMin: 7 },
     { name: 'Deadlifts', calPerMin: 7 },
@@ -66,6 +88,7 @@ const presetExercises: Record<string, { name: string; calPerMin: number }[]> = {
     { name: 'Yoga', calPerMin: 4 },
     { name: 'Stretching', calPerMin: 3 },
     { name: 'Pilates', calPerMin: 5 },
+    { name: 'Standing Toe Touch', calPerRep: 0.12 }, // MET 3.0, ~2 s/rep → ~7–8 kcal per 60 reps at 68 kg
     { name: 'Foam Rolling', calPerMin: 2 },
     { name: 'Tai Chi', calPerMin: 3 },
   ],
@@ -99,10 +122,13 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
 
   const presets = presetExercises[category] || [];
   const selectedPreset = presets.find((p) => p.name === exercise);
+  const isRepBased = selectedPreset && REP_BASED_EXERCISES.has(selectedPreset.name);
 
-  // Auto-calculate calories when exercise/duration change
+  // Auto-calculate calories: rep-based uses calPerRep * reps, else calPerMin * duration
   const estimatedCal = selectedPreset
-    ? Math.round(selectedPreset.calPerMin * (parseInt(duration) || 0))
+    ? isRepBased
+      ? Math.round((selectedPreset.calPerRep ?? 0) * (parseInt(reps) || 0))
+      : Math.round((selectedPreset.calPerMin ?? 0) * (parseInt(duration) || 0))
     : parseInt(caloriesBurned) || 0;
 
   const handleExerciseSelect = (name: string) => {
@@ -110,20 +136,44 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
     setCustomExercise('');
     const preset = presets.find((p) => p.name === name);
     if (preset) {
-      setCaloriesBurned(Math.round(preset.calPerMin * (parseInt(duration) || 30)).toString());
+      if (REP_BASED_EXERCISES.has(name) && preset.calPerRep) {
+        setCaloriesBurned(Math.round(preset.calPerRep * (parseInt(reps) || 0)).toString());
+      } else if (preset.calPerMin) {
+        setCaloriesBurned(Math.round(preset.calPerMin * (parseInt(duration) || 30)).toString());
+      }
     }
   };
 
   const handleDurationChange = (val: string) => {
     setDuration(val);
-    if (selectedPreset) {
+    if (selectedPreset && selectedPreset.calPerMin) {
       setCaloriesBurned(Math.round(selectedPreset.calPerMin * (parseInt(val) || 0)).toString());
+    }
+  };
+
+  const handleRepsChange = (val: string) => {
+    setReps(val);
+    if (selectedPreset && selectedPreset.calPerRep) {
+      setCaloriesBurned(Math.round(selectedPreset.calPerRep * (parseInt(val) || 0)).toString());
     }
   };
 
   const handleSubmit = () => {
     const exerciseName = customExercise || exercise;
     if (!exerciseName) return;
+
+    const totalReps = parseInt(reps) || 0;
+    if (isRepBased) {
+      onAdd({
+        exercise: exerciseName,
+        category,
+        duration: 0,
+        caloriesBurned: parseInt(caloriesBurned) || estimatedCal,
+        reps: totalReps,
+        ...(notes && { notes }),
+      });
+      return;
+    }
 
     onAdd({
       exercise: exerciseName,
@@ -138,7 +188,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
   };
 
   const isStrength = category === 'strength';
-  const canSubmit = (exercise || customExercise) && duration;
+  const canSubmit = (exercise || customExercise) && (isRepBased ? (parseInt(reps) || 0) > 0 : duration);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -203,60 +253,116 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
             />
           </div>
 
-          {/* Duration + Calories */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-text-muted">Duration (min)</label>
-              <div className="mt-1 flex items-center gap-1">
-                <Timer className="h-3.5 w-3.5 text-text-muted" />
-                <input
-                  type="number"
-                  value={duration}
-                  onChange={(e) => handleDurationChange(e.target.value)}
-                  className="glass-input w-full rounded-xl px-3 py-2 text-sm"
-                  min={1}
-                />
+          {/* Rep-based: Number of reps only */}
+          {isRepBased && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-text-muted">Number of reps</label>
+                <div className="mt-1 flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={reps}
+                    onChange={(e) => handleRepsChange(e.target.value)}
+                    className="glass-input w-full rounded-xl px-3 py-2 text-sm"
+                    min={1}
+                    placeholder="e.g. 20"
+                  />
+                </div>
+                <div className="mt-1.5 flex gap-1">
+                  {[10, 20, 30, 50].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleRepsChange(r.toString())}
+                      className={cn(
+                        'rounded-md px-2 py-0.5 text-[10px] font-medium',
+                        parseInt(reps) === r
+                          ? 'bg-accent-violet/15 text-accent-violet'
+                          : 'bg-white/[0.04] text-text-muted'
+                      )}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
               </div>
-              {/* Duration presets */}
-              <div className="mt-1.5 flex gap-1">
-                {[15, 30, 45, 60].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => handleDurationChange(d.toString())}
-                    className={cn(
-                      'rounded-md px-2 py-0.5 text-[10px] font-medium',
-                      parseInt(duration) === d
-                        ? 'bg-accent-violet/15 text-accent-violet'
-                        : 'bg-white/[0.04] text-text-muted'
-                    )}
-                  >
-                    {d}m
-                  </button>
-                ))}
+              <div>
+                <label className="text-xs font-medium text-text-muted">Calories Burned</label>
+                <div className="mt-1 flex items-center gap-1">
+                  <Flame className="h-3.5 w-3.5 text-accent-rose" />
+                  <input
+                    type="number"
+                    value={caloriesBurned || estimatedCal.toString()}
+                    onChange={(e) => setCaloriesBurned(e.target.value)}
+                    className="glass-input w-full rounded-xl px-3 py-2 text-sm"
+                    min={0}
+                  />
+                </div>
+                {selectedPreset?.calPerRep && (
+                  <p className="mt-1.5 text-[10px] text-text-muted">
+                    ~{selectedPreset.calPerRep} cal/rep estimated
+                  </p>
+                )}
               </div>
             </div>
-            <div>
-              <label className="text-xs font-medium text-text-muted">Calories Burned</label>
-              <div className="mt-1 flex items-center gap-1">
-                <Flame className="h-3.5 w-3.5 text-accent-rose" />
-                <input
-                  type="number"
-                  value={caloriesBurned || estimatedCal.toString()}
-                  onChange={(e) => setCaloriesBurned(e.target.value)}
-                  className="glass-input w-full rounded-xl px-3 py-2 text-sm"
-                  min={0}
-                />
-              </div>
-              {selectedPreset && (
-                <p className="mt-1.5 text-[10px] text-text-muted">
-                  ~{selectedPreset.calPerMin} cal/min estimated
-                </p>
-              )}
-            </div>
-          </div>
+          )}
 
-          {/* Strength-specific fields */}
-          {isStrength && (
+          {/* Duration + Calories (when not rep-based) */}
+          {!isRepBased && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-text-muted">Duration (min)</label>
+                <div className="mt-1 flex items-center gap-1">
+                  <Timer className="h-3.5 w-3.5 text-text-muted" />
+                  <input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => handleDurationChange(e.target.value)}
+                    className="glass-input w-full rounded-xl px-3 py-2 text-sm"
+                    min={1}
+                  />
+                </div>
+                <div className="mt-1.5 flex gap-1">
+                  {[15, 30, 45, 60].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => handleDurationChange(d.toString())}
+                      className={cn(
+                        'rounded-md px-2 py-0.5 text-[10px] font-medium',
+                        parseInt(duration) === d
+                          ? 'bg-accent-violet/15 text-accent-violet'
+                          : 'bg-white/[0.04] text-text-muted'
+                      )}
+                    >
+                      {d}m
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-text-muted">Calories Burned</label>
+                <div className="mt-1 flex items-center gap-1">
+                  <Flame className="h-3.5 w-3.5 text-accent-rose" />
+                  <input
+                    type="number"
+                    value={caloriesBurned || estimatedCal.toString()}
+                    onChange={(e) => setCaloriesBurned(e.target.value)}
+                    className="glass-input w-full rounded-xl px-3 py-2 text-sm"
+                    min={0}
+                  />
+                </div>
+                {selectedPreset?.calPerMin && (
+                  <p className="mt-1.5 text-[10px] text-text-muted">
+                    ~{selectedPreset.calPerMin} cal/min estimated
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Strength-specific fields (sets/reps/weight when not rep-based) */}
+          {isStrength && !isRepBased && (
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="text-xs font-medium text-text-muted">Sets</label>

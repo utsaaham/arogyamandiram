@@ -133,7 +133,8 @@ Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended w
       case 'insights': {
         const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's recent tracking data and provide actionable insights. Use their extended targets (ideal weight, recommended workout minutes, daily calorie burn goal, recommended sleep) when relevant. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest. Reference how they are doing vs their ideal weight, workout goal, and sleep target when applicable.`;
         const userPrompt = `${profileContext}\n${recentContext}\nProvide weekly insights and recommendations.`;
-        result = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        const raw = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        result = { ...raw, generatedAt: new Date().toISOString() };
         break;
       }
 
