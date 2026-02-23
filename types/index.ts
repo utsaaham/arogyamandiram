@@ -113,12 +113,19 @@ export interface SleepEntry {
   notes?: string;
 }
 
+export interface WaterLogEntry {
+  _id?: string;
+  amount: number;         // ml
+  time: string;           // HH:mm format
+}
+
 export interface IDailyLog {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   date: string;           // YYYY-MM-DD
   weight?: number;
   waterIntake: number;    // total ml
+  waterEntries: WaterLogEntry[];
   meals: MealEntry[];
   workouts: WorkoutEntry[];
   sleep?: SleepEntry;     // single entry per day

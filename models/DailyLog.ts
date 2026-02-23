@@ -47,6 +47,14 @@ const WorkoutEntrySchema = new Schema(
   { _id: true }
 );
 
+const WaterLogEntrySchema = new Schema(
+  {
+    amount: { type: Number, required: true, min: 1 },
+    time: { type: String, required: true },
+  },
+  { _id: true }
+);
+
 const SleepEntrySchema = new Schema(
   {
     bedtime: { type: String, required: true },
@@ -73,6 +81,7 @@ const DailyLogSchema = new Schema<IDailyLogDocument>(
     },
     weight: { type: Number, min: 20, max: 500 },
     waterIntake: { type: Number, default: 0, min: 0 },     // total ml
+    waterEntries: { type: [WaterLogEntrySchema], default: [] },
     meals: [MealEntrySchema],
     workouts: [WorkoutEntrySchema],
     sleep: { type: SleepEntrySchema, default: undefined },

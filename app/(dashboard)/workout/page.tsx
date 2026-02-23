@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dumbbell,
   Plus,
@@ -15,6 +15,16 @@ import {
   Timer,
   Zap,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+} from 'recharts';
 import ProgressRing from '@/components/ui/ProgressRing';
 import StatCard from '@/components/ui/StatCard';
 import AddWorkoutModal from '@/components/workout/AddWorkoutModal';
@@ -56,18 +66,38 @@ const categoryTextColors: Record<string, string> = {
   other: 'text-accent-amber',
 };
 
+interface WorkoutHistoryPoint {
+  date: string;
+  caloriesBurned: number;
+  duration: number;
+  count: number;
+}
+
 export default function WorkoutPage() {
   const { user } = useUser();
   const { log, loading, refetch } = useDailyLog();
   const [showAdd, setShowAdd] = useState(false);
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [history, setHistory] = useState<WorkoutHistoryPoint[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   const today = getToday();
   const workouts = log?.workouts || [];
   const totalBurned = log?.caloriesBurned || 0;
   const totalDuration = workouts.reduce((s, w) => s + (w.duration || 0), 0);
   const totalSets = workouts.reduce((s, w) => s + (w.sets || 0), 0);
+
+  // Fetch workout history (last 7 days)
+  useEffect(() => {
+    setHistoryLoading(true);
+    api.getWorkoutHistory(7).then((res) => {
+      if (res.success && res.data) {
+        const data = res.data as { history: WorkoutHistoryPoint[] };
+        setHistory(data.history || []);
+      }
+    }).finally(() => setHistoryLoading(false));
+  }, [log]);
 
   // Group by category
   const categoryBreakdown = workouts.reduce<Record<string, { count: number; calories: number; duration: number }>>((acc, w) => {
@@ -130,7 +160,7 @@ export default function WorkoutPage() {
   const recommendedMinutes = user?.targets?.dailyWorkoutMinutes ?? 30;
   const burnPercent = burnGoal > 0 ? Math.min(Math.round((totalBurned / burnGoal) * 100), 100) : 0;
 
-  // Ideal / baseline calorie burn from user profile (BMR + TDEE)
+  // Baseline calorie burn from user profile (BMR + TDEE) — matches dashboard
   const profile = user?.profile;
   const age =
     profile?.dateOfBirth != null
@@ -148,6 +178,37 @@ export default function WorkoutPage() {
           activityLevel: profile.activityLevel,
         })
       : null;
+
+  // Time-proportional baseline — exact same logic as dashboard energy balance
+  const now = new Date();
+  const dayFraction = (now.getHours() * 60 + now.getMinutes()) / 1440;
+  const baselineSoFar = baselineBurn ? Math.round(baselineBurn.tdee * dayFraction) : 0;
+  const totalBurnedSoFar = baselineSoFar + Math.round(totalBurned);
+
+  // Burn rate calculations
+  const burnPerMinute = totalDuration > 0 ? totalBurned / totalDuration : 0;
+  const burnPer30Min = burnPerMinute * 30;
+  const burnPerHour = burnPerMinute * 60;
+
+  // Chart data: fill in missing days in the last 7
+  const chartData = (() => {
+    const map = new Map(history.map((h) => [h.date, h]));
+    const result: { label: string; date: string; calories: number; duration: number }[] = [];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const entry = map.get(dateStr);
+      result.push({
+        label: i === 0 ? 'Today' : dayNames[d.getDay()],
+        date: dateStr,
+        calories: entry?.caloriesBurned || 0,
+        duration: entry?.duration || 0,
+      });
+    }
+    return result;
+  })();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -170,16 +231,16 @@ export default function WorkoutPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
           icon={Flame}
-          label={baselineBurn ? 'Workout burn' : 'Calories Burned'}
+          label="Workout Burn"
           value={formatNumber(Math.round(totalBurned))}
-          subtitle="kcal from exercise"
+          subtitle={`of ${formatNumber(burnGoal)} goal`}
           iconColor="text-accent-rose"
         />
         <StatCard
           icon={Timer}
           label="Duration"
           value={`${totalDuration}`}
-          subtitle="minutes total"
+          subtitle={`of ${recommendedMinutes} min goal`}
           iconColor="text-accent-amber"
         />
         <StatCard
@@ -200,12 +261,12 @@ export default function WorkoutPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Workout List */}
-        <div className="space-y-4 lg:col-span-2">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col lg:col-span-2">
+          <div className="glass-card flex flex-1 flex-col rounded-2xl p-6">
             <h2 className="mb-4 text-base font-semibold text-text-primary">Today&apos;s Sessions</h2>
 
             {workouts.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04]">
                   <Dumbbell className="h-7 w-7 text-text-muted" />
                 </div>
@@ -219,7 +280,7 @@ export default function WorkoutPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="flex-1 space-y-3 overflow-y-auto hide-scrollbar">
                 {workouts.map((workout, i) => {
                   const cat = workout.category || 'other';
                   const CatIcon = categoryIcons[cat] || Dumbbell;
@@ -231,12 +292,10 @@ export default function WorkoutPage() {
                       className="group rounded-xl border border-white/[0.04] bg-white/[0.02] p-4 transition-all hover:border-white/[0.08]"
                     >
                       <div className="flex items-start gap-3">
-                        {/* Category Icon */}
                         <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', colorClasses)}>
                           <CatIcon className="h-5 w-5" />
                         </div>
 
-                        {/* Info */}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between">
                             <div>
@@ -256,7 +315,6 @@ export default function WorkoutPage() {
                             </button>
                           </div>
 
-                          {/* Stats row */}
                           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                             {workout.duration > 0 ? (
                               <div className="flex items-center gap-1.5">
@@ -284,7 +342,6 @@ export default function WorkoutPage() {
                             )}
                           </div>
 
-                          {/* Notes */}
                           {workout.notes && (
                             <p className="mt-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-[11px] text-text-muted">
                               {workout.notes}
@@ -298,63 +355,54 @@ export default function WorkoutPage() {
               </div>
             )}
           </div>
-
-          {/* Baseline / ideal calorie burn — in main column; total daily burn = TDEE + workouts */}
-          {baselineBurn && (
-            <div className="glass-card rounded-2xl p-5">
-              <h3 className="mb-3 text-sm font-semibold text-text-primary">Ideal calorie burn</h3>
-              <p className="mb-3 text-xs leading-relaxed text-text-muted">
-                Based on your profile (BMR + activity). Your body burns this without exercise; adding workouts increases total burn.
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">BMR (at rest)</span>
-                  <span className="text-sm font-semibold text-text-primary">{formatNumber(baselineBurn.bmr)} kcal/day</span>
-                </div>
-                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">Daily baseline (TDEE)</span>
-                  <span className="text-sm font-semibold text-accent-amber">{formatNumber(baselineBurn.tdee)} kcal/day</span>
-                </div>
-                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">Sitting (per hour)</span>
-                  <span className="text-sm font-medium text-text-primary">~{baselineBurn.sittingPerHour} kcal</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between rounded-lg border border-accent-rose/30 bg-accent-rose/5 px-3 py-2.5">
-                  <span className="text-xs font-medium text-text-secondary">Estimated total burn today</span>
-                  <span className="text-sm font-bold text-accent-rose">
-                    {formatNumber(baselineBurn.tdee + Math.round(totalBurned))} kcal
-                  </span>
-                </div>
-                <p className="text-[11px] text-text-muted">
-                  Baseline ({formatNumber(baselineBurn.tdee)}) + workout burn ({formatNumber(Math.round(totalBurned))}) = total calories burned today.
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right Sidebar */}
         <div className="space-y-4">
-          {/* Burn Goal Ring — workout goal; show total burn when baseline exists */}
+          {/* Burn Goal Ring */}
           <div className="glass-card flex flex-col items-center rounded-2xl p-6">
             <ProgressRing
               progress={burnPercent}
               size={130}
               strokeWidth={10}
               color="stroke-accent-rose"
-              value={baselineBurn ? formatNumber(baselineBurn.tdee + Math.round(totalBurned)) : formatNumber(Math.round(totalBurned))}
-              label={baselineBurn ? 'Total burn today' : 'kcal burned'}
-              sublabel={baselineBurn ? `baseline + ${formatNumber(Math.round(totalBurned))} workout` : `of ${formatNumber(burnGoal)} goal`}
+              value={formatNumber(Math.round(totalBurned))}
+              label="Workout burn"
+              sublabel={`of ${formatNumber(burnGoal)} goal`}
             />
             <p className="mt-3 text-center text-sm font-medium text-text-secondary">
               {burnPercent >= 100
                 ? '🔥 Workout burn goal achieved!'
-                : `${formatNumber(Math.max(burnGoal - totalBurned, 0))} kcal to go (exercise)`}
+                : `${formatNumber(Math.max(burnGoal - totalBurned, 0))} kcal to go`}
             </p>
             <p className="mt-1 text-center text-xs text-text-muted">
-              Recommended: {recommendedMinutes} min activity · {totalDuration} min done
+              {recommendedMinutes} min target · {totalDuration} min done
             </p>
           </div>
+
+          {/* Burn Rate */}
+          {totalDuration > 0 && (
+            <div className="glass-card rounded-2xl p-5">
+              <h3 className="mb-3 text-sm font-semibold text-text-primary">Burn Rate</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">Per minute</span>
+                  <span className="text-sm font-semibold text-accent-rose">{burnPerMinute.toFixed(1)} kcal</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">Per 30 min</span>
+                  <span className="text-sm font-semibold text-accent-amber">{Math.round(burnPer30Min)} kcal</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">Per hour</span>
+                  <span className="text-sm font-semibold text-accent-violet">{Math.round(burnPerHour)} kcal</span>
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-text-muted">
+                Average rate across {workouts.length} session{workouts.length !== 1 ? 's' : ''} ({totalDuration} min)
+              </p>
+            </div>
+          )}
 
           {/* Category Breakdown */}
           {Object.keys(categoryBreakdown).length > 0 && (
@@ -396,36 +444,134 @@ export default function WorkoutPage() {
             </div>
           )}
 
-          {/* Time Breakdown */}
-          {totalDuration > 0 && (
+          {/* Baseline calorie burn */}
+          {baselineBurn && (
             <div className="glass-card rounded-2xl p-5">
-              <h3 className="mb-3 text-sm font-semibold text-text-primary">Time Summary</h3>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-accent-amber">{totalDuration}</p>
-                <p className="text-xs text-text-muted">minutes active today</p>
-              </div>
-              {totalDuration >= 30 && (
-                <div className="mt-3 rounded-lg bg-accent-emerald/10 px-3 py-2 text-center text-[11px] font-medium text-accent-emerald">
-                  ✅ WHO recommends 150+ min/week of activity
+              <h3 className="mb-3 text-sm font-semibold text-text-primary">Baseline Burn</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">BMR (at rest)</span>
+                  <span className="text-sm font-semibold text-text-primary">{formatNumber(baselineBurn.bmr)} kcal/day</span>
                 </div>
-              )}
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">TDEE (daily total)</span>
+                  <span className="text-sm font-semibold text-accent-amber">{formatNumber(baselineBurn.tdee)} kcal/day</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-xs text-text-secondary">Per hour (sitting)</span>
+                  <span className="text-sm font-medium text-text-primary">~{baselineBurn.sittingPerHour} kcal</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between rounded-lg border border-accent-rose/30 bg-accent-rose/5 px-3 py-2.5">
+                  <span className="text-xs font-medium text-text-secondary">Total burn today</span>
+                  <span className="text-sm font-bold text-accent-rose">
+                    {formatNumber(totalBurnedSoFar)} kcal
+                  </span>
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-text-muted">
+                Baseline so far ({formatNumber(baselineSoFar)}) + workout ({formatNumber(Math.round(totalBurned))})
+              </p>
             </div>
           )}
-
-          {/* Motivational */}
-          <div className="glass-card rounded-2xl p-5">
-            <h3 className="mb-2 text-sm font-semibold text-text-primary">💪 Motivation</h3>
-            <p className="text-xs leading-relaxed text-text-muted">
-              {workouts.length === 0
-                ? "Every fitness journey starts with a single step. Log your first workout to get started!"
-                : workouts.length === 1
-                ? "Great start! Consistency is the key to results. Try to work out at least 3-4 times a week."
-                : totalBurned > 300
-                ? "Incredible effort today! Your body is thanking you for the hard work."
-                : "Good work getting active today! Keep pushing — progress takes consistency."}
-            </p>
-          </div>
         </div>
+      </div>
+
+      {/* Workout History Chart */}
+      <div className="glass-card rounded-2xl p-6">
+        <h2 className="mb-4 text-base font-semibold text-text-primary">Last 7 Days</h2>
+        {historyLoading ? (
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+            <div className="min-w-0 flex-1">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis
+                    dataKey="label"
+                    stroke="rgba(255,255,255,0.15)"
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="rgba(255,255,255,0.15)"
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={50}
+                    tickFormatter={(v: number) => `${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'rgba(15, 15, 24, 0.95)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '12px',
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      color: '#f0f0f5',
+                      backdropFilter: 'blur(12px)',
+                    }}
+                    formatter={(value: number, name: string) => [
+                      `${Math.round(value)} ${name === 'calories' ? 'kcal' : 'min'}`,
+                      name === 'calories' ? 'Burned' : 'Duration',
+                    ]}
+                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  />
+                  {burnGoal > 0 && (
+                    <ReferenceLine
+                      y={burnGoal}
+                      stroke="#f43f5e"
+                      strokeDasharray="6 4"
+                      strokeOpacity={0.4}
+                      label={{
+                        value: `Goal: ${formatNumber(burnGoal)}`,
+                        fill: 'rgba(255,255,255,0.35)',
+                        fontSize: 10,
+                        position: 'insideTopRight',
+                      }}
+                    />
+                  )}
+                  <Bar
+                    dataKey="calories"
+                    fill="#f43f5e"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={40}
+                    fillOpacity={0.8}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="mt-1 text-center text-[10px] text-text-muted">Calories burned from exercise</p>
+            </div>
+
+            {/* Weekly summary chips */}
+            <div className="flex flex-row items-stretch gap-2 sm:flex-col sm:justify-center sm:gap-3">
+              {(() => {
+                const weekCals = chartData.reduce((s, d) => s + d.calories, 0);
+                const weekDuration = chartData.reduce((s, d) => s + d.duration, 0);
+                const activeDays = chartData.filter((d) => d.calories > 0).length;
+                return (
+                  <>
+                    <div className="flex-1 rounded-xl bg-white/[0.03] px-3 py-2 text-center sm:flex-none">
+                      <p className="text-lg font-bold text-accent-rose">{formatNumber(Math.round(weekCals))}</p>
+                      <p className="text-[10px] text-text-muted">kcal this week</p>
+                    </div>
+                    <div className="flex-1 rounded-xl bg-white/[0.03] px-3 py-2 text-center sm:flex-none">
+                      <p className="text-lg font-bold text-accent-amber">{weekDuration}</p>
+                      <p className="text-[10px] text-text-muted">min this week</p>
+                    </div>
+                    <div className="flex-1 rounded-xl bg-white/[0.03] px-3 py-2 text-center sm:flex-none">
+                      <p className="text-lg font-bold text-accent-emerald">{activeDays}/7</p>
+                      <p className="text-[10px] text-text-muted">active days</p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

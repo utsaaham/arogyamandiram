@@ -15,7 +15,6 @@ import {
   Plus,
 } from 'lucide-react';
 import MetricChart from '@/components/ui/MetricChart';
-import StatCard from '@/components/ui/StatCard';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useUser } from '@/hooks/useUser';
@@ -197,49 +196,59 @@ export default function WeightPage() {
         </button>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard
-          icon={Scale}
-          label="Current"
-          value={currentWeight ? formatWeight(currentWeight, units) : '—'}
-          iconColor="text-accent-violet"
-        />
-        <StatCard
-          icon={weightChange <= 0 ? TrendingDown : TrendingUp}
-          label={`Change (${periodOptions.find((p) => p.key === period)?.label})`}
-          value={weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${formatWeight(Math.abs(weightChange), units).replace(' kg', '').replace(' lbs', '')}` : '0'}
-          subtitle={units === 'metric' ? 'kg' : 'lbs'}
-          iconColor={weightChange <= 0 ? 'text-accent-emerald' : 'text-accent-amber'}
-        />
-        <StatCard
-          icon={Target}
-          label="Target"
-          value={targetWeight ? formatWeight(targetWeight, units) : '—'}
-          subtitle={targetWeight && currentWeight ? `${formatWeight(Math.abs(currentWeight - targetWeight), units).replace(' kg', '').replace(' lbs', '')} to go` : undefined}
-          iconColor="text-accent-cyan"
-        />
-        <StatCard
-          icon={Heart}
-          label="Ideal"
-          value={idealWeight != null ? formatWeight(idealWeight, units) : '—'}
-          subtitle={idealWeight != null && currentWeight ? `${formatWeight(Math.abs(currentWeight - idealWeight), units).replace(' kg', '').replace(' lbs', '')} from ideal` : 'Recommended for your height'}
-          iconColor="text-accent-emerald"
-        />
-        <StatCard
-          icon={Ruler}
-          label="BMI"
-          value={bmi ? bmi.toFixed(1) : '—'}
-          subtitle={
-            bmi
-              ? bmi < 18.5 ? 'Underweight'
-              : bmi < 25 ? 'Normal'
-              : bmi < 30 ? 'Overweight'
-              : 'Obese'
-              : undefined
-          }
-          iconColor="text-accent-amber"
-        />
+      {/* Stat Summary */}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        {[
+          {
+            icon: Scale,
+            label: 'Current',
+            value: currentWeight ? formatWeight(currentWeight, units) : '—',
+            color: 'text-accent-violet',
+          },
+          {
+            icon: weightChange <= 0 ? TrendingDown : TrendingUp,
+            label: `Change (${periodOptions.find((p) => p.key === period)?.label})`,
+            value: weightChange !== 0
+              ? `${weightChange > 0 ? '+' : ''}${formatWeight(Math.abs(weightChange), units).replace(' kg', '').replace(' lbs', '')} ${units === 'metric' ? 'kg' : 'lbs'}`
+              : '0',
+            color: weightChange <= 0 ? 'text-accent-emerald' : 'text-accent-rose',
+          },
+          {
+            icon: Target,
+            label: 'Target',
+            value: targetWeight ? formatWeight(targetWeight, units) : '—',
+            sub: targetWeight && currentWeight
+              ? `${formatWeight(Math.abs(currentWeight - targetWeight), units).replace(' kg', '').replace(' lbs', '')} to go`
+              : undefined,
+            color: 'text-accent-cyan',
+          },
+          {
+            icon: Heart,
+            label: 'Ideal',
+            value: idealWeight != null ? formatWeight(idealWeight, units) : '—',
+            color: 'text-accent-emerald',
+          },
+          {
+            icon: Ruler,
+            label: 'BMI',
+            value: bmi ? bmi.toFixed(1) : '—',
+            sub: bmi
+              ? bmi < 18.5 ? 'Under' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Over' : 'Obese'
+              : undefined,
+            color: 'text-accent-amber',
+          },
+        ].map((s) => (
+          <div key={s.label} className="glass-card flex items-center gap-3 rounded-xl px-3.5 py-4">
+            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.04]', s.color)}>
+              <s.icon className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[11px] text-text-muted">{s.label}</p>
+              <p className="mt-0.5 truncate text-base font-bold text-text-primary">{s.value}</p>
+              {s.sub && <p className="mt-0.5 truncate text-[11px] text-text-muted">{s.sub}</p>}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Chart */}
@@ -284,16 +293,17 @@ export default function WeightPage() {
       {/* History Table + Insights */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* History */}
-        <div className="glass-card rounded-2xl p-6 lg:col-span-2">
-          <h2 className="mb-4 text-base font-semibold text-text-primary">Weight History</h2>
+        <div className="flex flex-col lg:col-span-2">
+          <div className="glass-card flex flex-1 flex-col rounded-2xl p-6">
+            <h2 className="mb-4 text-base font-semibold text-text-primary">Weight History</h2>
 
-          {history.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <Scale className="h-8 w-8 text-text-muted" />
-              <p className="text-sm text-text-muted">No weight entries yet</p>
-              <p className="text-xs text-text-muted">Start logging your daily weight above</p>
-            </div>
-          ) : (
+            {history.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+                <Scale className="h-8 w-8 text-text-muted" />
+                <p className="text-sm text-text-muted">No weight entries yet</p>
+                <p className="text-xs text-text-muted">Start logging your daily weight above</p>
+              </div>
+            ) : (
             <div className="space-y-1">
               {/* Header */}
               <div className="flex items-center gap-4 border-b border-white/[0.06] px-3 py-2 text-[11px] font-medium text-text-muted">
@@ -345,6 +355,7 @@ export default function WeightPage() {
               )}
             </div>
           )}
+          </div>
         </div>
 
         {/* Insights Sidebar */}

@@ -7,20 +7,50 @@ import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
-import { getToday, recalcTotalsFromMeals } from '@/lib/utils';
+import { getToday, recalcTotalsFromMeals, toLocalDateString } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/daily-log?date=YYYY-MM-DD
+// GET /api/daily-log?days=N          (calories history)
 export async function GET(req: NextRequest) {
   try {
     const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
 
     const { searchParams } = new URL(req.url);
+    const daysParam = searchParams.get('days');
     const date = searchParams.get('date') || getToday();
 
     await connectDB();
+
+    // History mode: return last N days of calories
+    if (daysParam) {
+      const parsed = parseInt(daysParam, 10);
+      const days = Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 365) : 30;
+
+      const todayStr = getToday();
+      const todayDate = new Date(todayStr + 'T00:00:00');
+      todayDate.setDate(todayDate.getDate() - (days - 1));
+      const startDate = toLocalDateString(todayDate);
+
+      const logs = await DailyLog.find(
+        {
+          userId,
+          date: { $gte: startDate, $lte: todayStr },
+        },
+        { date: 1, totalCalories: 1 }
+      )
+        .sort({ date: 1 })
+        .lean();
+
+      return maskedResponse({
+        history: logs.map((log) => ({
+          date: (log as { date: string }).date,
+          totalCalories: Number((log as { totalCalories?: number }).totalCalories) || 0,
+        })),
+      });
+    }
 
     let log = await DailyLog.findOne({ userId, date }).lean();
 
@@ -30,6 +60,7 @@ export async function GET(req: NextRequest) {
         date,
         weight: null,
         waterIntake: 0,
+        waterEntries: [],
         meals: [],
         workouts: [],
         totalCalories: 0,

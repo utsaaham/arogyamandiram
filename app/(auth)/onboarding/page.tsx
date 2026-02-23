@@ -165,7 +165,7 @@ export default function OnboardingPage() {
               <div>
                 <label className="text-xs font-medium text-text-muted">Date of birth</label>
                 <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2.5 text-left text-sm"
                   max={new Date().toISOString().split('T')[0]} />
                 <p className="mt-1 text-[10px] text-text-muted">Age is calculated automatically</p>
               </div>

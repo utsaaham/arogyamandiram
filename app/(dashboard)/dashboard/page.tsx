@@ -21,8 +21,11 @@ import ProgressRing from '@/components/ui/ProgressRing';
 import MacroBar from '@/components/ui/MacroBar';
 import StatCard from '@/components/ui/StatCard';
 import { CardSkeleton } from '@/components/ui/Skeleton';
+import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
+import { computeBaselineBurn } from '@/lib/calorieBurn';
+import api from '@/lib/apiClient';
 import {
   getGreeting,
   formatCalories,
@@ -32,6 +35,7 @@ import {
   getToday,
   formatDate,
   cn,
+  getAgeFromDateOfBirth,
 } from '@/lib/utils';
 
 const mealIcons: Record<string, typeof Coffee> = {
@@ -50,8 +54,9 @@ const mealLabels: Record<string, string> = {
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
-  const { log, loading: logLoading } = useDailyLog();
+  const { log, loading: logLoading, refetch } = useDailyLog();
   const [mounted, setMounted] = useState(false);
+  const [addingWater, setAddingWater] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -86,8 +91,8 @@ export default function DashboardPage() {
   const totalCal = log?.totalCalories || 0;
   const burned = log?.caloriesBurned || 0;
   const netCal = totalCal - burned;
-  const remaining = Math.max(targets.dailyCalories - netCal, 0);
-  const calPercent = calcPercent(netCal, targets.dailyCalories);
+  const remaining = Math.max(targets.dailyCalories - totalCal, 0);
+  const calPercent = calcPercent(totalCal, targets.dailyCalories);
   const waterPercent = calcPercent(log?.waterIntake || 0, targets.dailyWater);
 
   // Group meals by type
@@ -105,6 +110,54 @@ export default function DashboardPage() {
     count: items.length,
   }));
 
+  // Baseline burn (BMR, TDEE, sitting) from profile — same as workout page
+  const profile = user?.profile;
+  const age =
+    profile?.dateOfBirth != null
+      ? getAgeFromDateOfBirth(profile.dateOfBirth)
+      : (typeof profile?.age === 'number' ? profile.age : undefined);
+  const baselineBurn =
+    profile &&
+    profile.weight > 0 &&
+    profile.height > 0
+      ? computeBaselineBurn({
+          weightKg: profile.weight,
+          heightCm: profile.height,
+          age,
+          gender: profile.gender,
+          activityLevel: profile.activityLevel,
+        })
+      : null;
+
+  // Time-proportional baseline: how much of your TDEE you've passively burned so far today
+  const now = new Date();
+  const dayFraction = (now.getHours() * 60 + now.getMinutes()) / 1440; // 0..1 through the day
+  const baselineSoFar = baselineBurn ? Math.round(baselineBurn.tdee * dayFraction) : 0;
+
+  // Net result: total burned (baseline so far + workouts) minus consumed
+  const totalBurnedSoFar = baselineSoFar + Math.round(burned);
+  const netResult = totalBurnedSoFar - totalCal; // positive = deficit, negative = surplus
+
+  const today = getToday();
+
+  const handleQuickAddWater = async (amount: number) => {
+    if (!amount || addingWater) return;
+    setAddingWater(true);
+    try {
+      const res = await api.addWater(today, amount);
+      if (res.success) {
+        showToast(`Added ${formatWater(amount)}`, 'success');
+        refetch();
+      } else {
+        showToast(res.error || 'Failed to add water', 'error');
+      }
+    } catch {
+      showToast('Failed to add water', 'error');
+    } finally {
+      setAddingWater(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -113,7 +166,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-text-primary">
             {getGreeting()}{user?.profile?.name ? `, ${user.profile.name.split(' ')[0]}` : ''} 👋
           </h1>
-          <p className="text-sm text-text-muted">{formatDate(getToday())}</p>
+          <p className="text-sm text-text-muted">{formatDate(today)}</p>
         </div>
         <Link
           href="/food"
@@ -124,7 +177,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stat Cards Row — hidden on mobile; nutrition/hydration/meals/quick actions cover logging */}
+      {/* Stat Cards Row — hidden on mobile */}
       <div className="hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4 lg:grid-cols-5">
         <StatCard
           icon={Flame}
@@ -165,75 +218,109 @@ export default function DashboardPage() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left: Calorie Ring + Macros */}
-        <div className="glass-card space-y-6 rounded-2xl p-6 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Today&apos;s Nutrition</h2>
-            <Link
-              href="/food"
-              className="flex items-center gap-1 text-xs font-medium text-accent-violet hover:underline"
-            >
-              Details <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-around">
-            {/* Calorie Ring */}
-            <div className="flex flex-col items-center gap-2">
-              <ProgressRing
-                progress={calPercent}
-                size={160}
-                strokeWidth={12}
-                color={calPercent > 100 ? 'stroke-accent-rose' : 'stroke-accent-emerald'}
-                value={formatNumber(Math.round(netCal))}
-                label="kcal consumed"
-                sublabel={`of ${formatNumber(targets.dailyCalories)}`}
-              />
-              {burned > 0 && (
-                <div className="flex items-center gap-1.5 rounded-lg bg-accent-rose/10 px-2.5 py-1">
-                  <Flame className="h-3.5 w-3.5 text-accent-rose" />
-                  <span className="text-xs font-medium text-accent-rose">{formatNumber(Math.round(burned))} burned</span>
-                </div>
-              )}
+        {/* Left: Nutrition + Energy balance stacked, same width */}
+        <div className="space-y-6 lg:col-span-2">
+          <div className="glass-card space-y-6 rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-text-primary">Today&apos;s Nutrition</h2>
+              <Link
+                href="/food"
+                className="flex items-center gap-1 text-xs font-medium text-accent-violet hover:underline"
+              >
+                Details <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
-            {/* Macro Bars */}
-            <div className="w-full max-w-xs flex-1 space-y-4">
-              <MacroBar
-                label="Protein"
-                current={log?.totalProtein || 0}
-                target={targets.protein}
-                color="bg-accent-violet"
-                bgColor="bg-accent-violet/10"
-              />
-              <MacroBar
-                label="Carbs"
-                current={log?.totalCarbs || 0}
-                target={targets.carbs}
-                color="bg-accent-amber"
-                bgColor="bg-accent-amber/10"
-              />
-              <MacroBar
-                label="Fat"
-                current={log?.totalFat || 0}
-                target={targets.fat}
-                color="bg-accent-rose"
-                bgColor="bg-accent-rose/10"
-              />
-
-              {/* Macro Summary Chips */}
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Protein', value: log?.totalProtein || 0, color: 'text-accent-violet' },
-                  { label: 'Carbs', value: log?.totalCarbs || 0, color: 'text-accent-amber' },
-                  { label: 'Fat', value: log?.totalFat || 0, color: 'text-accent-rose' },
-                ].map((m) => (
-                  <div key={m.label} className="rounded-xl bg-white/[0.03] px-3 py-2 text-center">
-                    <p className={cn('text-lg font-bold', m.color)}>{Math.round(m.value)}g</p>
-                    <p className="text-[10px] text-text-muted">{m.label}</p>
-                  </div>
-                ))}
+            <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-around">
+              {/* Calorie Ring */}
+              <div className="flex flex-col items-center gap-2">
+                <ProgressRing
+                  progress={calPercent}
+                  size={160}
+                  strokeWidth={12}
+                  color={calPercent > 100 ? 'stroke-accent-rose' : 'stroke-accent-emerald'}
+                  value={formatNumber(Math.round(totalCal))}
+                  label="kcal consumed"
+                  sublabel={`of ${formatNumber(targets.dailyCalories)}`}
+                />
               </div>
+
+              {/* Macro Bars */}
+              <div className="w-full max-w-xs flex-1 space-y-4">
+                <MacroBar
+                  label="Protein"
+                  current={log?.totalProtein || 0}
+                  target={targets.protein}
+                  color="bg-accent-violet"
+                  bgColor="bg-accent-violet/10"
+                />
+                <MacroBar
+                  label="Carbs"
+                  current={log?.totalCarbs || 0}
+                  target={targets.carbs}
+                  color="bg-accent-amber"
+                  bgColor="bg-accent-amber/10"
+                />
+                <MacroBar
+                  label="Fat"
+                  current={log?.totalFat || 0}
+                  target={targets.fat}
+                  color="bg-accent-rose"
+                  bgColor="bg-accent-rose/10"
+                />
+
+                {/* Macro Summary Chips */}
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Protein', value: log?.totalProtein || 0, color: 'text-accent-violet' },
+                    { label: 'Carbs', value: log?.totalCarbs || 0, color: 'text-accent-amber' },
+                    { label: 'Fat', value: log?.totalFat || 0, color: 'text-accent-rose' },
+                  ].map((m) => (
+                    <div key={m.label} className="rounded-xl bg-white/[0.03] px-3 py-2 text-center">
+                      <p className={cn('text-lg font-bold', m.color)}>{Math.round(m.value)}g</p>
+                      <p className="text-[10px] text-text-muted">{m.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Energy balance: 3 circles — Workouts, Baseline, Net Result */}
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="mb-4 text-base font-semibold text-text-primary">Energy balance</h2>
+            <div className="grid grid-cols-3 place-items-center gap-4">
+              {/* 1. Workouts — calories burned from exercise (overflow when exceeding goal) */}
+              <ProgressRing
+                progress={targets.dailyCalorieBurn > 0 ? Math.round((burned / targets.dailyCalorieBurn) * 100) : 0}
+                size={120}
+                strokeWidth={8}
+                color="stroke-accent-rose"
+                overflowColor="stroke-accent-violet"
+                value={formatNumber(Math.round(burned))}
+                label="Workouts"
+                sublabel={burned > targets.dailyCalorieBurn ? `${formatNumber(targets.dailyCalorieBurn)} + ${formatNumber(Math.round(burned - targets.dailyCalorieBurn))} extra` : `of ${formatNumber(targets.dailyCalorieBurn)}`}
+              />
+              {/* 2. Baseline — time-proportional TDEE burned so far today */}
+              <ProgressRing
+                progress={baselineBurn ? calcPercent(baselineSoFar, baselineBurn.tdee) : 0}
+                size={120}
+                strokeWidth={8}
+                color="stroke-accent-amber"
+                value={baselineBurn ? formatNumber(baselineSoFar) : '—'}
+                label="Baseline"
+                sublabel={baselineBurn ? `of ${formatNumber(baselineBurn.tdee)}/day` : '—'}
+              />
+              {/* 3. Net Result — deficit or surplus */}
+              <ProgressRing
+                progress={100}
+                size={120}
+                strokeWidth={8}
+                color={netResult >= 0 ? 'stroke-accent-emerald' : 'stroke-accent-rose'}
+                value={netResult >= 0 ? `-${formatNumber(netResult)}` : `+${formatNumber(-netResult)}`}
+                label={netResult >= 0 ? 'Deficit' : 'Surplus'}
+                sublabel={netResult >= 0 ? 'losing weight' : 'gaining weight'}
+              />
             </div>
           </div>
         </div>
@@ -265,6 +352,19 @@ export default function DashboardPage() {
                 ? '🎉 Goal reached!'
                 : `${formatWater(Math.max(targets.dailyWater - (log?.waterIntake || 0), 0))} to go`}
             </p>
+            <div className="mt-3 flex w-full flex-col items-stretch gap-2">
+              {[100, 250, 500, 750].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => handleQuickAddWater(amt)}
+                  disabled={addingWater}
+                  className="w-full rounded-full border border-accent-cyan/30 px-3 py-1.5 text-[11px] font-medium text-text-secondary transition-all hover:bg-accent-cyan/10 hover:text-accent-cyan disabled:opacity-50"
+                >
+                  {amt} ml
+                </button>
+              ))}
+            </div>
           </div>
 
           <Link

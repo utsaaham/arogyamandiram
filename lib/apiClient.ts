@@ -119,6 +119,9 @@ export const api = {
   getDailyLog: (date: string) =>
     apiFetch(`/daily-log?date=${date}`),
 
+  getCaloriesHistory: (days: number = 30) =>
+    apiFetch(`/daily-log?days=${days}`),
+
   createOrUpdateLog: (date: string, data: Record<string, unknown>) =>
     apiFetch('/daily-log', {
       method: 'POST',
@@ -131,6 +134,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ date, amount }),
     }),
+
+  getWaterHistory: (days: number = 30) =>
+    apiFetch(`/water?days=${days}`),
 
   // Weight
   logWeight: (date: string, weight: number) =>
@@ -167,6 +173,9 @@ export const api = {
       method: 'DELETE',
       body: JSON.stringify({ date, workoutId }),
     }),
+
+  getWorkoutHistory: (days: number = 7) =>
+    apiFetch(`/workouts?days=${days}`),
 
   // Sleep
   logSleep: (date: string, sleepData: Record<string, unknown>) =>

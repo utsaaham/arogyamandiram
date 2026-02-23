@@ -41,11 +41,18 @@ interface SleepEntry {
   notes?: string;
 }
 
+interface WaterLogEntry {
+  _id?: string;
+  amount: number;
+  time: string;
+}
+
 export interface DailyLogData {
   _id: string;
   date: string;
   weight?: number;
   waterIntake: number;
+  waterEntries?: WaterLogEntry[];
   meals: MealEntry[];
   workouts: WorkoutEntry[];
   sleep?: SleepEntry;
