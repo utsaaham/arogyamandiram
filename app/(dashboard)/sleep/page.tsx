@@ -5,9 +5,7 @@ import {
   Moon,
   Sunrise,
   BedDouble,
-  Sparkles,
   Loader2,
-  AlertCircle,
   Star,
   Clock,
 } from 'lucide-react';
@@ -34,11 +32,6 @@ interface SleepHistoryItem {
   sleep?: SleepEntryType;
 }
 
-interface AiSleepTip {
-  title: string;
-  description: string;
-}
-
 function parseTimeToMinutes(timeStr: string): number {
   const [h, m] = (timeStr || '0:0').split(':').map((x) => parseInt(x, 10) || 0);
   return h * 60 + m;
@@ -59,8 +52,8 @@ function displayTime(t: string): string {
 
 export default function SleepPage() {
   const { user, loading: userLoading } = useUser();
-  const { log, loading: logLoading, refetch } = useDailyLog();
-  const today = getToday();
+  const todayDate = getToday();
+  const { log, loading: logLoading, refetch } = useDailyLog(todayDate);
   const targetHours = user?.targets?.sleepHours ?? 8;
 
   const [history, setHistory] = useState<SleepHistoryItem[]>([]);
@@ -70,9 +63,6 @@ export default function SleepPage() {
   const [quality, setQuality] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [aiTips, setAiTips] = useState<AiSleepTip[] | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
 
   const currentSleep = log?.sleep;
   const durationHours = computeDurationHours(bedtime, wakeTime);
@@ -114,7 +104,7 @@ export default function SleepPage() {
     }
     setSaving(true);
     try {
-      const res = await api.logSleep(today, {
+      const res = await api.logSleep(todayDate, {
         bedtime,
         wakeTime,
         duration: Math.round(dur * 10) / 10,
@@ -132,24 +122,6 @@ export default function SleepPage() {
       showToast('Failed to log sleep', 'error');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const fetchAiTips = async () => {
-    setAiLoading(true);
-    setAiError(null);
-    try {
-      const res = await api.getSleepTips();
-      if (res.success && res.data) {
-        const data = res.data as { tips?: AiSleepTip[]; summary?: string };
-        setAiTips(data.tips || []);
-      } else {
-        setAiError(res.error || 'Failed to load tips');
-      }
-    } catch {
-      setAiError('Failed to load AI tips');
-    } finally {
-      setAiLoading(false);
     }
   };
 
@@ -194,10 +166,10 @@ export default function SleepPage() {
           <Moon className="h-6 w-6 text-accent-violet" />
           Sleep Tracker
         </h1>
-        <p className="text-sm text-text-muted">{formatDate(today)}</p>
+        <p className="text-sm text-text-muted">Last night · {formatDate(todayDate)}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Left: Progress + Logger */}
         <div className="space-y-6">
           {/* Progress Ring + Sleep Score */}
@@ -213,25 +185,19 @@ export default function SleepPage() {
                     ? 'stroke-accent-violet'
                     : 'stroke-accent-amber'
               }
-              value={currentSleep ? `${currentSleep.duration.toFixed(1)}h` : '—'}
-              label="slept"
-              sublabel={`of ${targetHours}h goal`}
+              value={currentSleep ? String(sleepScore ?? '—') : undefined}
+              label={currentSleep ? 'Sleep score' : 'Log sleep'}
+              sublabel={
+                currentSleep
+                  ? `${currentSleep.duration.toFixed(1)}h slept · ${targetHours}h goal`
+                  : 'to see score'
+              }
             />
             <div className="mt-4 flex flex-col items-center sm:mt-0">
-              {sleepScore != null && (
-                <div
-                  className={cn(
-                    'rounded-2xl border px-4 py-2',
-                    sleepScore >= 70
-                      ? 'border-accent-emerald/30 bg-accent-emerald/10 text-accent-emerald'
-                      : sleepScore >= 50
-                        ? 'border-accent-amber/30 bg-accent-amber/10 text-accent-amber'
-                        : 'border-accent-rose/30 bg-accent-rose/10 text-accent-rose'
-                  )}
-                >
-                  <p className="text-2xl font-bold">{(sleepScore as number)}</p>
-                  <p className="text-xs font-medium opacity-90">Sleep Score</p>
-                </div>
+              {currentSleep && (
+                <p className="text-sm text-text-muted">
+                  {currentSleep.duration.toFixed(1)}h slept last night
+                </p>
               )}
               {!currentSleep && (
                 <p className="text-sm text-text-muted">
@@ -321,8 +287,8 @@ export default function SleepPage() {
           </div>
         </div>
 
-        {/* Right: Chart + AI Tips + Recent */}
-        <div className="space-y-6">
+        {/* Right: Chart + Recent */}
+        <div className="flex flex-col gap-6">
           {/* Weekly Sleep Chart */}
           <div className="glass-card overflow-visible rounded-2xl p-6">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
@@ -386,68 +352,8 @@ export default function SleepPage() {
             )}
           </div>
 
-          {/* AI Sleep Tips */}
-          <div className="glass-card rounded-2xl p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-base font-semibold text-text-primary">
-                <Sparkles className="h-4 w-4 text-accent-violet" />
-                AI Sleep Coach
-              </h2>
-              <button
-                onClick={fetchAiTips}
-                disabled={aiLoading || !user?.hasOpenAiKey}
-                className="glass-button-primary flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium disabled:opacity-50"
-              >
-                {aiLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="h-3.5 w-3.5" />
-                )}
-                {aiTips ? 'Refresh' : 'Get Tips'}
-              </button>
-            </div>
-            {!user?.hasOpenAiKey && (
-              <div className="flex items-start gap-2 rounded-xl border border-accent-amber/20 bg-accent-amber/5 p-3">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent-amber" />
-                <p className="text-xs text-text-muted">
-                  Add your OpenAI API key in Settings to enable AI sleep tips.
-                </p>
-              </div>
-            )}
-            {aiError && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl border border-accent-rose/20 bg-accent-rose/5 p-3 text-xs text-accent-rose">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {aiError}
-              </div>
-            )}
-            {aiLoading ? (
-              <div className="flex flex-col items-center gap-2 py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-accent-violet" />
-                <p className="text-xs text-text-muted">Analyzing your sleep patterns...</p>
-              </div>
-            ) : aiTips && aiTips.length > 0 ? (
-              <div className="space-y-2">
-                {aiTips.map((tip, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
-                  >
-                    <p className="text-sm font-medium text-text-primary">{tip.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-text-secondary">
-                      {tip.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="py-4 text-center text-xs text-text-muted">
-                Click &quot;Get Tips&quot; for personalized sleep advice based on your data.
-              </p>
-            )}
-          </div>
-
           {/* Recent Sleep Log */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card flex min-h-0 flex-1 flex-col rounded-2xl p-6">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
               <Clock className="h-4 w-4 text-text-muted" />
               Recent Sleep
@@ -455,10 +361,11 @@ export default function SleepPage() {
             {history.filter((h) => h.sleep).length === 0 ? (
               <p className="py-4 text-center text-xs text-text-muted">No sleep entries yet</p>
             ) : (
-              <div className="space-y-2">
+              <div className="hide-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto">
                 {history
                   .filter((h) => h.sleep)
-                  .slice(0, 5)
+                  .slice(-7)
+                  .reverse()
                   .map((h) => (
                     <div
                       key={h.date}

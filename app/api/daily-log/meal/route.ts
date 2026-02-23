@@ -7,7 +7,7 @@ import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
-import { getToday } from '@/lib/utils';
+import { getToday, recalcTotalsFromMeals } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +38,10 @@ export async function POST(req: NextRequest) {
     // Trigger recalculation
     await log.save();
 
-    const result = log.toObject();
-    return maskedResponse(stripSensitive(result as unknown as Record<string, unknown>), {
+    const result = log.toObject() as unknown as Record<string, unknown>;
+    const totals = recalcTotalsFromMeals((result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>) ?? []);
+    Object.assign(result, totals);
+    return maskedResponse(stripSensitive(result), {
       message: 'Meal added',
     });
   } catch (err) {
@@ -74,8 +76,10 @@ export async function DELETE(req: NextRequest) {
     // Trigger recalculation
     await log.save();
 
-    const result = log.toObject();
-    return maskedResponse(stripSensitive(result as unknown as Record<string, unknown>), {
+    const result = log.toObject() as unknown as Record<string, unknown>;
+    const totals = recalcTotalsFromMeals((result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>) ?? []);
+    Object.assign(result, totals);
+    return maskedResponse(stripSensitive(result), {
       message: 'Meal removed',
     });
   } catch (err) {

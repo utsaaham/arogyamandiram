@@ -22,6 +22,7 @@ interface MetricChartProps {
   color?: string;
   gradientId?: string;
   unit?: string;
+  tooltipUnit?: string;
   height?: number;
   targetValue?: number;
   targetLabel?: string;
@@ -39,6 +40,7 @@ export default function MetricChart({
   color = '#8b5cf6',
   gradientId = 'chartGradient',
   unit = '',
+  tooltipUnit = unit,
   height = 220,
   targetValue,
   targetLabel,
@@ -60,7 +62,7 @@ export default function MetricChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 10, right: 14, left: 10, bottom: 18 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.25} />
@@ -74,11 +76,12 @@ export default function MetricChart({
           dataKey="date"
           tickFormatter={formatX}
           stroke="rgba(255,255,255,0.15)"
-          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11, dy: 8 }}
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
           minTickGap={40}
+          tickMargin={8}
         />
 
         <YAxis
@@ -88,7 +91,8 @@ export default function MetricChart({
           tickLine={false}
           axisLine={false}
           tickFormatter={formatY || ((v: number) => `${v}${unit}`)}
-          width={50}
+          width={62}
+          tickMargin={8}
         />
 
         <Tooltip
@@ -109,7 +113,7 @@ export default function MetricChart({
             }
             return label;
           }}
-          formatter={(value: number) => [`${value.toFixed(1)}${unit}`, '']}
+          formatter={(value: number) => [`${value.toFixed(1)}${tooltipUnit}`, '']}
           cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
         />
 

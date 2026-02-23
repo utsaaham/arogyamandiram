@@ -7,10 +7,11 @@ import {
   GlassWater,
   Target,
   TrendingUp,
-  Clock,
   Minus,
+  BarChart3,
 } from 'lucide-react';
 import ProgressRing from '@/components/ui/ProgressRing';
+import MetricChart from '@/components/ui/MetricChart';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -33,6 +34,18 @@ const quickAmounts = [
 
 const customAmounts = [100, 150, 200, 250, 300, 350, 400, 500, 750, 1000];
 
+interface WaterEntry {
+  date: string;
+  waterIntake: number;
+}
+
+const periodOptions = [
+  { key: 7, label: '7D' },
+  { key: 14, label: '2W' },
+  { key: 30, label: '1M' },
+  { key: 90, label: '3M' },
+];
+
 export default function WaterPage() {
   const { user, loading: userLoading } = useUser();
   const { log, loading: logLoading, refetch } = useDailyLog();
@@ -40,14 +53,36 @@ export default function WaterPage() {
   const [adding, setAdding] = useState(false);
   const [customAmount, setCustomAmount] = useState(250);
   const [showCustom, setShowCustom] = useState(false);
-  const [recentAdds, setRecentAdds] = useState<{ amount: number; time: string }[]>([]);
   const [animateWave, setAnimateWave] = useState(false);
+
+  const [waterHistory, setWaterHistory] = useState<WaterEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [period, setPeriod] = useState(14);
 
   const today = getToday();
   const target = user?.targets?.dailyWater ?? 2500;
   const current = log?.waterIntake || 0;
   const percent = calcPercent(current, target);
   const remaining = Math.max(target - current, 0);
+
+  const fetchWaterHistory = useCallback(async (days: number) => {
+    setHistoryLoading(true);
+    try {
+      const res = await api.getWaterHistory(days);
+      if (res.success && res.data) {
+        const data = res.data as { history: WaterEntry[] };
+        setWaterHistory(data.history || []);
+      }
+    } catch {
+      // silent
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWaterHistory(period);
+  }, [period, fetchWaterHistory]);
 
   // Trigger wave animation after adding
   useEffect(() => {
@@ -63,12 +98,9 @@ export default function WaterPage() {
       const res = await api.addWater(today, amount);
       if (res.success) {
         setAnimateWave(true);
-        setRecentAdds((prev) => [
-          { amount, time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) },
-          ...prev,
-        ]);
         showToast(`Added ${formatWater(amount)}`, 'success');
         refetch();
+        fetchWaterHistory(period);
       } else {
         showToast(res.error || 'Failed to add water', 'error');
       }
@@ -77,7 +109,7 @@ export default function WaterPage() {
     } finally {
       setAdding(false);
     }
-  }, [today, refetch]);
+  }, [today, refetch, fetchWaterHistory, period]);
 
   const loading = userLoading || logLoading;
 
@@ -321,53 +353,95 @@ export default function WaterPage() {
             </div>
           </div>
 
-          {/* Recent Additions */}
-          <div className="glass-card rounded-2xl p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-text-muted" />
-              <h3 className="text-sm font-semibold text-text-primary">Recent Activity</h3>
-            </div>
-
-            {recentAdds.length === 0 ? (
-              <p className="py-4 text-center text-xs text-text-muted">
-                No water logged this session. Start hydrating!
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {recentAdds.slice(0, 8).map((entry, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Droplets className="h-3.5 w-3.5 text-accent-cyan" />
-                      <span className="text-xs font-medium text-text-primary">
-                        +{formatWater(entry.amount)}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-text-muted">{entry.time}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Tips */}
           <div className="glass-card rounded-2xl p-4">
-            <h3 className="mb-2 text-sm font-semibold text-text-primary">💡 Hydration Tip</h3>
-            <p className="text-xs leading-relaxed text-text-muted">
-              {percent < 25
-                ? "Start your day with a glass of warm water with lemon. It kickstarts your metabolism and helps with digestion."
-                : percent < 50
-                ? "Try keeping a water bottle at your desk. You're more likely to sip regularly when water is within reach."
-                : percent < 75
-                ? "Great progress! Having water before meals can help with portion control and aids digestion."
-                : percent < 100
-                ? "Almost there! The last few glasses matter most for maintaining energy levels through the evening."
-                : "Excellent hydration today! Consistent water intake helps with skin health, energy, and overall wellness."}
-            </p>
+            <h3 className="mb-2 text-sm font-semibold text-text-primary">💡 Hydration Tips</h3>
+            <ul className="space-y-1.5 text-xs leading-relaxed text-text-muted">
+              <li>
+                • {percent < 25
+                  ? "Start your day with a glass of warm water with lemon. It kickstarts your metabolism and helps with digestion."
+                  : percent < 50
+                  ? "Try keeping a water bottle at your desk. You're more likely to sip regularly when water is within reach."
+                  : percent < 75
+                  ? "Great progress! Having water before meals can help with portion control and aids digestion."
+                  : percent < 100
+                  ? "Almost there! The last few glasses matter most for maintaining energy levels through the evening."
+                  : "Excellent hydration today! Consistent water intake helps with skin health, energy, and overall wellness."}
+              </li>
+              <li>• Even mild dehydration (1–2%) can impair focus, memory, and mood. Your brain is about 75% water — staying hydrated keeps you sharp throughout the day.</li>
+              <li>• Drinking 500 ml of water can boost your metabolism by 24–30% for up to an hour. A glass 30 minutes before meals also aids digestion and helps with portion control.</li>
+            </ul>
           </div>
         </div>
+      </div>
+
+      {/* Water Intake History Chart */}
+      <div className="glass-card rounded-2xl p-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-accent-cyan" />
+            <h2 className="text-base font-semibold text-text-primary">Daily Water Intake</h2>
+          </div>
+          <div className="flex gap-1.5">
+            {periodOptions.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setPeriod(opt.key)}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                  period === opt.key
+                    ? 'bg-accent-cyan/15 text-accent-cyan ring-1 ring-accent-cyan/30'
+                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {historyLoading ? (
+          <div className="flex h-56 items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
+          </div>
+        ) : (
+          <>
+            <MetricChart
+              data={waterHistory.map((e) => ({
+                date: e.date,
+                value: e.waterIntake,
+              }))}
+              color="#22d3ee"
+              gradientId="waterGrad"
+              unit=" ml"
+              height={240}
+              targetValue={target}
+              targetLabel={`Goal: ${formatWater(target)}`}
+              formatY={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}L` : `${v}ml`}
+            />
+            {waterHistory.length > 0 && (() => {
+              const avg = Math.round(waterHistory.reduce((s, e) => s + e.waterIntake, 0) / waterHistory.length);
+              const daysMetGoal = waterHistory.filter((e) => e.waterIntake >= target).length;
+              const best = Math.max(...waterHistory.map((e) => e.waterIntake));
+              return (
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  <div className="rounded-xl bg-white/[0.03] p-3 text-center">
+                    <p className="text-lg font-bold text-accent-cyan">{formatWater(avg)}</p>
+                    <p className="text-[11px] text-text-muted">Daily Average</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.03] p-3 text-center">
+                    <p className="text-lg font-bold text-accent-emerald">{daysMetGoal}/{waterHistory.length}</p>
+                    <p className="text-[11px] text-text-muted">Days Goal Met</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.03] p-3 text-center">
+                    <p className="text-lg font-bold text-accent-amber">{formatWater(best)}</p>
+                    <p className="text-[11px] text-text-muted">Best Day</p>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        )}
       </div>
     </div>
   );

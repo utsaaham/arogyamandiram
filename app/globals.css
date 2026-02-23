@@ -192,6 +192,25 @@ body::before {
   display: none;
 }
 
+/* ---------- Thin Scrollbar ---------- */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 /* ---------- Water Fill Scale Animation ---------- */
 @keyframes water-fill {
   0% { transform: scaleY(0.95); }
@@ -236,6 +255,16 @@ input[type='date'] {
   -webkit-appearance: none;
   text-align: left !important; /* override iOS Safari center alignment */
   direction: ltr;
+  color-scheme: dark;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 4px;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
 }
 input[type='date'].date-input {
   font-size: 0.875rem;

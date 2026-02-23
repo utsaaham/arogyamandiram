@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import ProgressRing from '@/components/ui/ProgressRing';
 import MacroBar from '@/components/ui/MacroBar';
+import MetricChart from '@/components/ui/MetricChart';
 import FoodResultCard from '@/components/food/FoodResultCard';
 import AddMealModal from '@/components/food/AddMealModal';
 import CustomFoodModal from '@/components/food/CustomFoodModal';
@@ -95,6 +96,9 @@ export default function FoodLogPage() {
   const [addingMeal, setAddingMeal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedMealType, setExpandedMealType] = useState<string | null>(null);
+  const [calorieHistory, setCalorieHistory] = useState<{ date: string; totalCalories: number }[]>([]);
+  const [calorieHistoryLoading, setCalorieHistoryLoading] = useState(true);
+  const [caloriePeriod, setCaloriePeriod] = useState(30);
 
   const searchTimerRef = useRef<NodeJS.Timeout>();
   const today = getToday();
@@ -133,6 +137,36 @@ export default function FoodLogPage() {
   useEffect(() => {
     doSearch('', 'all');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load calorie history for chart
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchHistory = async () => {
+      setCalorieHistoryLoading(true);
+      try {
+        const res = await api.getCaloriesHistory(caloriePeriod);
+        if (res.success && res.data && !cancelled) {
+          const data = res.data as { history?: { date: string; totalCalories: number }[] };
+          setCalorieHistory(data.history || []);
+        }
+      } catch {
+        if (!cancelled) {
+          setCalorieHistory([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setCalorieHistoryLoading(false);
+        }
+      }
+    };
+
+    fetchHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [caloriePeriod]);
 
   // The API returns first 20 foods when query is empty
 
@@ -211,9 +245,9 @@ export default function FoodLogPage() {
   }, {});
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Food Log</h1>
           <p className="text-sm text-text-muted">{formatDate(today)}</p>
@@ -275,7 +309,7 @@ export default function FoodLogPage() {
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
               </div>
             ) : results.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1 hide-scrollbar">
                 <p className="mb-3 text-xs text-text-muted">{results.length} results</p>
                 {results.map((food) => (
                   <FoodResultCard
@@ -307,7 +341,7 @@ export default function FoodLogPage() {
         </div>
 
         {/* Right Column: Today's Log */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {/* Calorie Summary */}
           <div className="glass-card flex flex-col items-center gap-4 rounded-2xl p-6">
             <ProgressRing
@@ -345,7 +379,7 @@ export default function FoodLogPage() {
           </div>
 
           {/* Logged Meals */}
-          <div className="glass-card rounded-2xl p-4">
+          <div className="glass-card flex-1 rounded-2xl p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-text-primary">Logged Meals</h3>
               <span className="text-xs text-text-muted">{meals.length} items</span>
@@ -436,6 +470,49 @@ export default function FoodLogPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Daily calories history */}
+      <div className="glass-card mt-2 rounded-2xl p-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-text-primary">Daily Calories</h2>
+          <div className="flex gap-1.5">
+            {[7, 30].map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setCaloriePeriod(opt)}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                  caloriePeriod === opt
+                    ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                )}
+              >
+                {opt === 7 ? '7D' : '1M'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {calorieHistoryLoading ? (
+          <div className="flex h-56 items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+          </div>
+        ) : (
+          <MetricChart
+            data={calorieHistory.map((entry) => ({
+              date: entry.date,
+              value: entry.totalCalories,
+            }))}
+            color="#f97316"
+            gradientId="caloriesGrad"
+            unit=""
+            tooltipUnit=" kcal"
+            formatY={(v) => formatNumber(Math.round(v))}
+            height={200}
+          />
+        )}
       </div>
 
       {/* Modals */}
