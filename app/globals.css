@@ -234,10 +234,12 @@ input[type='time']::-webkit-calendar-picker-indicator {
 input[type='date'] {
   appearance: none;
   -webkit-appearance: none;
-  text-align: left;
+  text-align: left !important; /* override iOS Safari center alignment */
+  direction: ltr;
 }
 input[type='date'].date-input {
   font-size: 0.875rem;
   min-height: 2.25rem;
   max-height: 2.5rem;
+  text-align: left !important;
 }

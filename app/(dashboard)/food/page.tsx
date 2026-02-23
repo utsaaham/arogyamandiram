@@ -68,11 +68,18 @@ const categories = [
   { key: 'bread', label: 'Breads' },
   { key: 'rice', label: 'Rice' },
   { key: 'snack', label: 'Snacks' },
+  { key: 'street_food', label: 'Street Food' },
   { key: 'sweet', label: 'Sweets' },
   { key: 'beverage', label: 'Drinks' },
+  { key: 'breakfast', label: 'Breakfast' },
+  { key: 'chutney', label: 'Chutneys' },
+  { key: 'raita', label: 'Raita' },
+  { key: 'salad', label: 'Salads' },
   { key: 'non_veg', label: 'Non-Veg' },
+  { key: 'seafood', label: 'Seafood' },
   { key: 'fruit', label: 'Fruits' },
   { key: 'dry_fruit', label: 'Dry Fruits' },
+  { key: 'other', label: 'Other' },
 ];
 
 export default function FoodLogPage() {
