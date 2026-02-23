@@ -7,7 +7,7 @@ import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
-import { getToday } from '@/lib/utils';
+import { getToday, toLocalDateString } from '@/lib/utils';
 import type { SleepQuality } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 function getDateDaysAgo(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() - days);
-  return d.toISOString().split('T')[0];
+  return toLocalDateString(d);
 }
 
 // POST /api/sleep - Log or update sleep for a date

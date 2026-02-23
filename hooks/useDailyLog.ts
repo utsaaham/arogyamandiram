@@ -85,5 +85,20 @@ export function useDailyLog(date?: string) {
     fetchLog();
   }, [fetchLog]);
 
+  // If the page stays open across midnight, automatically refresh the log
+  useEffect(() => {
+    const now = new Date();
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    const timer = window.setTimeout(() => {
+      fetchLog();
+    }, msUntilMidnight + 500); // small buffer after midnight
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [fetchLog]);
+
   return { log, loading, error, refetch: fetchLog };
 }

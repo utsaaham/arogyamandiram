@@ -42,6 +42,13 @@ const REP_BASED_EXERCISES = new Set([
   'Push-ups',
   'Flat Bench Sit-ups',
   'Decline Bench Sit-ups',
+  'Standing Cross Crunch',
+  'Standing Toe Touch',
+  'Pogo Jumps',
+  'High Knees',
+  'Dumbbell Side Bends',
+  'Lateral Raise',
+  'Dumbbell Biceps Curl with Rotation',
 ]);
 
 const presetExercises: Record<string, { name: string; calPerMin?: number; calPerRep?: number }[]> = {
@@ -50,6 +57,8 @@ const presetExercises: Record<string, { name: string; calPerMin?: number; calPer
     { name: 'Brisk Walking', calPerMin: 5 },
     { name: 'Cycling', calPerMin: 8 },
     { name: 'Swimming', calPerMin: 9 },
+    { name: 'Pogo Jumps', calPerRep: 0.24 }, // light jumping in place, ~2 s/rep
+    { name: 'High Knees', calPerRep: 0.28 }, // running in place, knees up, ~1.5–2 s/rep
     { name: 'Jump Rope', calPerMin: 12 },
     { name: 'HIIT', calPerMin: 13 },
     { name: 'Stair Climbing', calPerMin: 8 },
@@ -61,6 +70,10 @@ const presetExercises: Record<string, { name: string; calPerMin?: number; calPer
     { name: 'Push-ups', calPerRep: 0.4 },
     { name: 'Flat Bench Sit-ups', calPerRep: 0.35 },
     { name: 'Decline Bench Sit-ups', calPerRep: 0.4 },
+    { name: 'Standing Cross Crunch', calPerRep: 0.15 }, // dynamic core, ~2 s/rep
+    { name: 'Dumbbell Side Bends', calPerRep: 0.12 }, // oblique bends with weight, ~2 s/rep
+    { name: 'Lateral Raise', calPerRep: 0.1 }, // shoulder isolation, ~2 s/rep
+    { name: 'Dumbbell Biceps Curl with Rotation', calPerRep: 0.12 }, // curl + supination, ~2 s/rep
     { name: 'Weight Training', calPerMin: 6 },
     { name: 'Pull-ups', calPerMin: 8 },
     { name: 'Squats', calPerMin: 7 },
@@ -75,6 +88,7 @@ const presetExercises: Record<string, { name: string; calPerMin?: number; calPer
     { name: 'Yoga', calPerMin: 4 },
     { name: 'Stretching', calPerMin: 3 },
     { name: 'Pilates', calPerMin: 5 },
+    { name: 'Standing Toe Touch', calPerRep: 0.12 }, // MET 3.0, ~2 s/rep → ~7–8 kcal per 60 reps at 68 kg
     { name: 'Foam Rolling', calPerMin: 2 },
     { name: 'Tai Chi', calPerMin: 3 },
   ],
