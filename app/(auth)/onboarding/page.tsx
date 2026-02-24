@@ -113,7 +113,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-y-auto">
+    <div className="fixed inset-0 overflow-x-hidden overflow-y-auto">
       <div className="auth-viewport-min-height flex items-center justify-center px-4 py-6">
         <div className="mx-auto w-full max-w-lg">
         {/* Logo */}
