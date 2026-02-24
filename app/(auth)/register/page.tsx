@@ -94,7 +94,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="fixed inset-0 overflow-y-auto">
+    <main className="fixed inset-0 overflow-x-hidden overflow-y-auto">
       <div className="auth-viewport-min-height flex flex-col items-center justify-center px-4 py-6">
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-emerald/5 blur-[100px]" />
 

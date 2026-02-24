@@ -31,7 +31,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="fixed inset-0 overflow-y-auto">
+    <div className="fixed inset-0 overflow-x-hidden overflow-y-auto">
       <main className="flex min-h-[100dvh] flex-col">
       {/* Hero */}
       <section className="relative flex flex-1 flex-col items-center justify-center px-4 py-20 text-center">
