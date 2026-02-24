@@ -113,8 +113,9 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-lg">
+    <div className="fixed inset-0 overflow-y-auto">
+      <div className="auth-viewport-min-height flex items-center justify-center px-4 py-6">
+        <div className="mx-auto w-full max-w-lg">
         {/* Logo */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-violet to-accent-emerald text-lg font-bold">
@@ -153,6 +154,8 @@ export default function OnboardingPage() {
           <h2 className="mb-1 text-lg font-semibold text-text-primary">{steps[step].title}</h2>
           <p className="mb-6 text-xs text-text-muted">Step {step + 1} of {steps.length}</p>
 
+          {/* Scrollable step content so step 2 (fitness goals) is usable on small screens */}
+          <div className={cn('min-h-0', step === 2 && 'max-h-[50vh] overflow-y-auto overscroll-contain sm:max-h-[55vh]')}>
           {/* Step 0: Personal Info */}
           {step === 0 && (
             <div className="space-y-4 animate-fade-in">
@@ -311,6 +314,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
+          </div>
+
           {/* Navigation Buttons */}
           <div className="mt-6 flex items-center justify-between">
             {step > 0 ? (
@@ -350,6 +355,7 @@ export default function OnboardingPage() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -54,23 +54,23 @@ body::before {
   background-size: 256px 256px;
 }
 
-/* ---------- Scrollbar ---------- */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ---------- Auth / landing viewport (center in visible area; mobile bar aware) ---------- */
+.auth-viewport-min-height {
+  min-height: 100vh;
+}
+@supports (height: 100svh) {
+  .auth-viewport-min-height {
+    min-height: 100svh;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* ---------- Scrollbar: hidden everywhere (invisible scroll, mobile + desktop) ---------- */
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+*::-webkit-scrollbar {
+  display: none;
 }
 
 /* ---------- Focus Styles ---------- */

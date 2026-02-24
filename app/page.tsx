@@ -31,7 +31,8 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="flex min-h-screen flex-col">
+    <div className="fixed inset-0 overflow-y-auto">
+      <main className="flex min-h-[100dvh] flex-col">
       {/* Hero */}
       <section className="relative flex flex-1 flex-col items-center justify-center px-4 py-20 text-center">
         {/* Gradient orbs */}
@@ -91,6 +92,7 @@ export default function HomePage() {
       <footer className="border-t border-white/[0.04] py-6 text-center text-sm text-text-muted">
         Arogyamandiram &mdash; Wellness begins within.
       </footer>
-    </main>
+      </main>
+    </div>
   );
 }
