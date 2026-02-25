@@ -11,6 +11,7 @@ import {
   Dumbbell,
   Moon,
   Sparkles,
+  Trophy,
   Settings,
   LogOut,
   ChevronLeft,
@@ -26,6 +27,7 @@ const navItems = [
   { href: '/workout', icon: Dumbbell, label: 'Workouts' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
+  { href: '/achievements', icon: Trophy, label: 'Achievements' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 

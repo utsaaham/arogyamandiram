@@ -75,6 +75,43 @@ const UserSchema = new Schema<IUserDocument>(
       dailyCalorieBurn: { type: Number, default: 400 },
       sleepHours: { type: Number, default: 8 },
     },
+    achievements: {
+      badges: {
+        type: [
+          {
+            id: { type: String, required: true },
+            name: { type: String, required: true },
+            description: { type: String, default: '' },
+            icon: { type: String, default: '🏅' },
+            category: {
+              type: String,
+              enum: ['streak', 'milestone', 'challenge', 'first', 'other'],
+              default: 'other',
+            },
+            earnedAt: { type: Date, required: true },
+          },
+        ],
+        default: [],
+      },
+      streaks: {
+        current: {
+          logging: { type: Number, default: 0 },
+          calories: { type: Number, default: 0 },
+          water: { type: Number, default: 0 },
+          workout: { type: Number, default: 0 },
+          sleep: { type: Number, default: 0 },
+          weight: { type: Number, default: 0 },
+        },
+        best: {
+          logging: { type: Number, default: 0 },
+          calories: { type: Number, default: 0 },
+          water: { type: Number, default: 0 },
+          workout: { type: Number, default: 0 },
+          sleep: { type: Number, default: 0 },
+          weight: { type: Number, default: 0 },
+        },
+      },
+    },
     onboardingComplete: { type: Boolean, default: false },
   },
   {

@@ -16,6 +16,12 @@ A full-stack health tracking web app built with Next.js 14, featuring Indian foo
 - Meal breakdown by type (breakfast/lunch/dinner/snack)
 - Quick action shortcuts
 
+### 🏅 Achievements & Streaks
+- Habit streaks for logging, water, workouts, sleep, and weight
+- Badge collection for first-time milestones and longer streaks
+- Dedicated achievements page with streak overview cards
+- Motivation section on the dashboard with your latest badge
+
 ### 🍛 Food Logger
 - **150+ Indian foods** built-in: curries, dals, breads, rice, sweets, snacks, beverages, dry fruits
 - Fuzzy search with relevance scoring
@@ -186,7 +192,9 @@ arogyamandiram/
 │   │   ├── water/page.tsx        # Water tracker
 │   │   ├── weight/page.tsx       # Weight journal
 │   │   ├── workout/page.tsx      # Workout planner
+│   │   ├── sleep/page.tsx        # Sleep tracker
 │   │   ├── ai-insights/page.tsx  # AI recommendations
+│   │   ├── achievements/page.tsx # Achievements & streaks
 │   │   └── settings/page.tsx     # Settings
 │   ├── api/
 │   │   ├── auth/                 # NextAuth + register
@@ -203,11 +211,13 @@ arogyamandiram/
 ├── components/
 │   ├── food/                     # Food search cards, modals
 │   ├── layout/                   # Sidebar, MobileNav
+│   ├── achievements/             # Streak and badge cards
 │   ├── ui/                       # ProgressRing, MacroBar, Chart, Toast, etc.
 │   └── workout/                  # Workout modal
 ├── hooks/
 │   ├── useDailyLog.ts            # Daily log data hook
-│   └── useUser.ts                # User data hook
+│   ├── useUser.ts                # User data hook
+│   └── useAchievements.ts        # Achievements (streaks + badges) hook
 ├── lib/
 │   ├── apiClient.ts              # Frontend API wrapper (sanitized)
 │   ├── apiMask.ts                # Server-side response masking
@@ -217,6 +227,7 @@ arogyamandiram/
 │   ├── health.ts                 # BMR, TDEE, macro calculations
 │   ├── indianFoods.ts            # 150+ Indian food database
 │   ├── session.ts                # Auth helpers
+│   ├── gamification.ts           # Streak and badge calculation logic
 │   └── utils.ts                  # Formatters, validators
 ├── models/
 │   ├── User.ts                   # User schema
