@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
   Plus,
@@ -13,6 +13,7 @@ import {
   Timer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import api from '@/lib/apiClient';
 
 interface AddWorkoutModalProps {
   onClose: () => void;
@@ -109,6 +110,44 @@ const presetExercises: Record<string, { name: string; calPerMin?: number; calPer
   ],
 };
 
+const exerciseThumbnails: Record<string, string> = {
+  Running: '🏃‍♂️',
+  'Brisk Walking': '🚶‍♀️',
+  Cycling: '🚴‍♂️',
+  Swimming: '🏊‍♂️',
+  'Jump Rope': '🪢',
+  HIIT: '⚡️',
+  'Stair Climbing': '🪜',
+  Elliptical: '🏃',
+  Dancing: '💃',
+  Rowing: '🚣‍♂️',
+  'Weight Training': '🏋️‍♂️',
+  'Pull-ups': '🤸‍♂️',
+  Squats: '🏋️',
+  Deadlifts: '🏋️‍♀️',
+  'Bench Press': '🛋️',
+  'Overhead Press': '💪',
+  Lunges: '🦵',
+  Planks: '📏',
+  'Kettlebell Swings': '🏋️‍♂️',
+  Yoga: '🧘‍♀️',
+  Stretching: '🤸‍♀️',
+  Pilates: '🧘',
+  'Foam Rolling': '🧽',
+  'Tai Chi': '🌬️',
+  Cricket: '🏏',
+  Badminton: '🏸',
+  Tennis: '🎾',
+  Football: '⚽️',
+  Basketball: '🏀',
+  'Table Tennis': '🏓',
+  Kabaddi: '🤼‍♂️',
+  Hiking: '🥾',
+  Gardening: '🪴',
+  'House Cleaning': '🧹',
+  'Martial Arts': '🥋',
+};
+
 export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutModalProps) {
   const [category, setCategory] = useState('cardio');
   const [exercise, setExercise] = useState('');
@@ -119,6 +158,22 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
   const [reps, setReps] = useState('');
   const [weightUsed, setWeightUsed] = useState('');
   const [notes, setNotes] = useState('');
+
+  const [recentExercises, setRecentExercises] = useState<{ name: string; count: number; lastDate: string }[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getWorkoutExercises(180).then((res) => {
+      if (!res.success || !res.data || cancelled) return;
+      const data = res.data as { exercises?: { name: string; count: number; lastDate: string }[] };
+      setRecentExercises(data.exercises || []);
+    }).catch(() => {
+      // ignore
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const presets = presetExercises[category] || [];
   const selectedPreset = presets.find((p) => p.name === exercise);
@@ -141,6 +196,26 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
       } else if (preset.calPerMin) {
         setCaloriesBurned(Math.round(preset.calPerMin * (parseInt(duration) || 30)).toString());
       }
+    }
+  };
+
+  const handleSuggestionSelect = (name: string) => {
+    // If this is a known preset, switch to its category automatically
+    let targetCategory: string | null = null;
+    for (const [catKey, list] of Object.entries(presetExercises)) {
+      if (list.some((p) => p.name === name)) {
+        targetCategory = catKey;
+        break;
+      }
+    }
+
+    if (targetCategory) {
+      setCategory(targetCategory);
+      setExercise(name);
+      setCustomExercise('');
+    } else {
+      setCustomExercise(name);
+      setExercise('');
     }
   };
 
@@ -189,6 +264,37 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
 
   const isStrength = category === 'strength';
   const canSubmit = (exercise || customExercise) && (isRepBased ? (parseInt(reps) || 0) > 0 : duration);
+
+  const currentExerciseName = customExercise || exercise;
+
+  const allPresetNames = Object.values(presetExercises)
+    .flat()
+    .map((p) => p.name);
+
+  const historyNames = recentExercises.map((e) => e.name);
+
+  const suggestionPool = Array.from(new Set([...allPresetNames, ...historyNames]));
+
+  const query = currentExerciseName.trim().toLowerCase();
+  const suggestions =
+    query.length > 0
+      ? suggestionPool
+          .filter((name) => name.toLowerCase().includes(query) && name !== currentExerciseName)
+          .slice(0, 6)
+      : historyNames.slice(0, 6);
+
+  const categoryMeta = workoutCategories.find((c) => c.key === category);
+  const exerciseEmoji =
+    (currentExerciseName && exerciseThumbnails[currentExerciseName]) ||
+    (category === 'cardio'
+      ? '🏃‍♂️'
+      : category === 'strength'
+        ? '🏋️‍♂️'
+        : category === 'flexibility'
+          ? '🧘‍♀️'
+          : category === 'sports'
+            ? '🏅'
+            : '💪');
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -248,10 +354,43 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
               type="text"
               value={customExercise}
               onChange={(e) => { setCustomExercise(e.target.value); setExercise(''); }}
-              placeholder="Or type custom exercise..."
+              placeholder="Start typing to search or add your own..."
               className="glass-input mt-2 w-full rounded-xl px-3 py-2 text-sm"
             />
+            {suggestions.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {suggestions.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => handleSuggestionSelect(name)}
+                    className="rounded-lg bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-text-muted hover:bg-white/[0.08]"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Exercise preview */}
+          {currentExerciseName && (
+            <div className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-2xl">
+                <span aria-hidden="true">{exerciseEmoji}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-text-primary">
+                  {currentExerciseName}
+                </p>
+                {categoryMeta && (
+                  <p className="text-[11px] text-text-muted">
+                    {categoryMeta.label} exercise
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Rep-based: Number of reps only */}
           {isRepBased && (

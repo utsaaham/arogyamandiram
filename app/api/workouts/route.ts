@@ -11,6 +11,26 @@ import { getToday, toLocalDateString } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
+function normalizeExerciseName(name: unknown): string {
+  return typeof name === 'string' ? name.trim().toLowerCase() : '';
+}
+
+function computeWorkoutScore(workout: {
+  weight?: unknown;
+  reps?: unknown;
+  duration?: unknown;
+}): number {
+  const weight = Number(workout.weight) || 0;
+  const reps = Number(workout.reps) || 0;
+  const duration = Number(workout.duration) || 0;
+
+  // Prefer weight-based PRs, then reps, then duration
+  if (weight > 0) return weight;
+  if (reps > 0) return reps;
+  if (duration > 0) return duration;
+  return 0;
+}
+
 function getDateDaysAgo(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() - days);
@@ -89,10 +109,58 @@ export async function POST(req: NextRequest) {
     // Trigger recalculation
     await log.save();
 
-    const result = log.toObject();
-    return maskedResponse(stripSensitive(result as unknown as Record<string, unknown>), {
-      message: 'Workout added',
-    });
+    const result = log.toObject() as {
+      workouts?: { _id?: unknown; exercise?: unknown; weight?: unknown; reps?: unknown; duration?: unknown }[];
+    };
+
+    let isPr = false;
+
+    if (result.workouts && result.workouts.length > 0) {
+      const newWorkoutDoc = result.workouts[result.workouts.length - 1];
+      const exerciseName = normalizeExerciseName(newWorkoutDoc.exercise);
+
+      if (exerciseName) {
+        const newWorkoutId = String(newWorkoutDoc._id ?? '');
+        const logs = await DailyLog.find(
+          {
+            userId,
+            'workouts.exercise': { $exists: true },
+          },
+          { date: 1, workouts: 1 }
+        ).lean();
+
+        let newScore = 0;
+        let previousBest = 0;
+
+        for (const l of logs as {
+          workouts?: { _id?: unknown; exercise?: unknown; weight?: unknown; reps?: unknown; duration?: unknown }[];
+        }[]) {
+          for (const w of l.workouts || []) {
+            if (normalizeExerciseName(w.exercise) !== exerciseName) continue;
+            const score = computeWorkoutScore(w);
+            if (!score) continue;
+
+            if (String(w._id ?? '') === newWorkoutId) {
+              newScore = Math.max(newScore, score);
+            } else {
+              previousBest = Math.max(previousBest, score);
+            }
+          }
+        }
+
+        if (newScore > 0 && newScore > previousBest) {
+          isPr = true;
+        }
+      }
+    }
+
+    const safe = stripSensitive(result as unknown as Record<string, unknown>);
+    return maskedResponse(
+      { ...(safe as Record<string, unknown>), isPr },
+      {
+        message: isPr ? 'Workout added (new PR!)' : 'Workout added',
+      }
+    );
   } catch (err) {
     console.error('[Workout Add Error]:', err);
     return errorResponse('Failed to add workout', 500);

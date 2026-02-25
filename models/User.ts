@@ -63,6 +63,8 @@ const UserSchema = new Schema<IUserDocument>(
         weighIn: { type: Boolean, default: true },
         workout: { type: Boolean, default: true },
       },
+      // Whether the user has completed the main dashboard walkthrough
+      dashboardTourComplete: { type: Boolean, default: false },
     },
     targets: {
       dailyCalories: { type: Number, default: 2000 },

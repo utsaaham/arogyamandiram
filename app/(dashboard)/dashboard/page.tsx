@@ -37,6 +37,7 @@ import {
   cn,
   getAgeFromDateOfBirth,
 } from '@/lib/utils';
+import { getTargetsForUser } from '@/lib/health';
 import { StreakBar } from '@/components/achievements/StreakBar';
 
 const mealIcons: Record<string, typeof Coffee> = {
@@ -79,17 +80,7 @@ export default function DashboardPage() {
     );
   }
 
-  const targets = user?.targets ?? {
-    dailyCalories: 2000,
-    dailyWater: 2500,
-    protein: 150,
-    carbs: 200,
-    fat: 67,
-    idealWeight: 70,
-    dailyWorkoutMinutes: 30,
-    dailyCalorieBurn: 400,
-    sleepHours: 8,
-  };
+  const targets = getTargetsForUser(user ?? undefined);
   const totalCal = log?.totalCalories || 0;
   const burned = log?.caloriesBurned || 0;
   const netCal = totalCal - burned;

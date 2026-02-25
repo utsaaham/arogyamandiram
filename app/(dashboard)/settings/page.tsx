@@ -13,11 +13,13 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { getTargetsForUser } from '@/lib/health';
 import { cn } from '@/lib/utils';
 
 type SettingsTab = 'profile' | 'api-keys' | 'targets' | 'notifications';
@@ -48,6 +50,7 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<SettingsTab>('profile');
   const [saving, setSaving] = useState(false);
   const [regeneratingPlan, setRegeneratingPlan] = useState(false);
+  const [recalculatingTargets, setRecalculatingTargets] = useState(false);
 
   // Profile state (dateOfBirth is source of truth; age shown when no DOB for legacy)
   const [name, setName] = useState('');
@@ -200,6 +203,32 @@ export default function SettingsPage() {
       showToast('Failed to save targets', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const recalculateTargetsFromProfile = async () => {
+    setRecalculatingTargets(true);
+    try {
+      const res = await api.recalculateTargets();
+      if (res.success && res.data) {
+        showToast('Targets recalculated from your profile', 'success');
+        await refetch();
+        const data = res.data as { targets?: Record<string, number> };
+        const t = data?.targets;
+        if (t) {
+          setDailyCalories(String(t.dailyCalories ?? ''));
+          setDailyWater(String(t.dailyWater ?? ''));
+          setProtein(String(t.protein ?? ''));
+          setCarbs(String(t.carbs ?? ''));
+          setFat(String(t.fat ?? ''));
+        }
+      } else {
+        showToast(res.error || 'Failed to recalculate targets', 'error');
+      }
+    } catch {
+      showToast('Failed to recalculate targets', 'error');
+    } finally {
+      setRecalculatingTargets(false);
     }
   };
 
@@ -477,8 +506,28 @@ export default function SettingsPage() {
             <div className="space-y-5">
               <h2 className="text-base font-semibold text-text-primary">Daily Targets</h2>
               <p className="text-xs text-text-muted">
-                These were auto-calculated during onboarding. Adjust as needed, or regenerate with AI for personalized recommendations.
+                Targets are calculated from your profile using standard formulas (BMR/TDEE for calories, weight and activity for water, age for sleep). Updating your profile recalculates them automatically. You can recalculate now or adjust values below.
               </p>
+
+              <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-white/[0.02] p-4">
+                <p className="text-sm font-medium text-text-primary">Recalculate from profile</p>
+                <p className="text-xs text-text-muted">
+                  Refresh all targets (calories, water, macros, ideal weight, workout, sleep) using current profile data and formulas.
+                </p>
+                <button
+                  type="button"
+                  onClick={recalculateTargetsFromProfile}
+                  disabled={recalculatingTargets}
+                  className="mt-1 flex w-fit items-center gap-2 rounded-xl border border-border bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-white/[0.06] disabled:opacity-50"
+                >
+                  {recalculatingTargets ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  Recalculate from profile
+                </button>
+              </div>
 
               {user?.hasOpenAiKey && (
                 <div className="flex flex-col gap-2 rounded-xl border border-accent-violet/20 bg-accent-violet/5 p-4">
@@ -529,6 +578,31 @@ export default function SettingsPage() {
                     className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm" />
                 </div>
               </div>
+
+              {/* Formula-derived read-only targets */}
+              {user && (
+                <div className="rounded-xl bg-white/[0.03] p-4">
+                  <p className="mb-2 text-xs font-medium text-text-muted">From your profile (formula-based)</p>
+                  <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                    <div>
+                      <span className="text-text-muted">Ideal weight</span>
+                      <p className="font-medium text-text-primary">{getTargetsForUser(user).idealWeight} kg</p>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Workout (min/day)</span>
+                      <p className="font-medium text-text-primary">{getTargetsForUser(user).dailyWorkoutMinutes}</p>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Calorie burn goal</span>
+                      <p className="font-medium text-text-primary">{getTargetsForUser(user).dailyCalorieBurn} kcal</p>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Sleep target</span>
+                      <p className="font-medium text-text-primary">{getTargetsForUser(user).sleepHours} h</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Macro split visualization */}
               {protein && carbs && fat && (
