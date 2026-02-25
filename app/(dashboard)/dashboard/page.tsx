@@ -21,9 +21,9 @@ import ProgressRing from '@/components/ui/ProgressRing';
 import MacroBar from '@/components/ui/MacroBar';
 import StatCard from '@/components/ui/StatCard';
 import { CardSkeleton } from '@/components/ui/Skeleton';
-import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
+import { useAchievements } from '@/hooks/useAchievements';
 import { computeBaselineBurn } from '@/lib/calorieBurn';
 import api from '@/lib/apiClient';
 import {
@@ -37,6 +37,7 @@ import {
   cn,
   getAgeFromDateOfBirth,
 } from '@/lib/utils';
+import { StreakBar } from '@/components/achievements/StreakBar';
 
 const mealIcons: Record<string, typeof Coffee> = {
   breakfast: Coffee,
@@ -55,6 +56,7 @@ const mealLabels: Record<string, string> = {
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { log, loading: logLoading, refetch } = useDailyLog();
+  const { achievements } = useAchievements();
   const [mounted, setMounted] = useState(false);
   const [addingWater, setAddingWater] = useState(false);
 
@@ -140,19 +142,22 @@ export default function DashboardPage() {
 
   const today = getToday();
 
+  // Simple frontend-only level system based on badges + logging streak
+  const totalBadges = achievements?.badges.length ?? 0;
+  const loggingStreak = achievements?.streaks.current.logging ?? 0;
+  const xp = totalBadges * 10 + loggingStreak * 2;
+  const level = Math.floor(xp / 50) + 1;
+  const xpIntoLevel = xp % 50;
+  const xpPercent = Math.min(100, Math.round((xpIntoLevel / 50) * 100));
+
   const handleQuickAddWater = async (amount: number) => {
     if (!amount || addingWater) return;
     setAddingWater(true);
     try {
-      const res = await api.addWater(today, amount);
-      if (res.success) {
-        showToast(`Added ${formatWater(amount)}`, 'success');
-        refetch();
-      } else {
-        showToast(res.error || 'Failed to add water', 'error');
-      }
+      await api.addWater(today, amount);
+      refetch();
     } catch {
-      showToast('Failed to add water', 'error');
+      // Silent failure on dashboard; dedicated water page has full error handling
     } finally {
       setAddingWater(false);
     }
@@ -215,6 +220,40 @@ export default function DashboardPage() {
           iconColor="text-accent-violet"
         />
       </div>
+
+      {/* Gamified strip: Level, streaks, badges */}
+      {achievements && (
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          {/* Level card */}
+          <div className="glass-card flex flex-col justify-center gap-2 rounded-2xl p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Level
+              </p>
+              <span className="rounded-full bg-accent-violet/10 px-2 py-0.5 text-[10px] font-semibold text-accent-violet">
+                XP {xpIntoLevel}/50
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-text-primary">Lv {level}</span>
+              <span className="text-[11px] text-text-muted">
+                {loggingStreak >= 7 ? 'Building momentum' : 'Getting started'}
+              </span>
+            </div>
+            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-accent-violet transition-all duration-500"
+                style={{ width: `${xpPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Streaks */}
+          <div className="lg:col-span-2">
+            <StreakBar streaks={achievements.streaks} />
+          </div>
+        </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

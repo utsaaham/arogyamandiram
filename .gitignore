@@ -4,3 +4,13 @@
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# IDE
+.idea/
