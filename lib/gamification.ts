@@ -255,8 +255,8 @@ export async function calculateStreaks(
   return streaks;
 }
 
-/** Fetch logs for aggregates and challenge checks (e.g. last 400 days). */
-async function getLogsForBadges(userId: string, daysBack: number = 400): Promise<IDailyLog[]> {
+/** Fetch logs for aggregates and challenge checks (e.g. last several years). */
+async function getLogsForBadges(userId: string, daysBack: number = 3650): Promise<IDailyLog[]> {
   const today = startOfDay(new Date());
   const fromDate = subDays(today, daysBack);
   return DailyLog.find({
@@ -479,6 +479,14 @@ export async function calculateAchievements(userId: string): Promise<Achievement
   let totalCaloriesBurned = 0;
   let sleepEntryCount = 0;
   let weightEntryCount = 0;
+  let firstMealDate: string | undefined;
+  let firstWaterDate: string | undefined;
+  let firstWorkoutDate: string | undefined;
+  let firstWeightDate: string | undefined;
+  let firstSleepDate: string | undefined;
+  let firstPerfectDayDate: string | undefined;
+  let firstEarlyBirdDate: string | undefined;
+  let firstNightOwlDate: string | undefined;
   let hasFirstMeal = false;
   let hasFirstWater = false;
   let hasFirstWorkout = false;
@@ -495,20 +503,55 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     if (log.sleep) sleepEntryCount += 1;
     if (typeof log.weight === 'number') weightEntryCount += 1;
 
-    if ((log.meals?.length ?? 0) > 0) hasFirstMeal = true;
-    if ((log.waterIntake ?? 0) > 0) hasFirstWater = true;
-    if ((log.workouts?.length ?? 0) > 0) hasFirstWorkout = true;
-    if (typeof log.weight === 'number') hasFirstWeight = true;
-    if (log.sleep) hasFirstSleep = true;
+    if ((log.meals?.length ?? 0) > 0) {
+      if (!firstMealDate) firstMealDate = log.date;
+      hasFirstMeal = true;
+    }
+    if ((log.waterIntake ?? 0) > 0 || (log.waterEntries?.length ?? 0) > 0) {
+      if (!firstWaterDate) firstWaterDate = log.date;
+      hasFirstWater = true;
+    }
+    if ((log.workouts?.length ?? 0) > 0) {
+      if (!firstWorkoutDate) firstWorkoutDate = log.date;
+      hasFirstWorkout = true;
+    }
+    if (typeof log.weight === 'number') {
+      if (!firstWeightDate) firstWeightDate = log.date;
+      hasFirstWeight = true;
+    }
+    if (log.sleep) {
+      if (!firstSleepDate) firstSleepDate = log.date;
+      hasFirstSleep = true;
+    }
 
-    if (isPerfectDay(log, targets)) hasPerfectDay = true;
+    if (isPerfectDay(log, targets)) {
+      if (!firstPerfectDayDate) firstPerfectDayDate = log.date;
+      hasPerfectDay = true;
+    }
 
     for (const meal of log.meals ?? []) {
-      if (meal.time && isBefore8AM(meal.time)) hasEarlyBird = true;
+      if (meal.time && isBefore8AM(meal.time)) {
+        if (!firstEarlyBirdDate) firstEarlyBirdDate = log.date;
+        hasEarlyBird = true;
+      }
     }
-    if (log.sleep?.bedtime && isAfterMidnight(log.sleep.bedtime)) hasNightOwl = true;
-    if (log.sleep?.wakeTime && isAfterMidnight(log.sleep.wakeTime)) hasNightOwl = true;
+    const bedtimeAfterMidnight = log.sleep?.bedtime && isAfterMidnight(log.sleep.bedtime);
+    const wakeAfterMidnight = log.sleep?.wakeTime && isAfterMidnight(log.sleep.wakeTime);
+    if (bedtimeAfterMidnight || wakeAfterMidnight) {
+      if (!firstNightOwlDate) firstNightOwlDate = log.date;
+      hasNightOwl = true;
+    }
   }
+
+  // Map first log dates for \"first_*\" and selected challenge badges.
+  if (firstMealDate) badgeFirstEarned['first_meal'] = firstMealDate;
+  if (firstWaterDate) badgeFirstEarned['first_water'] = firstWaterDate;
+  if (firstWorkoutDate) badgeFirstEarned['first_workout'] = firstWorkoutDate;
+  if (firstWeightDate) badgeFirstEarned['first_weight'] = firstWeightDate;
+  if (firstSleepDate) badgeFirstEarned['first_sleep'] = firstSleepDate;
+  if (firstPerfectDayDate) badgeFirstEarned['first_perfect_day'] = firstPerfectDayDate;
+  if (firstEarlyBirdDate) badgeFirstEarned['challenge_early_bird'] = firstEarlyBirdDate;
+  if (firstNightOwlDate) badgeFirstEarned['challenge_night_owl'] = firstNightOwlDate;
 
   // ----- First-time -----
   if (hasFirstMeal) awardBadge('first_meal', existingBadgeIds, newBadges, nowIso);

@@ -104,10 +104,10 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
               </p>
 
               {firstEarnedDate && (
-                <div className="mt-3 grid grid-cols-1 gap-2 border-t border-white/10 pt-2 text-[11px] text-text-muted sm:grid-cols-2">
+                <div className="mt-3 border-t border-white/10 pt-2 text-[11px] text-text-muted">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-secondary/80">
-                      First earned
+                      Earned
                     </p>
                     <p className="mt-0.5">
                       {new Date(firstEarnedDate).toLocaleDateString(undefined, {
@@ -117,20 +117,6 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
                       })}
                     </p>
                   </div>
-                  {badge.earnedAt && badge.earnedAt !== firstEarnedDate && (
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-secondary/80">
-                        Latest refresh
-                      </p>
-                      <p className="mt-0.5">
-                        {new Date(badge.earnedAt).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
