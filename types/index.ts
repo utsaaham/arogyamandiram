@@ -59,6 +59,41 @@ export interface UserTargets {
   sleepHours: number;    // recommended sleep hours
 }
 
+export interface UserStreaks {
+  current: {
+    logging: number;    // consecutive days with any log
+    calories: number;   // consecutive days within calorie target
+    water: number;      // consecutive days meeting water goal
+    workout: number;    // consecutive days with a workout
+    sleep: number;      // consecutive days meeting sleep target
+    weight: number;     // consecutive days logging weight
+  };
+  best: {
+    logging: number;
+    calories: number;
+    water: number;
+    workout: number;
+    sleep: number;
+    weight: number;
+  };
+}
+
+export type BadgeCategory = 'streak' | 'milestone' | 'challenge' | 'first' | 'other';
+
+export interface UserBadge {
+  id: string;           // unique badge id (e.g. 'streak_7_any')
+  name: string;
+  description: string;
+  icon: string;         // emoji or icon name
+  category: BadgeCategory;
+  earnedAt: string;     // ISO date string
+}
+
+export interface UserAchievements {
+  badges: UserBadge[];
+  streaks: UserStreaks;
+}
+
 export interface IUser {
   _id: Types.ObjectId;
   email: string;
@@ -67,6 +102,7 @@ export interface IUser {
   apiKeys: UserApiKeys;
   settings: UserSettings;
   targets: UserTargets;
+  achievements?: UserAchievements;
   onboardingComplete: boolean;
   createdAt: Date;
   updatedAt: Date;
