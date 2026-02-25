@@ -25,6 +25,7 @@ import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { getTargetsForUser } from '@/lib/health';
 import {
   cn,
   formatNumber,
@@ -91,6 +92,9 @@ export default function FoodLogPage() {
   const [category, setCategory] = useState('all');
   const [results, setResults] = useState<FoodItem[]>([]);
   const [searching, setSearching] = useState(false);
+  const [recentFoods, setRecentFoods] = useState<{ name: string; lastDate: string; count: number }[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'search' | 'recent'>('search');
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [showCustom, setShowCustom] = useState(false);
   const [addingMeal, setAddingMeal] = useState(false);
@@ -137,6 +141,29 @@ export default function FoodLogPage() {
   useEffect(() => {
     doSearch('', 'all');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load recent foods once
+  useEffect(() => {
+    let cancelled = false;
+    setRecentLoading(true);
+    api.getRecentFoods(30, 60).then((res) => {
+      if (!res.success || !res.data || cancelled) return;
+      const data = res.data as { recentFoods?: { name: string; lastDate: string; count: number }[] };
+      setRecentFoods(data.recentFoods || []);
+    }).catch(() => {
+      if (!cancelled) {
+        setRecentFoods([]);
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setRecentLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Load calorie history for chart
   useEffect(() => {
@@ -221,17 +248,7 @@ export default function FoodLogPage() {
     );
   }
 
-  const targets = user?.targets ?? {
-    dailyCalories: 2000,
-    dailyWater: 2500,
-    protein: 150,
-    carbs: 200,
-    fat: 67,
-    idealWeight: 70,
-    dailyWorkoutMinutes: 30,
-    dailyCalorieBurn: 400,
-    sleepHours: 8,
-  };
+  const targets = getTargetsForUser(user ?? undefined);
   const totalCal = log?.totalCalories || 0;
   const calPercent = calcPercent(totalCal, targets.dailyCalories);
   const meals = log?.meals || [];
@@ -264,77 +281,145 @@ export default function FoodLogPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column: Search + Results */}
         <div className="space-y-4 lg:col-span-2">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="glass-input w-full rounded-xl py-3 pl-10 pr-10 text-sm"
-              placeholder="Search foods... try 'paneer', 'dosa', 'biryani'"
-            />
-            {query && (
+          {/* Search / Recent Toggle + Search Bar */}
+          <div className="space-y-3">
+            <div className="flex gap-2">
               <button
-                onClick={() => { setQuery(''); doSearch('', category); }}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Category Filters */}
-          <div className="hide-scrollbar flex gap-2 overflow-x-auto p-1">
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => handleCategoryChange(cat.key)}
+                type="button"
+                onClick={() => setViewMode('search')}
                 className={cn(
-                  'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
-                  category === cat.key
+                  'rounded-full px-3 py-1 text-xs font-medium',
+                  viewMode === 'search'
                     ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
                     : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
                 )}
               >
-                {cat.label}
+                Search
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setViewMode('recent')}
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-medium',
+                  viewMode === 'recent'
+                    ? 'bg-accent-emerald/15 text-accent-emerald ring-1 ring-accent-emerald/30'
+                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                )}
+              >
+                Recent
+              </button>
+            </div>
+
+            {viewMode === 'search' && (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="glass-input w-full rounded-xl py-3 pl-10 pr-10 text-sm"
+                    placeholder="Search foods... try 'paneer', 'dosa', 'biryani'"
+                  />
+                  {query && (
+                    <button
+                      onClick={() => { setQuery(''); doSearch('', category); }}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Filters */}
+                <div className="hide-scrollbar flex gap-2 overflow-x-auto p-1">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.key}
+                      onClick={() => handleCategoryChange(cat.key)}
+                      className={cn(
+                        'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                        category === cat.key
+                          ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Results */}
+          {/* Results / Recent */}
           <div className="glass-card rounded-2xl p-4">
-            {searching ? (
+            {viewMode === 'search' ? (
+              searching ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+                </div>
+              ) : results.length > 0 ? (
+                <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1 hide-scrollbar">
+                  <p className="mb-3 text-xs text-text-muted">{results.length} results</p>
+                  {results.map((food) => (
+                    <FoodResultCard
+                      key={food.id}
+                      food={food}
+                      onSelect={() => setSelectedFood(food)}
+                    />
+                  ))}
+                </div>
+              ) : query || category !== 'all' ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Utensils className="h-8 w-8 text-text-muted" />
+                  <p className="text-sm text-text-muted">No foods found</p>
+                  <button
+                    onClick={() => setShowCustom(true)}
+                    className="text-xs font-medium text-accent-violet hover:underline"
+                  >
+                    Add custom food instead
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Search className="h-8 w-8 text-text-muted" />
+                  <p className="text-sm text-text-muted">Search for Indian foods to add</p>
+                  <p className="text-xs text-text-muted">150+ items: curries, dals, breads, sweets & more</p>
+                </div>
+              )
+            ) : recentLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-emerald border-t-transparent" />
               </div>
-            ) : results.length > 0 ? (
-              <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1 hide-scrollbar">
-                <p className="mb-3 text-xs text-text-muted">{results.length} results</p>
-                {results.map((food) => (
-                  <FoodResultCard
-                    key={food.id}
-                    food={food}
-                    onSelect={() => setSelectedFood(food)}
-                  />
-                ))}
-              </div>
-            ) : query || category !== 'all' ? (
+            ) : recentFoods.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
                 <Utensils className="h-8 w-8 text-text-muted" />
-                <p className="text-sm text-text-muted">No foods found</p>
-                <button
-                  onClick={() => setShowCustom(true)}
-                  className="text-xs font-medium text-accent-violet hover:underline"
-                >
-                  Add custom food instead
-                </button>
+                <p className="text-sm text-text-muted">We will remember foods you log here.</p>
+                <p className="text-xs text-text-muted">Start by logging a meal from the search tab.</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <Search className="h-8 w-8 text-text-muted" />
-                <p className="text-sm text-text-muted">Search for Indian foods to add</p>
-                <p className="text-xs text-text-muted">150+ items: curries, dals, breads, sweets & more</p>
+              <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1 hide-scrollbar">
+                <p className="mb-3 text-xs text-text-muted">
+                  Your recent foods ({recentFoods.length})
+                </p>
+                {recentFoods.map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => {
+                      setQuery(item.name);
+                      setViewMode('search');
+                      doSearch(item.name, category);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.04]"
+                  >
+                    <span className="truncate text-text-primary">{item.name}</span>
+                    <span className="ml-2 shrink-0 text-[11px] text-text-muted">
+                      {item.count}× logged
+                    </span>
+                  </button>
+                ))}
               </div>
             )}
           </div>

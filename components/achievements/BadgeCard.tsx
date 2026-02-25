@@ -71,14 +71,14 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
         )}
       >
         {/* Top row: NAME (left) + TIER (right) – like deck-building template */}
-        <div className="flex w-full items-stretch gap-1 p-1.5 pb-0">
+        <div className="flex w-full items-stretch gap-0.5 p-1 pb-0 sm:gap-1 sm:p-1.5">
           <div
             className={cn(
               'deck-banner flex min-w-0 flex-1 items-center truncate',
               bannerClass
             )}
           >
-            <span className="truncate">{isLocked ? '???' : badge.name}</span>
+            <span className="truncate text-[8px] sm:text-[9px]">{isLocked ? '???' : badge.name}</span>
           </div>
           <div
             className={cn(
@@ -92,16 +92,16 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
 
         {/* TIER label row (rarity word) */}
         {!isLocked && (
-          <div className="mt-1 text-center text-[10px] font-bold uppercase tracking-wider text-white/90">
+          <div className="mt-0.5 text-center text-[8px] font-bold uppercase tracking-wider text-white/90 sm:mt-1 sm:text-[10px]">
             {rarity === 'legendary' ? 'Legendary' : rarity === 'epic' ? 'Epic' : rarity === 'rare' ? 'Rare' : 'Common'}
           </div>
         )}
 
         {/* Central ITEM area – icon in bordered box */}
-        <div className="flex flex-1 flex-col items-center justify-center px-3 py-2">
+        <div className="flex flex-1 flex-col items-center justify-center px-1.5 py-1 sm:px-3 sm:py-2">
           <div
             className={cn(
-              'deck-art-box flex w-full max-w-[80px] items-center justify-center text-3xl',
+              'deck-art-box flex w-full max-w-[56px] items-center justify-center text-xl sm:max-w-[80px] sm:text-3xl',
               isLocked ? 'text-text-muted' : 'text-white'
             )}
           >
@@ -110,12 +110,12 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
         </div>
 
         {/* SHORT DESCRIPTION HERE */}
-        <p className="line-clamp-2 px-2 pb-1.5 text-center text-[10px] leading-snug text-white/80">
+        <p className="line-clamp-2 px-1 pb-1 text-center text-[9px] leading-snug text-white/80 sm:px-2 sm:pb-1.5 sm:text-[10px]">
           {badge.description}
         </p>
 
         {/* TYPE / ELEMENT footer */}
-        <div className="deck-type-footer border-t border-white/10 py-1 text-center text-white/70">
+        <div className="deck-type-footer border-t border-white/10 py-0.5 text-center text-[8px] text-white/70 sm:py-1 sm:text-[10px]">
           {typeLabel}
         </div>
       </button>

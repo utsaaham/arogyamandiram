@@ -24,6 +24,7 @@ import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { getTargetsForUser } from '@/lib/health';
 import { cn, formatDate, getToday } from '@/lib/utils';
 import type { SleepEntry as SleepEntryType } from '@/types';
 
@@ -54,7 +55,7 @@ export default function SleepPage() {
   const { user, loading: userLoading } = useUser();
   const todayDate = getToday();
   const { log, loading: logLoading, refetch } = useDailyLog(todayDate);
-  const targetHours = user?.targets?.sleepHours ?? 8;
+  const targetHours = getTargetsForUser(user ?? undefined).sleepHours;
 
   const [history, setHistory] = useState<SleepHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);

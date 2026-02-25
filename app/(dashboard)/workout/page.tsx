@@ -34,6 +34,7 @@ import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import { computeBaselineBurn } from '@/lib/calorieBurn';
+import { getTargetsForUser } from '@/lib/health';
 import {
   cn,
   formatNumber,
@@ -114,7 +115,13 @@ export default function WorkoutPage() {
     try {
       const res = await api.addWorkout(today, workout);
       if (res.success) {
-        showToast(`${workout.exercise} added!`, 'success');
+        const data = res.data as { isPr?: boolean } | undefined;
+        const name = typeof workout.exercise === 'string' ? workout.exercise : 'Workout';
+        if (data?.isPr) {
+          showToast(`${name} added – new personal record!`, 'success');
+        } else {
+          showToast(`${name} added!`, 'success');
+        }
         setShowAdd(false);
         refetch();
       } else {
@@ -156,8 +163,9 @@ export default function WorkoutPage() {
     );
   }
 
-  const burnGoal = user?.targets?.dailyCalorieBurn ?? 400;
-  const recommendedMinutes = user?.targets?.dailyWorkoutMinutes ?? 30;
+  const targets = getTargetsForUser(user ?? undefined);
+  const burnGoal = targets.dailyCalorieBurn;
+  const recommendedMinutes = targets.dailyWorkoutMinutes;
   const burnPercent = burnGoal > 0 ? Math.min(Math.round((totalBurned / burnGoal) * 100), 100) : 0;
 
   // Baseline calorie burn from user profile (BMR + TDEE) — matches dashboard

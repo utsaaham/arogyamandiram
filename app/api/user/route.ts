@@ -7,6 +7,8 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
+import { getAgeFromDateOfBirth } from '@/lib/utils';
+import { generateTargets } from '@/lib/health';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +55,31 @@ export async function PUT(req: NextRequest) {
           updateData[`profile.${key}`] = value;
         }
       }
+
+      // Recompute formula-based targets when profile has all required fields
+      const weight = typeof profile.weight === 'number' ? profile.weight : undefined;
+      const height = typeof profile.height === 'number' ? profile.height : undefined;
+      const gender = profile.gender as string | undefined;
+      const activityLevel = profile.activityLevel as string | undefined;
+      const goal = profile.goal as string | undefined;
+      let age: number | undefined;
+      if (profile.dateOfBirth) {
+        const dob = new Date(profile.dateOfBirth);
+        if (!Number.isNaN(dob.getTime())) age = getAgeFromDateOfBirth(dob);
+      } else if (typeof profile.age === 'number') {
+        age = profile.age;
+      }
+      const hasRequired =
+        weight != null && weight > 0 &&
+        height != null && height > 0 &&
+        gender && activityLevel && goal &&
+        age != null && age >= 13 && age <= 120;
+      if (hasRequired) {
+        const generated = generateTargets(weight!, height!, age!, gender as 'male' | 'female' | 'other', activityLevel as 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active', goal as 'lose' | 'maintain' | 'gain');
+        for (const [key, value] of Object.entries(generated)) {
+          updateData[`targets.${key}`] = value;
+        }
+      }
     }
 
     if (settings) {
@@ -67,7 +94,8 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    if (targets) {
+    // Only apply body.targets if we didn't already set targets from profile formulas
+    if (targets && !Object.keys(updateData).some((k) => k.startsWith('targets.'))) {
       for (const [key, value] of Object.entries(targets)) {
         updateData[`targets.${key}`] = value;
       }

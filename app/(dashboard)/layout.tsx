@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
+import DashboardTour from '@/components/tour/DashboardTour';
 import api from '@/lib/apiClient';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -21,10 +23,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       // Check if onboarding is complete
       api.getUser().then((res) => {
         if (res.success && res.data) {
-          const user = res.data as { onboardingComplete?: boolean };
+          const user = res.data as { onboardingComplete?: boolean; settings?: { dashboardTourComplete?: boolean } };
           if (!user.onboardingComplete) {
             router.push('/onboarding');
             return;
+          }
+          // Only show tour for first-time: not if server says complete, and not if this session already completed it (sessionStorage)
+          const sessionCompleted = typeof window !== 'undefined' && window.sessionStorage.getItem('dashboardTourComplete') === 'true';
+          if (!sessionCompleted && !user.settings?.dashboardTourComplete) {
+            setShowTour(true);
           }
         }
         setCheckingOnboarding(false);
@@ -48,6 +55,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <MobileNav />
       <main className="min-h-full pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+          {showTour && (
+            <DashboardTour
+              onClose={() => setShowTour(false)}
+            />
+          )}
           {children}
         </div>
       </main>

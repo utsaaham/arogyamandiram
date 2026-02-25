@@ -101,6 +101,12 @@ export const api = {
       body: JSON.stringify({ targets }),
     }),
 
+  recalculateTargets: () =>
+    apiFetch('/user/recalculate-targets', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+
   // API Keys (sent via dedicated secure endpoint)
   saveApiKeys: (keys: { openai?: string; edamamAppId?: string; edamamAppKey?: string }) =>
     apiFetch('/user/api-keys', {
@@ -121,6 +127,9 @@ export const api = {
 
   getCaloriesHistory: (days: number = 30) =>
     apiFetch(`/daily-log?days=${days}`),
+
+  getRecentFoods: (limit: number = 30, days: number = 60) =>
+    apiFetch(`/daily-log/recent-foods?limit=${limit}&days=${days}`),
 
   createOrUpdateLog: (date: string, data: Record<string, unknown>) =>
     apiFetch('/daily-log', {
@@ -167,6 +176,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ date, workout }),
     }),
+
+  getWorkoutExercises: (days: number = 90) =>
+    apiFetch(`/workouts/exercises?days=${days}`),
 
   removeWorkout: (date: string, workoutId: string) =>
     apiFetch('/workouts', {

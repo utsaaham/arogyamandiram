@@ -45,6 +45,8 @@ export interface UserSettings {
     weighIn: boolean;
     workout: boolean;
   };
+  /** Whether the main dashboard tour has been completed at least once. */
+  dashboardTourComplete?: boolean;
 }
 
 export interface UserTargets {
