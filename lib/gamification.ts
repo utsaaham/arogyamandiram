@@ -319,7 +319,8 @@ export async function calculateAchievements(userId: string): Promise<Achievement
 
   // Perfect week = 7 consecutive calendar days each with all five habits successful
   let perfectWeekFound = false;
-  for (const dateKey of byDate.keys()) {
+  const dateKeys = Array.from(byDate.keys());
+  for (const dateKey of dateKeys) {
     const start = parseISO(dateKey);
     let allPerfect = true;
     for (let offset = 0; offset < 7; offset++) {
@@ -340,7 +341,7 @@ export async function calculateAchievements(userId: string): Promise<Achievement
 
   // Weekend warrior: 2 consecutive calendar days that are weekend (Sat or Sun), both with workout
   const weekendWarriorFound = (() => {
-    for (const dateKey of byDate.keys()) {
+    for (const dateKey of dateKeys) {
       const d1 = parseISO(dateKey);
       const d2 = subDays(d1, 1);
       const day1 = getDay(d1); // 0 = Sun, 6 = Sat
