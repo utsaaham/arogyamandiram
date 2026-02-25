@@ -179,6 +179,23 @@ body::before {
     min-height: 180px;
   }
 
+  /* Grid: prevent card overflow on narrow viewports (iPhone 11, 16 Pro, etc.) */
+  .badge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 768px) {
+    .badge-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .badge-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
   @media (max-width: 639px) {
     .portrait-card {
       min-height: 0;
@@ -199,9 +216,25 @@ body::before {
     }
   }
 
-  /* TCG-style card wrapper: no clip, padding for frame */
+  /* Very small phones (e.g. iPhone SE 320px) – tighter so content fits */
+  @media (max-width: 380px) {
+    .deck-banner {
+      padding: 2px 3px;
+      font-size: 7px;
+    }
+
+    .deck-art-box {
+      min-height: 2rem;
+    }
+
+    .badge-card-wrapper {
+      @apply p-0.5;
+    }
+  }
+
+  /* TCG-style card wrapper: no clip, padding for frame; min-w-0 so grid items can shrink */
   .badge-card-wrapper {
-    @apply overflow-visible p-1;
+    @apply min-w-0 overflow-visible p-1;
   }
 
   /* TCG double-frame: outer + inner like collectible card templates */

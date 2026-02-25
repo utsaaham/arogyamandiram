@@ -65,16 +65,16 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
         type="button"
         onClick={() => !isLocked && onClick?.(badge)}
         className={cn(
-          'portrait-card relative flex w-full flex-col overflow-hidden text-left transition-all duration-200 outline-none',
+          'portrait-card relative flex w-full min-w-0 flex-col overflow-hidden text-left transition-all duration-200 outline-none',
           isLocked ? 'cursor-default' : 'cursor-pointer hover:opacity-95',
           deckClass
         )}
       >
         {/* Top row: NAME (left) + TIER (right) – like deck-building template */}
-        <div className="flex w-full items-stretch gap-0.5 p-1 pb-0 sm:gap-1 sm:p-1.5">
+        <div className="flex w-full min-w-0 shrink-0 items-stretch gap-0.5 p-1 pb-0 sm:gap-1 sm:p-1.5">
           <div
             className={cn(
-              'deck-banner flex min-w-0 flex-1 items-center truncate',
+              'deck-banner flex min-w-0 flex-1 items-center overflow-hidden',
               bannerClass
             )}
           >
@@ -92,13 +92,13 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
 
         {/* TIER label row (rarity word) */}
         {!isLocked && (
-          <div className="mt-0.5 text-center text-[8px] font-bold uppercase tracking-wider text-white/90 sm:mt-1 sm:text-[10px]">
+          <div className="shrink-0 mt-0.5 text-center text-[8px] font-bold uppercase tracking-wider text-white/90 sm:mt-1 sm:text-[10px]">
             {rarity === 'legendary' ? 'Legendary' : rarity === 'epic' ? 'Epic' : rarity === 'rare' ? 'Rare' : 'Common'}
           </div>
         )}
 
         {/* Central ITEM area – icon in bordered box */}
-        <div className="flex flex-1 flex-col items-center justify-center px-1.5 py-1 sm:px-3 sm:py-2">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-1.5 py-0.5 sm:px-3 sm:py-2">
           <div
             className={cn(
               'deck-art-box flex w-full max-w-[56px] items-center justify-center text-xl sm:max-w-[80px] sm:text-3xl',
@@ -110,12 +110,12 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
         </div>
 
         {/* SHORT DESCRIPTION HERE */}
-        <p className="line-clamp-2 px-1 pb-1 text-center text-[9px] leading-snug text-white/80 sm:px-2 sm:pb-1.5 sm:text-[10px]">
+        <p className="line-clamp-2 min-h-0 shrink-0 overflow-hidden px-1 pb-1 text-center text-[9px] leading-snug text-white/80 sm:px-2 sm:pb-1.5 sm:text-[10px]">
           {badge.description}
         </p>
 
         {/* TYPE / ELEMENT footer */}
-        <div className="deck-type-footer border-t border-white/10 py-0.5 text-center text-[8px] text-white/70 sm:py-1 sm:text-[10px]">
+        <div className="deck-type-footer shrink-0 border-t border-white/10 py-0.5 text-center text-[8px] text-white/70 sm:py-1 sm:text-[10px]">
           {typeLabel}
         </div>
       </button>
