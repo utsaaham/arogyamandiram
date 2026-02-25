@@ -19,6 +19,7 @@ import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { getTargetsForUser } from '@/lib/health';
 import {
   cn,
   formatWeight,
@@ -100,7 +101,7 @@ export default function WeightPage() {
 
   const units = user?.settings?.units || 'metric';
   const targetWeight = user?.profile?.targetWeight;
-  const idealWeight = user?.targets?.idealWeight;
+  const idealWeight = getTargetsForUser(user ?? undefined).idealWeight;
   const currentWeight = history.length > 0 ? history[history.length - 1].weight : user?.profile?.weight;
   const startWeight = history.length > 0 ? history[0].weight : currentWeight;
 

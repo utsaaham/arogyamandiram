@@ -1,8 +1,11 @@
 // ============================================
 // Health Calculations - BMR, TDEE, Macros, Water
 // ============================================
+// Formulas: Mifflin-St Jeor (BMR), activity multipliers (TDEE), 35 ml/kg + activity (water),
+// Devine formula (ideal weight), NSF-style age bands (sleep).
 
-import type { Gender, ActivityLevel, Goal, UserTargets } from '@/types';
+import type { Gender, ActivityLevel, Goal, UserTargets, UserProfile } from '@/types';
+import { getAgeFromDateOfBirth } from '@/lib/utils';
 
 // Activity level multipliers (Harris-Benedict revised)
 const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
@@ -97,7 +100,7 @@ export function calculateMacros(
 
 /**
  * Calculate daily water intake recommendation (ml).
- * Based on weight and activity level.
+ * Base: 35 ml per kg body weight; plus activity bonus (standard hydration guidelines).
  */
 export function calculateWaterTarget(weight: number, activityLevel: ActivityLevel): number {
   // Base: 35ml per kg of body weight
@@ -157,12 +160,14 @@ export function calculateDailyCalorieBurn(goal: Goal): number {
 }
 
 /**
- * Recommended sleep hours by age.
+ * Recommended sleep hours by age (NSF-style guidelines).
+ * Teens 14-17: 9h; Adults 18-64: 8h; Older adults 65+: 7.5h.
  */
 export function calculateSleepHours(age: number): number {
-  if (age < 18) return 8;
-  if (age >= 65) return 7.5;
-  return 8;
+  if (age < 14) return 9;
+  if (age < 18) return 9;   // teens 14-17
+  if (age >= 65) return 7.5; // older adults
+  return 8;                  // adults 18-64
 }
 
 /**
@@ -195,4 +200,62 @@ export function generateTargets(
     dailyCalorieBurn,
     sleepHours,
   };
+}
+
+/** Default targets when profile is incomplete (safe fallbacks). */
+const DEFAULT_TARGETS: UserTargets = {
+  dailyCalories: 2000,
+  dailyWater: 2500,
+  protein: 150,
+  carbs: 200,
+  fat: 67,
+  idealWeight: 70,
+  dailyWorkoutMinutes: 30,
+  dailyCalorieBurn: 400,
+  sleepHours: 8,
+};
+
+/** User-like object with optional profile and targets (e.g. from API). */
+export interface UserWithTargets {
+  profile?: UserProfile | null;
+  targets?: UserTargets | null;
+}
+
+/**
+ * Returns formula-based targets for display: uses stored targets if complete,
+ * else computes from profile via generateTargets(), else safe defaults.
+ */
+export function getTargetsForUser(user: UserWithTargets | null | undefined): UserTargets {
+  const t = user?.targets;
+  if (t != null) return t as UserTargets;
+
+  const p = user?.profile;
+  if (!p) return DEFAULT_TARGETS;
+
+  const weight = p.weight > 0 ? p.weight : 0;
+  const height = p.height > 0 ? p.height : 0;
+  const gender = p.gender as Gender | undefined;
+  const activityLevel = p.activityLevel as ActivityLevel | undefined;
+  const goal = p.goal as Goal | undefined;
+
+  let age: number;
+  if (p.dateOfBirth) {
+    age = getAgeFromDateOfBirth(p.dateOfBirth);
+  } else if (typeof p.age === 'number' && p.age >= 13 && p.age <= 120) {
+    age = p.age;
+  } else {
+    return DEFAULT_TARGETS;
+  }
+
+  if (
+    !gender ||
+    !activityLevel ||
+    !goal ||
+    weight <= 0 ||
+    height <= 0
+  ) {
+    return DEFAULT_TARGETS;
+  }
+
+  return generateTargets(weight, height, age, gender, activityLevel, goal);
 }

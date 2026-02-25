@@ -17,6 +17,7 @@ import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { getTargetsForUser } from '@/lib/health';
 import {
   cn,
   formatWater,
@@ -60,7 +61,7 @@ export default function WaterPage() {
   const [period, setPeriod] = useState(14);
 
   const today = getToday();
-  const target = user?.targets?.dailyWater ?? 2500;
+  const target = getTargetsForUser(user ?? undefined).dailyWater;
   const current = log?.waterIntake || 0;
   const percent = calcPercent(current, target);
   const remaining = Math.max(target - current, 0);
@@ -156,21 +157,22 @@ export default function WaterPage() {
                   background: 'linear-gradient(180deg, rgba(34,211,238,0.25) 0%, rgba(34,211,238,0.45) 100%)',
                 }}
               >
-                {/* Wave effect */}
-                <div className="absolute -top-2 left-0 right-0 h-4 overflow-hidden">
-                  <svg
-                    viewBox="0 0 160 16"
-                    className={cn(
-                      'w-full text-accent-cyan/30',
-                      percent > 0 && 'animate-pulse-slow'
-                    )}
-                  >
-                    <path
-                      d="M0 8 Q20 2 40 8 Q60 14 80 8 Q100 2 120 8 Q140 14 160 8 V16 H0 Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </div>
+                {/* Water surface: two gentle wave layers (no sliding, subtle bob only) */}
+                {percent > 0 && (
+                  <div className="absolute -top-1 left-0 right-0 h-5 overflow-hidden pointer-events-none">
+                    <svg viewBox="0 0 160 20" className="absolute inset-0 w-full h-full text-accent-cyan/40 water-wave" preserveAspectRatio="none">
+                      <path d="M0 10 Q40 6 80 10 Q120 14 160 10 L160 20 L0 20 Z" fill="currentColor" />
+                    </svg>
+                    <svg viewBox="0 0 160 20" className="absolute inset-0 w-full h-full text-accent-cyan/20 water-wave-slow" preserveAspectRatio="none">
+                      <path d="M0 10 Q40 14 80 10 Q120 6 160 10 L160 20 L0 20 Z" fill="currentColor" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* Ripple on add */}
+                {animateWave && (
+                  <div className="water-ripple pointer-events-none absolute inset-x-0 -top-1 h-3 rounded-full bg-accent-cyan/25 blur-[3px]" />
+                )}
 
                 {/* Bubbles */}
                 {percent > 10 && (
