@@ -35,6 +35,7 @@ function createEmptyStreaks(): UserStreaks {
       sleep: 0,
       weight: 0,
     },
+    starts: {},
   };
 }
 
@@ -56,8 +57,18 @@ function isSleepSuccess(log: IDailyLog, targets: UserTargets): boolean {
   return log.sleep.duration >= targets.sleepHours;
 }
 
-function isWorkoutSuccess(log: IDailyLog, _targets: UserTargets): boolean {
-  return Boolean(log.workouts && log.workouts.length > 0);
+function isWorkoutSuccess(log: IDailyLog, targets: UserTargets): boolean {
+  const burn = log.caloriesBurned ?? 0;
+
+  // Use the greater of the personalised workout-burn target and a
+  // sensible floor (300 kcal) so streaks feel meaningful even if
+  // targets are unset or very low.
+  const baseTarget = targets.dailyCalorieBurn && targets.dailyCalorieBurn > 0
+    ? targets.dailyCalorieBurn
+    : 300;
+  const threshold = Math.max(300, baseTarget);
+
+  return burn >= threshold;
 }
 
 function isWeightSuccess(log: IDailyLog): boolean {
@@ -128,6 +139,15 @@ export async function calculateStreaks(
   let keepSleep = true;
   let keepWeight = true;
 
+  // Track the first calendar day included in the *current* streak run
+  // for each habit so the UI can say "Streak started Feb 12".
+  let startLogging: string | undefined;
+  let startCalories: string | undefined;
+  let startWater: string | undefined;
+  let startWorkout: string | undefined;
+  let startSleep: string | undefined;
+  let startWeight: string | undefined;
+
   while (keepLogging || keepCalories || keepWater || keepWorkout || keepSleep || keepWeight) {
     const dateKey = formatISO(currentDate, { representation: 'date' });
     const log = byDate.get(dateKey);
@@ -143,34 +163,94 @@ export async function calculateStreaks(
     const healthySuccess =
       caloriesSuccess || waterSuccess || sleepSuccess || workoutSuccess || weightSuccess;
 
-    if (keepLogging && healthySuccess) streaks.current.logging += 1;
-    else keepLogging = false;
+    if (keepLogging && healthySuccess) {
+      streaks.current.logging += 1;
+      startLogging = dateKey;
+    } else {
+      keepLogging = false;
+    }
 
-    if (keepCalories && caloriesSuccess) streaks.current.calories += 1;
-    else keepCalories = false;
+    if (keepCalories && caloriesSuccess) {
+      streaks.current.calories += 1;
+      startCalories = dateKey;
+    } else {
+      keepCalories = false;
+    }
 
-    if (keepWater && waterSuccess) streaks.current.water += 1;
-    else keepWater = false;
+    if (keepWater && waterSuccess) {
+      streaks.current.water += 1;
+      startWater = dateKey;
+    } else {
+      keepWater = false;
+    }
 
-    if (keepWorkout && workoutSuccess) streaks.current.workout += 1;
-    else keepWorkout = false;
+    if (keepWorkout && workoutSuccess) {
+      streaks.current.workout += 1;
+      startWorkout = dateKey;
+    } else {
+      keepWorkout = false;
+    }
 
-    if (keepSleep && sleepSuccess) streaks.current.sleep += 1;
-    else keepSleep = false;
+    if (keepSleep && sleepSuccess) {
+      streaks.current.sleep += 1;
+      startSleep = dateKey;
+    } else {
+      keepSleep = false;
+    }
 
-    if (keepWeight && weightSuccess) streaks.current.weight += 1;
-    else keepWeight = false;
+    if (keepWeight && weightSuccess) {
+      streaks.current.weight += 1;
+      startWeight = dateKey;
+    } else {
+      keepWeight = false;
+    }
 
     currentDate = subDays(currentDate, 1);
     if (!isSameDay(currentDate, fromDate) && currentDate < fromDate) break;
   }
 
-  streaks.best.logging = Math.max(streaks.best.logging, streaks.current.logging);
-  streaks.best.calories = Math.max(streaks.best.calories, streaks.current.calories);
-  streaks.best.water = Math.max(streaks.best.water, streaks.current.water);
-  streaks.best.workout = Math.max(streaks.best.workout, streaks.current.workout);
-  streaks.best.sleep = Math.max(streaks.best.sleep, streaks.current.sleep);
-  streaks.best.weight = Math.max(streaks.best.weight, streaks.current.weight);
+  // Best streaks across the entire window (not just the current run)
+  let runLogging = 0;
+  let runCalories = 0;
+  let runWater = 0;
+  let runWorkout = 0;
+  let runSleep = 0;
+  let runWeight = 0;
+
+  for (const log of logs) {
+    const caloriesSuccess = isCalorieSuccess(log, targets);
+    const waterSuccess = isWaterSuccess(log, targets);
+    const sleepSuccess = isSleepSuccess(log, targets);
+    const workoutSuccess = isWorkoutSuccess(log, targets);
+    const weightSuccess = isWeightSuccess(log);
+
+    const healthySuccess =
+      caloriesSuccess || waterSuccess || sleepSuccess || workoutSuccess || weightSuccess;
+
+    runLogging = healthySuccess ? runLogging + 1 : 0;
+    runCalories = caloriesSuccess ? runCalories + 1 : 0;
+    runWater = waterSuccess ? runWater + 1 : 0;
+    runWorkout = workoutSuccess ? runWorkout + 1 : 0;
+    runSleep = sleepSuccess ? runSleep + 1 : 0;
+    runWeight = weightSuccess ? runWeight + 1 : 0;
+
+    streaks.best.logging = Math.max(streaks.best.logging, runLogging);
+    streaks.best.calories = Math.max(streaks.best.calories, runCalories);
+    streaks.best.water = Math.max(streaks.best.water, runWater);
+    streaks.best.workout = Math.max(streaks.best.workout, runWorkout);
+    streaks.best.sleep = Math.max(streaks.best.sleep, runSleep);
+    streaks.best.weight = Math.max(streaks.best.weight, runWeight);
+  }
+
+  // Attach optional start dates only when the streak is non-zero.
+  streaks.starts = {
+    logging: streaks.current.logging > 0 ? startLogging : undefined,
+    calories: streaks.current.calories > 0 ? startCalories : undefined,
+    water: streaks.current.water > 0 ? startWater : undefined,
+    workout: streaks.current.workout > 0 ? startWorkout : undefined,
+    sleep: streaks.current.sleep > 0 ? startSleep : undefined,
+    weight: streaks.current.weight > 0 ? startWeight : undefined,
+  };
 
   return streaks;
 }
@@ -194,7 +274,8 @@ function awardBadge(
   badgeId: string,
   existingIds: Set<string>,
   newBadges: UserBadge[],
-  nowIso: string
+  earnedAtIso: string,
+  firstEarnedAtIso?: string
 ): void {
   if (existingIds.has(badgeId)) return;
   const def = getBadgeDefinition(badgeId);
@@ -205,7 +286,8 @@ function awardBadge(
     description: def.description,
     icon: def.icon,
     category: def.category,
-    earnedAt: nowIso,
+    earnedAt: earnedAtIso,
+    ...(firstEarnedAtIso ? { firstEarnedAt: firstEarnedAtIso } : {}),
   };
   newBadges.push(badge);
   existingIds.add(badgeId);
@@ -231,6 +313,160 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     calculateStreaks(userId, targets),
     getLogsForBadges(userId),
   ]);
+
+  // ----- First-earned dates for streak-related badges -----
+  type HabitKey = 'water' | 'calories' | 'workout' | 'sleep' | 'weight';
+  const streakLoggingThresholds = [3, 7, 14, 30, 50, 100] as const;
+  const streakHabitThresholds = [7, 14, 30, 50, 100] as const;
+
+  const firstLogging: Partial<Record<(typeof streakLoggingThresholds)[number], string>> = {};
+  const firstHabit: Record<HabitKey, Partial<Record<(typeof streakHabitThresholds)[number], string>>> = {
+    water: {},
+    calories: {},
+    workout: {},
+    sleep: {},
+    weight: {},
+  };
+
+  let runLogging = 0;
+  let runCalories = 0;
+  let runWater = 0;
+  let runWorkout = 0;
+  let runSleep = 0;
+  let runWeight = 0;
+
+  // Start dates for the current running streak of each type. These let us
+  // say \"first earned\" based on the *beginning* of the streak window
+  // instead of the day the threshold was finally crossed.
+  let runStartLogging: string | undefined;
+  let runStartCalories: string | undefined;
+  let runStartWater: string | undefined;
+  let runStartWorkout: string | undefined;
+  let runStartSleep: string | undefined;
+  let runStartWeight: string | undefined;
+
+  for (const log of logs) {
+    const caloriesSuccess = isCalorieSuccess(log, targets);
+    const waterSuccess = isWaterSuccess(log, targets);
+    const sleepSuccess = isSleepSuccess(log, targets);
+    const workoutSuccess = isWorkoutSuccess(log, targets);
+    const weightSuccess = isWeightSuccess(log);
+
+    const healthySuccess =
+      caloriesSuccess || waterSuccess || sleepSuccess || workoutSuccess || weightSuccess;
+
+    // Logging (any healthy success)
+    if (healthySuccess) {
+      if (runLogging === 0) runStartLogging = log.date;
+      runLogging += 1;
+    } else {
+      runLogging = 0;
+      runStartLogging = undefined;
+    }
+
+    // Per-habit runs – set start date when entering a new run
+    if (caloriesSuccess) {
+      if (runCalories === 0) runStartCalories = log.date;
+      runCalories += 1;
+    } else {
+      runCalories = 0;
+      runStartCalories = undefined;
+    }
+
+    if (waterSuccess) {
+      if (runWater === 0) runStartWater = log.date;
+      runWater += 1;
+    } else {
+      runWater = 0;
+      runStartWater = undefined;
+    }
+
+    if (workoutSuccess) {
+      if (runWorkout === 0) runStartWorkout = log.date;
+      runWorkout += 1;
+    } else {
+      runWorkout = 0;
+      runStartWorkout = undefined;
+    }
+
+    if (sleepSuccess) {
+      if (runSleep === 0) runStartSleep = log.date;
+      runSleep += 1;
+    } else {
+      runSleep = 0;
+      runStartSleep = undefined;
+    }
+
+    if (weightSuccess) {
+      if (runWeight === 0) runStartWeight = log.date;
+      runWeight += 1;
+    } else {
+      runWeight = 0;
+      runStartWeight = undefined;
+    }
+
+    for (const t of streakLoggingThresholds) {
+      if (runLogging >= t && !firstLogging[t] && runStartLogging) {
+        firstLogging[t] = runStartLogging;
+      }
+    }
+
+    for (const t of streakHabitThresholds) {
+      if (runCalories >= t && !firstHabit.calories[t] && runStartCalories) {
+        firstHabit.calories[t] = runStartCalories;
+      }
+      if (runWater >= t && !firstHabit.water[t] && runStartWater) {
+        firstHabit.water[t] = runStartWater;
+      }
+      if (runWorkout >= t && !firstHabit.workout[t] && runStartWorkout) {
+        firstHabit.workout[t] = runStartWorkout;
+      }
+      if (runSleep >= t && !firstHabit.sleep[t] && runStartSleep) {
+        firstHabit.sleep[t] = runStartSleep;
+      }
+      if (runWeight >= t && !firstHabit.weight[t] && runStartWeight) {
+        firstHabit.weight[t] = runStartWeight;
+      }
+    }
+  }
+
+  const badgeFirstEarned: Record<string, string> = {};
+
+  // Map logging thresholds to streak_any_* badges
+  const streakLoggingBadgeIds = [
+    'streak_any_3',
+    'streak_any_7',
+    'streak_any_14',
+    'streak_any_30',
+    'streak_any_50',
+    'streak_any_100',
+  ] as const;
+  streakLoggingThresholds.forEach((t, idx) => {
+    const d = firstLogging[t];
+    if (d) {
+      badgeFirstEarned[streakLoggingBadgeIds[idx]] = d;
+    }
+  });
+
+  // Map per-habit thresholds to streak_<habit>_* badges
+  const habitPrefixes: Record<HabitKey, string> = {
+    water: 'streak_water_',
+    calories: 'streak_calories_',
+    workout: 'streak_workout_',
+    sleep: 'streak_sleep_',
+    weight: 'streak_weight_',
+  };
+
+  (Object.keys(firstHabit) as HabitKey[]).forEach((habit) => {
+    const prefix = habitPrefixes[habit];
+    for (const t of streakHabitThresholds) {
+      const d = firstHabit[habit][t];
+      if (d) {
+        const badgeId = `${prefix}${t}`;
+        badgeFirstEarned[badgeId] = d;
+      }
+    }
+  });
 
   const byDate = new Map<string, IDailyLog>();
   for (const log of logs) {
@@ -284,10 +520,12 @@ export async function calculateAchievements(userId: string): Promise<Achievement
 
   // ----- Logging streak (any) -----
   const loggingThresholds = [3, 7, 14, 30, 50, 100];
-  const loggingBadgeIds = ['streak_any_3', 'streak_any_7', 'streak_any_14', 'streak_any_30', 'streak_any_50', 'streak_any_100'];
+  const loggingBadgeIds = ['streak_any_3', 'streak_any_7', 'streak_any_14', 'streak_any_30', 'streak_any_50', 'streak_any_100'] as const;
   for (let i = 0; i < loggingThresholds.length; i++) {
     if (streaks.current.logging >= loggingThresholds[i]) {
-      awardBadge(loggingBadgeIds[i], existingBadgeIds, newBadges, nowIso);
+      const id = loggingBadgeIds[i];
+      const first = badgeFirstEarned[id];
+      awardBadge(id, existingBadgeIds, newBadges, nowIso, first);
     }
   }
 
@@ -298,7 +536,11 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     const current = streaks.current[key];
     const prefix = `streak_${key}_`;
     for (const t of thresholds) {
-      if (current >= t) awardBadge(`${prefix}${t}`, existingBadgeIds, newBadges, nowIso);
+      if (current >= t) {
+        const badgeId = `${prefix}${t}`;
+        const first = badgeFirstEarned[badgeId];
+        awardBadge(badgeId, existingBadgeIds, newBadges, nowIso, first);
+      }
     }
   }
 
@@ -360,7 +602,13 @@ export async function calculateAchievements(userId: string): Promise<Achievement
   })();
   if (weekendWarriorFound) awardBadge('challenge_weekend_warrior', existingBadgeIds, newBadges, nowIso);
 
-  const mergedBadges = [...existingAchievements.badges, ...newBadges];
+  const mergedBadges = [...existingAchievements.badges, ...newBadges].map((badge) => {
+    const first = badgeFirstEarned[badge.id];
+    if (first) {
+      return { ...badge, firstEarnedAt: first };
+    }
+    return badge;
+  });
   const mergedAchievements: UserAchievements = {
     badges: mergedBadges,
     streaks,

@@ -66,7 +66,7 @@ export interface UserStreaks {
     logging: number;    // consecutive days with any log
     calories: number;   // consecutive days within calorie target
     water: number;      // consecutive days meeting water goal
-    workout: number;    // consecutive days with a workout
+    workout: number;    // consecutive days with a workout (meeting burn threshold)
     sleep: number;      // consecutive days meeting sleep target
     weight: number;     // consecutive days logging weight
   };
@@ -74,9 +74,22 @@ export interface UserStreaks {
     logging: number;
     calories: number;
     water: number;
-    workout: number;
+    workout: number;    // longest run of days meeting workout burn threshold
     sleep: number;
     weight: number;
+  };
+  /**
+   * Optional start dates (ISO YYYY-MM-DD) for the *current* streak run
+   * of each habit. Present only when the corresponding `current.*`
+   * value is > 0.
+   */
+  starts?: {
+    logging?: string;
+    calories?: string;
+    water?: string;
+    workout?: string;
+    sleep?: string;
+    weight?: string;
   };
 }
 
@@ -89,6 +102,12 @@ export interface UserBadge {
   icon: string;         // emoji or icon name
   category: BadgeCategory;
   earnedAt: string;     // ISO date string
+  /**
+   * Optional: the first day this badge's condition became true based on
+   * historical logs (e.g. the first day a 7‑day streak was reached),
+   * which can differ from when the badge record itself was created.
+   */
+  firstEarnedAt?: string;
 }
 
 export interface UserAchievements {

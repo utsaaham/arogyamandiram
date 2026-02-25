@@ -60,7 +60,7 @@ export function BadgeGrid({ allDefinitions, earnedBadges, onBadgeClick }: BadgeG
                 {CATEGORY_LABELS[cat]} ({earnedInCat}/{definitions.length})
               </h3>
             </div>
-            <div className="badge-grid grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {definitions.map((def) => {
                 const earned = earnedById.get(def.id);
                 const badge = earned ?? definitionToBadge(def);
