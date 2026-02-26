@@ -2,6 +2,7 @@ import { startOfDay, subDays, formatISO, isSameDay, getDay, parseISO } from 'dat
 import DailyLog from '@/models/DailyLog';
 import User from '@/models/User';
 import { getBadgeDefinition } from '@/lib/badgeDefinitions';
+import { computeDailyXp } from '@/lib/xp';
 import type {
   IDailyLog,
   UserAchievements,
@@ -16,6 +17,19 @@ export interface AchievementsResult {
   achievements: UserAchievements;
   newlyEarnedBadges: UserBadge[];
 }
+
+/** Default targets when user.targets is missing (e.g. legacy or malformed docs). */
+const DEFAULT_TARGETS: UserTargets = {
+  dailyCalories: 2000,
+  dailyWater: 2500,
+  protein: 150,
+  carbs: 200,
+  fat: 67,
+  idealWeight: 70,
+  dailyWorkoutMinutes: 30,
+  dailyCalorieBurn: 400,
+  sleepHours: 8,
+};
 
 function createEmptyStreaks(): UserStreaks {
   return {
@@ -299,20 +313,34 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     throw new Error('User not found');
   }
 
-  const existingAchievements: UserAchievements = user.achievements ?? {
-    badges: [],
-    streaks: createEmptyStreaks(),
+  // Normalize so new/legacy users never have undefined.badges or missing targets
+  const targets: UserTargets =
+    user.targets && typeof user.targets === 'object'
+      ? { ...DEFAULT_TARGETS, ...user.targets }
+      : DEFAULT_TARGETS;
+
+  const existingAchievements: UserAchievements = {
+    badges: Array.isArray(user.achievements?.badges) ? user.achievements.badges : [],
+    streaks:
+      user.achievements?.streaks &&
+      typeof user.achievements.streaks === 'object' &&
+      user.achievements.streaks.current &&
+      user.achievements.streaks.best
+        ? user.achievements.streaks
+        : createEmptyStreaks(),
+    xpTotal: typeof user.achievements?.xpTotal === 'number' ? user.achievements.xpTotal : 0,
   };
 
   const existingBadgeIds = new Set(existingAchievements.badges.map((b) => b.id));
   const newBadges: UserBadge[] = [];
   const nowIso = new Date().toISOString();
-  const targets = user.targets;
 
   const [streaks, logs] = await Promise.all([
     calculateStreaks(userId, targets),
     getLogsForBadges(userId),
   ]);
+
+  const logsList = Array.isArray(logs) ? logs : [];
 
   // ----- First-earned dates for streak-related badges -----
   type HabitKey = 'water' | 'calories' | 'workout' | 'sleep' | 'weight';
@@ -345,7 +373,7 @@ export async function calculateAchievements(userId: string): Promise<Achievement
   let runStartSleep: string | undefined;
   let runStartWeight: string | undefined;
 
-  for (const log of logs) {
+  for (const log of logsList) {
     const caloriesSuccess = isCalorieSuccess(log, targets);
     const waterSuccess = isWaterSuccess(log, targets);
     const sleepSuccess = isSleepSuccess(log, targets);
@@ -469,7 +497,7 @@ export async function calculateAchievements(userId: string): Promise<Achievement
   });
 
   const byDate = new Map<string, IDailyLog>();
-  for (const log of logs) {
+  for (const log of logsList) {
     byDate.set(log.date, log);
   }
 
@@ -496,7 +524,7 @@ export async function calculateAchievements(userId: string): Promise<Achievement
   let hasEarlyBird = false;
   let hasNightOwl = false;
 
-  for (const log of logs) {
+  for (const log of logsList) {
     totalMeals += log.meals?.length ?? 0;
     totalWorkouts += (log.workouts?.length ?? 0);
     totalCaloriesBurned += log.caloriesBurned ?? 0;
@@ -653,10 +681,34 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     return badge;
   });
 
-  // Lifetime XP: preserve existing total and add a bonus for newly earned badges.
-  const existingXpTotal = existingAchievements.xpTotal ?? 0;
+  // Lifetime XP:
+  // - Start from existing total if present
+  // - Optionally rehydrate from DailyLog.xpAwarded / computeDailyXp when xpTotal is missing or zero
+  // - Add a bonus for newly earned badges
+  let baseXpTotal = existingAchievements.xpTotal ?? 0;
+
+  if (!baseXpTotal) {
+    try {
+      let xpFromLogs = 0;
+      for (const log of logsList) {
+        const awarded = (log as IDailyLog & { xpAwarded?: number }).xpAwarded;
+        if (typeof awarded === 'number' && Number.isFinite(awarded) && awarded > 0) {
+          xpFromLogs += awarded;
+        } else {
+          xpFromLogs += computeDailyXp(log, targets);
+        }
+      }
+      if (xpFromLogs > baseXpTotal) {
+        baseXpTotal = xpFromLogs;
+      }
+    } catch (rehydrateErr) {
+      console.warn('[calculateAchievements] XP rehydration skipped:', rehydrateErr);
+      // baseXpTotal stays 0 or existing value
+    }
+  }
+
   const badgeXpDelta = newBadges.length * 10;
-  const xpTotal = existingXpTotal + badgeXpDelta;
+  const xpTotal = baseXpTotal + badgeXpDelta;
 
   const mergedAchievements: UserAchievements = {
     ...existingAchievements,
