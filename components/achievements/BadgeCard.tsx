@@ -66,12 +66,12 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
         type="button"
         onClick={() => !isLocked && onClick?.(badge)}
         className={cn(
-          'portrait-card relative flex w-full flex-col overflow-hidden text-left transition-all duration-200 outline-none',
+          'portrait-card relative flex h-full w-full flex-col overflow-hidden text-left outline-none transition-all duration-200',
           isLocked ? 'cursor-default' : 'cursor-pointer hover:opacity-95',
           deckClass
         )}
       >
-        {/* Top row: NAME (left) + TIER (right) – like deck-building template */}
+        {/* Top row: NAME (left) + TIER (right) – pinned to top */}
         <div className="flex w-full items-stretch gap-0.5 p-1 pb-0 sm:gap-1 sm:p-1.5">
           <div
             className={cn(
@@ -91,33 +91,41 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
           </div>
         </div>
 
-        {/* TIER label row (rarity word) */}
-        {!isLocked && (
-          <div className="mt-0.5 text-center text-[8px] font-bold uppercase tracking-wider text-white/90 sm:mt-1 sm:text-[10px]">
-            {rarity === 'legendary' ? 'Legendary' : rarity === 'epic' ? 'Epic' : rarity === 'rare' ? 'Rare' : 'Common'}
-          </div>
-        )}
-
-        {/* Central ITEM area – icon card */}
-        <div className="flex flex-1 flex-col items-center justify-center px-1.5 py-1 sm:px-3 sm:py-2">
-          {isLocked ? (
-            <span className="inline-block text-2xl leading-none text-text-muted">?</span>
-          ) : (
-            <BadgeIcon
-              badgeId={badge.id}
-              category={badge.category}
-              emoji={badge.icon}
-              className="h-16 w-11 sm:h-20 sm:w-14"
-            />
+        {/* Middle block: rarity label, icon, description. Icon is a direct child (no wrapper). */}
+        <div className="grid flex-1 grid-rows-[auto_1fr_auto] items-center gap-0 px-1.5 pt-0.5 pb-1.5 sm:px-3 sm:pt-1 sm:pb-2">
+          {!isLocked && (
+            <div className="text-center text-[8px] font-bold uppercase tracking-wider text-white/90 sm:text-[10px]">
+              {rarity === 'legendary'
+                ? 'Legendary'
+                : rarity === 'epic'
+                  ? 'Epic'
+                  : rarity === 'rare'
+                    ? 'Rare'
+                    : 'Common'}
+            </div>
           )}
+
+          {isLocked ? (
+            <span className="mx-auto flex h-20 w-20 items-center justify-center sm:h-24 sm:w-24 text-3xl leading-none text-text-muted">
+              ?
+            </span>
+          ) : (
+            <span className="mx-auto flex h-20 w-20 items-center justify-center sm:h-24 sm:w-24">
+              <BadgeIcon
+                badgeId={badge.id}
+                category={badge.category}
+                emoji={badge.icon}
+                className="h-12 w-12 sm:h-14 sm:w-14"
+              />
+            </span>
+          )}
+
+          <p className="mt-1 line-clamp-2 text-center text-[9px] leading-snug text-white/80 sm:text-[10px]">
+            {badge.description}
+          </p>
         </div>
 
-        {/* SHORT DESCRIPTION HERE */}
-        <p className="line-clamp-2 px-1 pb-1 text-center text-[9px] leading-snug text-white/80 sm:px-2 sm:pb-1.5 sm:text-[10px]">
-          {badge.description}
-        </p>
-
-        {/* TYPE / ELEMENT footer */}
+        {/* TYPE / ELEMENT footer – pinned to bottom */}
         <div className="deck-type-footer border-t border-white/10 py-0.5 text-center text-[8px] text-white/70 sm:py-1 sm:text-[10px]">
           {typeLabel}
         </div>

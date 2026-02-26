@@ -8,6 +8,7 @@ import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday, recalcTotalsFromMeals } from '@/lib/utils';
+import { awardDailyXp } from '@/lib/xp';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,9 @@ export async function POST(req: NextRequest) {
     const result = log.toObject() as unknown as Record<string, unknown>;
     const totals = recalcTotalsFromMeals((result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>) ?? []);
     Object.assign(result, totals);
+
+    await awardDailyXp(String(userId), logDate);
+
     return maskedResponse(stripSensitive(result), {
       message: 'Meal added',
     });
@@ -79,6 +83,9 @@ export async function DELETE(req: NextRequest) {
     const result = log.toObject() as unknown as Record<string, unknown>;
     const totals = recalcTotalsFromMeals((result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>) ?? []);
     Object.assign(result, totals);
+
+    await awardDailyXp(String(userId), logDate);
+
     return maskedResponse(stripSensitive(result), {
       message: 'Meal removed',
     });

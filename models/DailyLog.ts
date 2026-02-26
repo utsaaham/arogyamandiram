@@ -91,6 +91,8 @@ const DailyLogSchema = new Schema<IDailyLogDocument>(
     totalFat: { type: Number, default: 0 },
     caloriesBurned: { type: Number, default: 0 },
     notes: { type: String, default: '', maxlength: 500 },
+    // XP already granted for this calendar day (so we can award only the delta).
+    xpAwarded: { type: Number, default: 0, min: 0, max: 50 },
   },
   {
     timestamps: true,
