@@ -1,10 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#10b981"/>
+    <linearGradient id="royal-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F3F42"/>
+      <stop offset="100%" stop-color="#06292B"/>
     </linearGradient>
+
+    <linearGradient id="cream-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDF7E2"/>
+      <stop offset="100%" stop-color="#D9CBA0"/>
+    </linearGradient>
+
+    <filter id="inner-carve" x="-50%" y="-50%" width="200%" height="200%">
+      <feComponentTransfer in="SourceAlpha">
+        <feFuncA type="table" tableValues="1 0" />
+      </feComponentTransfer>
+      <feGaussianBlur stdDeviation="1.5"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feFlood flood-color="#06292B" flood-opacity="0.5" result="color"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feComposite in2="SourceAlpha" operator="in" />
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode/>
+      </feMerge>
+    </filter>
+
+    <filter id="soft-drop">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
   </defs>
-  <rect width="32" height="32" rx="8" fill="url(#g)"/>
-  <text x="16" y="22" text-anchor="middle" font-family="system-ui" font-weight="700" font-size="18" fill="white">A</text>
+
+  <rect width="64" height="64" rx="16" fill="url(#royal-teal)"/>
+
+  <g filter="url(#soft-drop)">
+    <path fill-rule="evenodd" d="
+      M 32 6
+      C 32 11 34 14 36 16
+      C 34 16 33 17 33 19
+      C 33 23 37 26 41 28
+      C 38 28 36 29 36 32
+      C 36 37 42 40 48 42
+      C 43 42 40 43 40 46
+      L 42 46 L 42 50 L 46 50 L 46 54
+      L 18 54 L 18 50 L 22 50 L 22 46
+      L 24 46
+      C 24 43 21 42 16 42
+      C 22 40 28 37 28 32
+      C 28 29 26 28 23 28
+      C 27 26 31 23 31 19
+      C 31 17 30 16 28 16
+      C 30 14 32 11 32 6 Z
+      M 32 18 L 30 24 L 34 24 Z
+      M 32 28 L 28 36 L 36 36 Z"
+          fill="url(#cream-gold)"
+          filter="url(#inner-carve)"/>
+  </g>
 </svg>

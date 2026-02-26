@@ -179,12 +179,11 @@ body::before {
   /* Portrait-style achievement card – TCG proportions (~2.5:3.5); compact on mobile */
   .portrait-card {
     aspect-ratio: 5 / 7;
-    min-height: 180px;
+    min-height: 0;
   }
 
   @media (max-width: 639px) {
     .portrait-card {
-      min-height: 0;
       aspect-ratio: 3 / 4;
     }
 

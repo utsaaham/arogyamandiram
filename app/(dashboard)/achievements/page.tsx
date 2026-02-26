@@ -9,6 +9,7 @@ import { BadgeGrid } from '@/components/achievements/BadgeGrid';
 import { BadgeDetailModal } from '@/components/achievements/BadgeDetailModal';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import type { UserBadge } from '@/types';
+import { getLevelProgress, BASE_LEVEL_XP } from '@/lib/level';
 
 export default function AchievementsPage() {
   const { achievements, loading, error, newlyEarnedBadges } = useAchievements();
@@ -36,10 +37,9 @@ export default function AchievementsPage() {
   const bestLoggingStreak = streaks?.best.logging ?? 0;
   const loggingStreak = streaks?.current.logging ?? 0;
 
-  const xp = totalBadges * 10 + loggingStreak * 2;
-  const level = Math.floor(xp / 50) + 1;
-  const xpIntoLevel = xp % 50;
-  const xpPercent = Math.min(100, Math.round((xpIntoLevel / 50) * 100));
+  // XP/Level from server-side lifetime XP.
+  const xpTotal = achievements?.xpTotal ?? 0;
+  const { level, xpIntoLevel, xpPercent, xpForCurrentLevel } = getLevelProgress(xpTotal);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -65,7 +65,7 @@ export default function AchievementsPage() {
               </span>
               <span className="text-sm font-semibold text-text-primary">Lv {level}</span>
               <span className="text-[10px] text-text-muted">
-                XP {xpIntoLevel}/50
+                XP {xpIntoLevel}/{xpForCurrentLevel || BASE_LEVEL_XP}
               </span>
             </div>
             <div className="glass-card-elevated flex flex-col gap-1 rounded-2xl px-3 py-2">
@@ -106,16 +106,14 @@ export default function AchievementsPage() {
         </div>
       )}
 
-      {streaks && (
-        <div className="space-y-2">
-          <StreakBar streaks={streaks} />
-          <p className="text-[11px] text-text-muted">
-            {loggingStreak >= 7
-              ? 'Keep your streak alive to climb to the next badge tier.'
-              : `Just ${Math.max(1, 7 - loggingStreak)} day${Math.max(1, 7 - loggingStreak) === 1 ? '' : 's'} away from your first 7-day streak badge.`}
-          </p>
-        </div>
-      )}
+      <div className="space-y-2">
+        <StreakBar streaks={streaks} />
+        <p className="text-[11px] text-text-muted">
+          {loggingStreak >= 7
+            ? 'Keep your streak alive to climb to the next badge tier.'
+            : `Just ${Math.max(1, 7 - loggingStreak)} day${Math.max(1, 7 - loggingStreak) === 1 ? '' : 's'} away from your first 7-day streak badge.`}
+        </p>
+      </div>
 
       {newlyEarnedBadges.length > 0 && (
         <div className="glass-card rounded-2xl p-4 animate-card-pop">

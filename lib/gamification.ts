@@ -652,9 +652,17 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     }
     return badge;
   });
+
+  // Lifetime XP: preserve existing total and add a bonus for newly earned badges.
+  const existingXpTotal = existingAchievements.xpTotal ?? 0;
+  const badgeXpDelta = newBadges.length * 10;
+  const xpTotal = existingXpTotal + badgeXpDelta;
+
   const mergedAchievements: UserAchievements = {
+    ...existingAchievements,
     badges: mergedBadges,
     streaks,
+    xpTotal,
   };
 
   await User.findByIdAndUpdate(userId, { achievements: mergedAchievements }).exec();

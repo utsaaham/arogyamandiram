@@ -113,6 +113,7 @@ const UserSchema = new Schema<IUserDocument>(
           weight: { type: Number, default: 0 },
         },
       },
+      xpTotal: { type: Number, default: 0, min: 0 },
     },
     onboardingComplete: { type: Boolean, default: false },
   },
