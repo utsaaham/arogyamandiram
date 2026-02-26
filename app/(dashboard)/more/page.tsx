@@ -3,21 +3,29 @@
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
-  Moon,
   Scale,
-  Sparkles,
+  Dumbbell,
+  Moon,
   Trophy,
+  Key,
+  Target,
+  Bell,
   Settings,
+  Code2,
   LogOut,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const moreItems: { href: string; icon: LucideIcon; label: string }[] = [
-  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/weight', icon: Scale, label: 'Weight' },
-  { href: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
+  { href: '/workout', icon: Dumbbell, label: 'Workout' },
+  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/achievements', icon: Trophy, label: 'Achievements' },
+  { href: '/api-keys', icon: Key, label: 'API Keys' },
+  { href: '/targets', icon: Target, label: 'Targets' },
+  { href: '/preferences', icon: Bell, label: 'Preferences' },
+  { href: '/project', icon: Code2, label: 'Project' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
