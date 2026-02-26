@@ -90,7 +90,17 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-white/[0.04] py-6 text-center text-sm text-text-muted">
-        Arogyamandiram &mdash; Wellness begins within.
+        <p>Arogyamandiram &mdash; Wellness begins within.</p>
+        <p className="mt-2">
+          <a
+            href="https://github.com/utsaaham/arogyamandiram"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-violet hover:underline"
+          >
+            View on GitHub · Contribute
+          </a>
+        </p>
       </footer>
       </main>
     </div>

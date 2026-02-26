@@ -4,18 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  Utensils,
+  Moon,
   Droplets,
-  Dumbbell,
+  Utensils,
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const mobileNav = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-  { href: '/food', icon: Utensils, label: 'Food' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },
-  { href: '/workout', icon: Dumbbell, label: 'Workout' },
+  { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/more', icon: MoreHorizontal, label: 'More' },
 ];
 
