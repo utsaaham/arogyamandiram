@@ -8,6 +8,7 @@ import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday, toLocalDateString } from '@/lib/utils';
+import { awardDailyXp } from '@/lib/xp';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,6 +156,9 @@ export async function POST(req: NextRequest) {
     }
 
     const safe = stripSensitive(result as unknown as Record<string, unknown>);
+
+    await awardDailyXp(String(userId), logDate);
+
     return maskedResponse(
       { ...(safe as Record<string, unknown>), isPr },
       {
@@ -193,6 +197,9 @@ export async function DELETE(req: NextRequest) {
     await log.save();
 
     const result = log.toObject();
+
+    await awardDailyXp(String(userId), logDate);
+
     return maskedResponse(stripSensitive(result as unknown as Record<string, unknown>), {
       message: 'Workout removed',
     });

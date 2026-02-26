@@ -113,6 +113,8 @@ export interface UserBadge {
 export interface UserAchievements {
   badges: UserBadge[];
   streaks: UserStreaks;
+  /** Lifetime XP accumulated from entries + badges. */
+  xpTotal?: number;
 }
 
 export interface IUser {
@@ -192,6 +194,8 @@ export interface IDailyLog {
   totalFat: number;
   caloriesBurned: number;
   notes?: string;
+  /** XP already awarded for this specific date (0–50). */
+  xpAwarded?: number;
   createdAt: Date;
   updatedAt: Date;
 }

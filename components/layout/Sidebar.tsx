@@ -42,18 +42,6 @@ export default function Sidebar() {
         collapsed ? 'w-[72px]' : 'w-[240px]'
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-white/[0.04] px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-violet to-accent-emerald text-sm font-bold">
-          A
-        </div>
-        {!collapsed && (
-          <span className="font-heading text-lg font-bold tracking-tight">
-            Arogya<span className="text-accent-violet">mandiram</span>
-          </span>
-        )}
-      </div>
-
       {/* Nav Items */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map((item) => {

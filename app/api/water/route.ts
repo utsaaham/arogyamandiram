@@ -8,6 +8,7 @@ import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday, toLocalDateString } from '@/lib/utils';
+import { awardDailyXp } from '@/lib/xp';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,6 +83,8 @@ export async function POST(req: NextRequest) {
       },
       { new: true, upsert: true, strict: false }
     ).lean();
+
+    await awardDailyXp(String(userId), logDate);
 
     return maskedResponse({
       date: logDate,

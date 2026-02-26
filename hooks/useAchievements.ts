@@ -4,6 +4,11 @@ import type { UserAchievements, UserBadge, ApiResponse } from '@/types';
 interface AchievementsResponse {
   achievements: UserAchievements;
   newlyEarnedBadges: UserBadge[];
+  xpTotal?: number;
+  xpToday?: number;
+  level?: number;
+  xpIntoLevel?: number;
+  xpPercent?: number;
 }
 
 interface UseAchievementsResult {
