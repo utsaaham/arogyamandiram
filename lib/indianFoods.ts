@@ -78,7 +78,7 @@ const breads: FoodItem[] = [
   { id: 'brd_022', name: 'Lachha Paratha', category: 'bread', servingSize: 70, servingUnit: 'g', calories: 240, protein: 4, carbs: 28, fat: 12, fiber: 1, isVegetarian: true, isVegan: false, tags: ['layered', 'flaky', 'restaurant'] },
   { id: 'brd_023', name: 'Bajra Roti', category: 'bread', servingSize: 50, servingUnit: 'g', calories: 120, protein: 3, carbs: 22, fat: 2, fiber: 3, isVegetarian: true, isVegan: true, tags: ['millet', 'rajasthani', 'gluten free'] },
   { id: 'brd_024', name: 'Jowar Roti', category: 'bread', servingSize: 50, servingUnit: 'g', calories: 115, protein: 3, carbs: 22, fat: 1.5, fiber: 3, isVegetarian: true, isVegan: true, tags: ['sorghum', 'maharashtrian', 'gluten free'] },
-  { id: 'brd_025', name: 'Pav (1 piece)', category: 'bread', servingSize: 1, servingUnit: 'piece', calories: 131, protein: 4.1, carbs: 24, fat: 1.9, fiber: 1, isVegetarian: true, isVegan: true, tags: ['pav', 'bread roll', 'mumbai', 'per piece'] },
+  { id: 'brd_025', name: 'Pav', category: 'bread', servingSize: 1, servingUnit: 'piece', calories: 131, protein: 4.1, carbs: 24, fat: 1.9, fiber: 1, isVegetarian: true, isVegan: true, tags: ['pav', 'bread roll', 'mumbai', 'per piece'] },
 ];
 
 // ---------- RICE DISHES ----------
@@ -143,7 +143,6 @@ const snacks: FoodItem[] = [
   { id: 'snk_011', name: 'Dhokla', category: 'snack', servingSize: 100, servingUnit: 'g', calories: 160, protein: 6, carbs: 24, fat: 4, fiber: 2, isVegetarian: true, isVegan: true, tags: ['dhokla', 'gujarati', 'steamed', 'light'] },
   { id: 'snk_012', name: 'Khandvi', category: 'snack', servingSize: 100, servingUnit: 'g', calories: 140, protein: 5, carbs: 20, fat: 4, fiber: 1, isVegetarian: true, isVegan: true, tags: ['khandvi', 'gujarati', 'rolled'] },
   { id: 'snk_013', name: 'Medu Vada', category: 'snack', servingSize: 50, servingUnit: 'g', calories: 150, protein: 5, carbs: 18, fat: 7, fiber: 2, isVegetarian: true, isVegan: true, tags: ['vada', 'south indian', 'urad dal'] },
-  { id: 'snk_014', name: 'Idli (2 pieces)', category: 'snack', servingSize: 100, servingUnit: 'g', calories: 130, protein: 4, carbs: 26, fat: 0.5, fiber: 1, isVegetarian: true, isVegan: true, tags: ['idli', 'south indian', 'steamed', 'light'] },
   { id: 'snk_015', name: 'Upma', category: 'breakfast', servingSize: 200, servingUnit: 'g', calories: 240, protein: 6, carbs: 36, fat: 8, fiber: 3, isVegetarian: true, isVegan: true, tags: ['upma', 'semolina', 'breakfast'] },
   { id: 'snk_016', name: 'Poha', category: 'breakfast', servingSize: 200, servingUnit: 'g', calories: 250, protein: 5, carbs: 40, fat: 8, fiber: 2, isVegetarian: true, isVegan: true, tags: ['poha', 'flattened rice', 'breakfast', 'maharashtrian'] },
   { id: 'snk_017', name: 'Chilla (Besan)', category: 'breakfast', servingSize: 80, servingUnit: 'g', calories: 150, protein: 6, carbs: 16, fat: 7, fiber: 2, isVegetarian: true, isVegan: true, tags: ['chilla', 'gram flour', 'pancake', 'protein'] },
@@ -211,7 +210,7 @@ const nonVeg: FoodItem[] = [
 
 // ---------- MORE INDIAN (everyday & regional) ----------
 const moreIndian: FoodItem[] = [
-  { id: 'ind_001', name: 'Pav Bhaji Masala', category: 'curry', servingSize: 150, servingUnit: 'g', calories: 180, protein: 4, carbs: 22, fat: 9, fiber: 3, isVegetarian: true, isVegan: true, tags: ['pav bhaji', 'mumbai', 'mashed veg'] },
+  { id: 'ind_001', name: 'Pav Bhaji Masala', category: 'curry', servingSize: 150, servingUnit: 'g', calories: 180, protein: 4, carbs: 22, fat: 9, fiber: 3, isVegetarian: true, isVegan: true, tags: ['pav bhaji masala', 'mumbai', 'mashed veg'] },
   { id: 'ind_002', name: 'Kadai Chicken', category: 'curry', servingSize: 200, servingUnit: 'g', calories: 290, protein: 26, carbs: 10, fat: 18, fiber: 2, isVegetarian: false, isVegan: false, tags: ['kadai', 'chicken', 'bell pepper'] },
   { id: 'ind_003', name: 'Hyderabadi Biryani (Chicken)', category: 'rice', servingSize: 280, servingUnit: 'g', calories: 420, protein: 20, carbs: 48, fat: 18, fiber: 2, isVegetarian: false, isVegan: false, tags: ['biryani', 'hyderabadi', 'dum'] },
   { id: 'ind_004', name: 'Pongal (Ven Pongal)', category: 'breakfast', servingSize: 200, servingUnit: 'g', calories: 240, protein: 8, carbs: 36, fat: 7, fiber: 2, isVegetarian: true, isVegan: true, tags: ['pongal', 'south indian', 'rice', 'pepper'] },
@@ -219,8 +218,7 @@ const moreIndian: FoodItem[] = [
   { id: 'ind_006', name: 'Pesarattu (Green Gram Dosa)', category: 'bread', servingSize: 120, servingUnit: 'g', calories: 160, protein: 8, carbs: 24, fat: 4, fiber: 4, isVegetarian: true, isVegan: true, tags: ['pesarattu', 'andhra', 'protein', 'moong'] },
   { id: 'ind_007', name: 'Rava Dosa', category: 'bread', servingSize: 100, servingUnit: 'g', calories: 140, protein: 3, carbs: 24, fat: 4, fiber: 1, isVegetarian: true, isVegan: true, tags: ['rava dosa', 'crispy', 'semolina'] },
   { id: 'ind_008', name: 'Set Dosa (3 pieces)', category: 'bread', servingSize: 150, servingUnit: 'g', calories: 180, protein: 5, carbs: 32, fat: 4, fiber: 1, isVegetarian: true, isVegan: true, tags: ['set dosa', 'spongy', 'karnataka'] },
-  { id: 'ind_009', name: 'Pav', category: 'bread', servingSize: 50, servingUnit: 'g', calories: 150, protein: 5, carbs: 28, fat: 2, fiber: 1, isVegetarian: true, isVegan: true, tags: ['pav', 'bread', 'mumbai'] },
-  { id: 'ind_010', name: 'Bisi Bele Bath', category: 'rice', servingSize: 250, servingUnit: 'g', calories: 320, protein: 10, carbs: 48, fat: 10, fiber: 4, isVegetarian: true, isVegan: true, tags: ['bisi bele bath', 'karnataka', 'one pot'] },
+  { id: 'ind_010', name: 'Bisi Bele Bath (legacy)', category: 'rice', servingSize: 250, servingUnit: 'g', calories: 320, protein: 10, carbs: 48, fat: 10, fiber: 4, isVegetarian: true, isVegan: true, tags: ['bisi bele bath', 'karnataka', 'one pot', 'legacy'] },
   { id: 'ind_011', name: 'Pulao (Chicken)', category: 'rice', servingSize: 250, servingUnit: 'g', calories: 340, protein: 18, carbs: 40, fat: 12, fiber: 2, isVegetarian: false, isVegan: false, tags: ['chicken pulao', 'aromatic'] },
   { id: 'ind_012', name: 'Tomato Rice', category: 'rice', servingSize: 200, servingUnit: 'g', calories: 260, protein: 4, carbs: 44, fat: 7, fiber: 2, isVegetarian: true, isVegan: true, tags: ['tomato rice', 'south indian', 'tangy'] },
   { id: 'ind_013', name: 'Coconut Rice', category: 'rice', servingSize: 200, servingUnit: 'g', calories: 280, protein: 4, carbs: 42, fat: 10, fiber: 2, isVegetarian: true, isVegan: true, tags: ['coconut rice', 'south indian', 'festive'] },
@@ -229,7 +227,7 @@ const moreIndian: FoodItem[] = [
   { id: 'ind_016', name: 'Chakli', category: 'snack', servingSize: 30, servingUnit: 'g', calories: 145, protein: 2, carbs: 16, fat: 8, fiber: 1, isVegetarian: true, isVegan: true, tags: ['chakli', 'spiral', 'festive'] },
   { id: 'ind_017', name: 'Pongal (Sweet)', category: 'sweet', servingSize: 150, servingUnit: 'g', calories: 280, protein: 6, carbs: 42, fat: 10, fiber: 1, isVegetarian: true, isVegan: false, tags: ['sweet pongal', 'sakkarai', 'jaggery'] },
   { id: 'ind_018', name: 'Semiya Payasam', category: 'sweet', servingSize: 150, servingUnit: 'g', calories: 250, protein: 5, carbs: 40, fat: 8, fiber: 0.5, isVegetarian: true, isVegan: false, tags: ['vermicelli', 'payasam', 'south indian'] },
-  { id: 'ind_019', name: 'Watermelon', category: 'fruit', servingSize: 150, servingUnit: 'g', calories: 45, protein: 1, carbs: 11, fat: 0, fiber: 0.5, isVegetarian: true, isVegan: true, tags: ['watermelon', 'summer', 'hydrating'] },
+  // Watermelon canonical entry is `Watermelon (1 slice)` in moreFruitsDryFruits
   { id: 'ind_020', name: 'Orange (Santra)', category: 'fruit', servingSize: 130, servingUnit: 'g', calories: 62, protein: 1, carbs: 15, fat: 0, fiber: 3, isVegetarian: true, isVegan: true, tags: ['orange', 'vitamin c'] },
   { id: 'ind_021', name: 'Grapes (Angoor)', category: 'fruit', servingSize: 100, servingUnit: 'g', calories: 69, protein: 0.7, carbs: 18, fat: 0, fiber: 0.9, isVegetarian: true, isVegan: true, tags: ['grapes', 'antioxidant'] },
   { id: 'ind_022', name: 'Custard Apple (Sitaphal)', category: 'fruit', servingSize: 100, servingUnit: 'g', calories: 94, protein: 1.5, carbs: 24, fat: 0.4, fiber: 4, isVegetarian: true, isVegan: true, tags: ['sitaphal', 'custard apple', 'tropical'] },
@@ -253,8 +251,6 @@ const moreCurries: FoodItem[] = [
   { id: 'in_cur_031', name: 'Chana Masala', category: 'curry', servingSize: 200, servingUnit: 'g', calories: 250, protein: 12, carbs: 36, fat: 8, fiber: 10, isVegetarian: true, isVegan: true, tags: ['chana', 'chickpea', 'punjabi'] },
   { id: 'in_cur_032', name: 'Goat Curry (Mutton Curry)', category: 'curry', servingSize: 200, servingUnit: 'g', calories: 300, protein: 28, carbs: 8, fat: 18, fiber: 2, isVegetarian: false, isVegan: false, tags: ['mutton', 'goat', 'spicy'] },
   { id: 'in_cur_033', name: 'Chettinad Chicken', category: 'curry', servingSize: 200, servingUnit: 'g', calories: 310, protein: 26, carbs: 12, fat: 20, fiber: 2, isVegetarian: false, isVegan: false, tags: ['chettinad', 'tamil', 'spicy'] },
-  { id: 'in_cur_034', name: 'Pav Bhaji (Gravy)', category: 'curry', servingSize: 200, servingUnit: 'g', calories: 200, protein: 5, carbs: 26, fat: 10, fiber: 4, isVegetarian: true, isVegan: true, tags: ['pav bhaji', 'mumbai', 'mashed'] },
-  { id: 'in_cur_035', name: 'Pav Bhaji (Bhaji only, 100g)', category: 'curry', servingSize: 100, servingUnit: 'g', calories: 107, protein: 3.3, carbs: 18, fat: 9, fiber: 3, isVegetarian: true, isVegan: true, tags: ['pav bhaji', 'bhaji only', 'street food', 'vegetable mash'] },
   { id: 'in_cur_036', name: 'Navratan Korma', category: 'curry', servingSize: 200, servingUnit: 'g', calories: 300, protein: 8, carbs: 24, fat: 20, fiber: 3, isVegetarian: true, isVegan: false, tags: ['navratan', 'korma', 'nine gems', 'creamy'] },
 ];
 
@@ -307,16 +303,13 @@ const moreSnacksStreet: FoodItem[] = [
   { id: 'in_snk_022', name: 'Papdi Chaat', category: 'street_food', servingSize: 150, servingUnit: 'g', calories: 260, protein: 5, carbs: 34, fat: 12, fiber: 3, isVegetarian: true, isVegan: false, tags: ['papdi chaat', 'chaat', 'delhi'] },
   { id: 'in_snk_023', name: 'Sabudana Khichdi', category: 'breakfast', servingSize: 200, servingUnit: 'g', calories: 280, protein: 2, carbs: 52, fat: 8, fiber: 1, isVegetarian: true, isVegan: true, tags: ['sabudana', 'fasting', 'maharashtrian'] },
   { id: 'in_snk_024', name: 'Sabudana Vada (2 pieces)', category: 'snack', servingSize: 80, servingUnit: 'g', calories: 200, protein: 2, carbs: 36, fat: 6, fiber: 0.5, isVegetarian: true, isVegan: true, tags: ['sabudana', 'vada', 'fasting'] },
-  { id: 'in_snk_025', name: 'Pav Bhaji (Full)', category: 'street_food', servingSize: 300, servingUnit: 'g', calories: 450, protein: 12, carbs: 54, fat: 20, fiber: 5, isVegetarian: true, isVegan: false, tags: ['pav bhaji', 'mumbai', 'full'] },
   { id: 'in_snk_026', name: 'Misal Pav', category: 'street_food', servingSize: 300, servingUnit: 'g', calories: 420, protein: 18, carbs: 48, fat: 18, fiber: 6, isVegetarian: true, isVegan: true, tags: ['misal', 'maharashtrian', 'sprouts'] },
   { id: 'in_snk_027', name: 'Dabeli', category: 'street_food', servingSize: 120, servingUnit: 'g', calories: 320, protein: 6, carbs: 42, fat: 14, fiber: 3, isVegetarian: true, isVegan: true, tags: ['dabeli', 'gujarati', 'burger'] },
   { id: 'in_snk_028', name: 'Kachori with Sabzi', category: 'street_food', servingSize: 150, servingUnit: 'g', calories: 340, protein: 8, carbs: 38, fat: 18, fiber: 3, isVegetarian: true, isVegan: true, tags: ['kachori', 'sabzi', 'breakfast'] },
   { id: 'in_snk_029', name: 'Samosa (2 pieces)', category: 'snack', servingSize: 120, servingUnit: 'g', calories: 360, protein: 6, carbs: 42, fat: 18, fiber: 3, isVegetarian: true, isVegan: true, tags: ['samosa', 'aloo', 'fried'] },
-  { id: 'in_snk_030', name: 'Pav Bhaji (Single Pav)', category: 'street_food', servingSize: 180, servingUnit: 'g', calories: 280, protein: 7, carbs: 34, fat: 12, fiber: 3, isVegetarian: true, isVegan: false, tags: ['pav bhaji', 'single', 'mumbai'] },
   { id: 'in_snk_031', name: 'Bread Pakora (2 pieces)', category: 'snack', servingSize: 100, servingUnit: 'g', calories: 280, protein: 6, carbs: 28, fat: 16, fiber: 1, isVegetarian: true, isVegan: false, tags: ['bread pakora', 'fried', 'breakfast'] },
   { id: 'in_snk_032', name: 'Aloo Chaat', category: 'street_food', servingSize: 150, servingUnit: 'g', calories: 200, protein: 3, carbs: 28, fat: 8, fiber: 2, isVegetarian: true, isVegan: true, tags: ['aloo chaat', 'potato', 'chaat'] },
   { id: 'in_snk_033', name: 'Raj Kachori', category: 'street_food', servingSize: 200, servingUnit: 'g', calories: 380, protein: 8, carbs: 42, fat: 20, fiber: 4, isVegetarian: true, isVegan: false, tags: ['raj kachori', 'chaat', 'big'] },
-  { id: 'in_snk_034', name: 'Pav (2 piece with bhaji)', category: 'bread', servingSize: 100, servingUnit: 'g', calories: 300, protein: 10, carbs: 56, fat: 4, fiber: 2, isVegetarian: true, isVegan: true, tags: ['pav', 'double', 'mumbai'] },
 ];
 
 // ---------- ALL INDIAN: ALL DRINKS & BEVERAGES ----------
@@ -368,10 +361,8 @@ const moreChutneysRaita: FoodItem[] = [
 const moreBreakfast: FoodItem[] = [
   { id: 'in_bf_001', name: 'Dalia (Porridge)', category: 'breakfast', servingSize: 200, servingUnit: 'g', calories: 180, protein: 6, carbs: 34, fat: 3, fiber: 4, isVegetarian: true, isVegan: true, tags: ['dalia', 'broken wheat', 'porridge'] },
   { id: 'in_bf_002', name: 'Vermicelli Upma (Semiya)', category: 'breakfast', servingSize: 200, servingUnit: 'g', calories: 260, protein: 5, carbs: 42, fat: 8, fiber: 1, isVegetarian: true, isVegan: true, tags: ['semiya', 'vermicelli', 'upma'] },
-  { id: 'in_bf_003', name: 'Idli (3 pieces)', category: 'breakfast', servingSize: 150, servingUnit: 'g', calories: 195, protein: 6, carbs: 39, fat: 0.5, fiber: 1.5, isVegetarian: true, isVegan: true, tags: ['idli', 'south indian', 'steamed'] },
-  { id: 'in_bf_004', name: 'Dosa (2 pieces)', category: 'breakfast', servingSize: 180, servingUnit: 'g', calories: 240, protein: 6, carbs: 40, fat: 6, fiber: 2, isVegetarian: true, isVegan: true, tags: ['dosa', 'south indian', 'breakfast'] },
-  { id: 'in_bf_010', name: 'Idli (1 piece)', category: 'breakfast', servingSize: 1, servingUnit: 'piece', calories: 65, protein: 2, carbs: 13, fat: 0.3, fiber: 0.5, isVegetarian: true, isVegan: true, tags: ['idli', 'single piece', 'south indian', 'steamed', 'idly'] },
-  { id: 'in_bf_011', name: 'Dosa (1 piece, idli batter)', category: 'breakfast', servingSize: 1, servingUnit: 'piece', calories: 120, protein: 3, carbs: 20, fat: 3, fiber: 1, isVegetarian: true, isVegan: true, tags: ['dosa', 'idli batter', 'south indian', 'breakfast', 'idly dosa'] },
+  { id: 'in_bf_010', name: 'Idli', category: 'breakfast', servingSize: 1, servingUnit: 'piece', calories: 65, protein: 2, carbs: 13, fat: 0.3, fiber: 0.5, isVegetarian: true, isVegan: true, tags: ['idli', 'south indian', 'steamed', 'idly'] },
+  { id: 'in_bf_011', name: 'Dosa', category: 'breakfast', servingSize: 1, servingUnit: 'piece', calories: 120, protein: 3, carbs: 20, fat: 3, fiber: 1, isVegetarian: true, isVegan: true, tags: ['dosa', 'south indian', 'breakfast', 'idly dosa'] },
   { id: 'in_bf_005', name: 'Poha (with peanuts)', category: 'breakfast', servingSize: 220, servingUnit: 'g', calories: 280, protein: 6, carbs: 44, fat: 10, fiber: 2, isVegetarian: true, isVegan: true, tags: ['poha', 'batata poha', 'maharashtrian'] },
   { id: 'in_bf_006', name: 'Aloo Paratha (2 with curd)', category: 'breakfast', servingSize: 220, servingUnit: 'g', calories: 420, protein: 12, carbs: 56, fat: 16, fiber: 4, isVegetarian: true, isVegan: false, tags: ['aloo paratha', 'punjabi', 'breakfast'] },
   { id: 'in_bf_007', name: 'Besan Chilla (2 pieces)', category: 'breakfast', servingSize: 120, servingUnit: 'g', calories: 200, protein: 10, carbs: 22, fat: 8, fiber: 3, isVegetarian: true, isVegan: true, tags: ['chilla', 'besan', 'protein'] },
@@ -427,9 +418,6 @@ const proteinShakes: FoodItem[] = [
 // ---------- DAIRY (Homemade from Amul Gold 6% milk) ----------
 const dairy: FoodItem[] = [
   { id: 'dry_100', name: 'Curd / Dahi (Full-Fat, 100g)', category: 'other', servingSize: 100, servingUnit: 'g', calories: 100, protein: 3.5, carbs: 4.5, fat: 6, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium'] },
-  { id: 'dry_101', name: 'Curd / Dahi (Full-Fat, 1 cup ~245g)', category: 'other', servingSize: 245, servingUnit: 'g', calories: 245, protein: 9, carbs: 11, fat: 15, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium', '1 cup'] },
-  { id: 'dry_102', name: 'Curd / Dahi (Full-Fat, 200g)', category: 'other', servingSize: 200, servingUnit: 'g', calories: 200, protein: 7, carbs: 9, fat: 12, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium'] },
-  { id: 'dry_103', name: 'Curd / Dahi (Full-Fat, 150g)', category: 'other', servingSize: 150, servingUnit: 'g', calories: 150, protein: 5, carbs: 7, fat: 9, fiber: 0, isVegetarian: true, isVegan: false, tags: ['curd', 'dahi', 'yogurt', 'dairy', 'homemade', 'amul gold', '6% milk', 'probiotic', 'calcium'] },
 ];
 
 // ---------- AMERICAN (USDA-style per serving) ----------
@@ -451,6 +439,7 @@ const american: FoodItem[] = [
   { id: 'usa_015', name: 'Peanut Butter (2 tbsp)', category: 'other', servingSize: 32, servingUnit: 'g', calories: 188, protein: 8, carbs: 7, fat: 16, fiber: 2, isVegetarian: true, isVegan: true, tags: ['american', 'peanut butter', 'protein'] },
   { id: 'usa_016', name: 'Oatmeal (1 cup cooked)', category: 'breakfast', servingSize: 234, servingUnit: 'g', calories: 158, protein: 6, carbs: 28, fat: 3, fiber: 4, isVegetarian: true, isVegan: true, tags: ['american', 'oatmeal', 'breakfast', 'fiber'] },
   { id: 'usa_017', name: 'Bagel (plain, 1 piece)', category: 'bread', servingSize: 100, servingUnit: 'g', calories: 257, protein: 10, carbs: 50, fat: 2, fiber: 2, isVegetarian: true, isVegan: true, tags: ['american', 'bagel', 'bread'] },
+  { id: 'usa_023', name: 'Pepperidge Farm 100% Whole Wheat Bread (1 slice)', category: 'bread', servingSize: 1, servingUnit: 'slice', calories: 120, protein: 5, carbs: 21, fat: 2, fiber: 3, isVegetarian: true, isVegan: true, tags: ['american', 'bread', 'pepperidge farm', '100% whole wheat', 'slice'] },
   { id: 'usa_022', name: 'Kirkland Everything Bagel (1 piece)', category: 'bread', servingSize: 1, servingUnit: 'piece', calories: 310, protein: 12, carbs: 61, fat: 2.5, fiber: 2, isVegetarian: true, isVegan: true, tags: ['american', 'bagel', 'bread', 'kirkland', 'costco', 'everything bagel'] },
   { id: 'usa_018', name: 'Muffin (blueberry, 1 piece)', category: 'snack', servingSize: 65, servingUnit: 'g', calories: 240, protein: 4, carbs: 38, fat: 9, fiber: 1, isVegetarian: true, isVegan: false, tags: ['american', 'muffin', 'bakery'] },
   { id: 'usa_019', name: 'Donut (glazed, 1 piece)', category: 'sweet', servingSize: 50, servingUnit: 'g', calories: 226, protein: 3, carbs: 28, fat: 11, fiber: 0.5, isVegetarian: true, isVegan: false, tags: ['american', 'donut', 'sweet'] },
@@ -502,7 +491,6 @@ const spanish: FoodItem[] = [
   { id: 'esp_001', name: 'Paella (1 serving)', category: 'rice', servingSize: 300, servingUnit: 'g', calories: 380, protein: 22, carbs: 42, fat: 14, fiber: 2, isVegetarian: false, isVegan: false, tags: ['spanish', 'paella', 'seafood', 'rice'] },
   { id: 'esp_002', name: 'Spanish Tortilla (1 slice)', category: 'other', servingSize: 120, servingUnit: 'g', calories: 220, protein: 10, carbs: 14, fat: 14, fiber: 1, isVegetarian: true, isVegan: false, tags: ['spanish', 'tortilla', 'potato', 'egg'] },
   { id: 'esp_003', name: 'Gazpacho (1 bowl)', category: 'other', servingSize: 250, servingUnit: 'ml', calories: 80, protein: 2, carbs: 14, fat: 2, fiber: 2, isVegetarian: true, isVegan: true, tags: ['spanish', 'gazpacho', 'cold soup'] },
-  { id: 'esp_004', name: 'Churros (3 pieces)', category: 'sweet', servingSize: 90, servingUnit: 'g', calories: 280, protein: 4, carbs: 38, fat: 12, fiber: 1, isVegetarian: true, isVegan: false, tags: ['spanish', 'churros', 'dessert'] },
   { id: 'esp_005', name: 'Patatas Bravas (1 serving)', category: 'snack', servingSize: 200, servingUnit: 'g', calories: 320, protein: 4, carbs: 38, fat: 18, fiber: 3, isVegetarian: true, isVegan: true, tags: ['spanish', 'potato', 'tapas'] },
   { id: 'esp_006', name: 'Olives (10 pieces)', category: 'snack', servingSize: 30, servingUnit: 'g', calories: 45, protein: 0.5, carbs: 2, fat: 4, fiber: 1, isVegetarian: true, isVegan: true, tags: ['spanish', 'olives', 'tapas'] },
   { id: 'esp_007', name: 'Jamón Serrano (30g)', category: 'other', servingSize: 30, servingUnit: 'g', calories: 60, protein: 8, carbs: 0, fat: 3, fiber: 0, isVegetarian: false, isVegan: false, tags: ['spanish', 'ham', 'cured'] },

@@ -47,7 +47,10 @@ body::before {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 9999;
+  /* Keep the film grain behind all app content and modals
+     so overlays (like badge detail blur) can fully cover
+     the viewport without visible unblurred pixels. */
+  z-index: 0;
   opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
@@ -179,23 +182,6 @@ body::before {
     min-height: 180px;
   }
 
-  /* Grid: prevent card overflow on narrow viewports (iPhone 11, 16 Pro, etc.) */
-  .badge-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (min-width: 768px) {
-    .badge-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .badge-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
   @media (max-width: 639px) {
     .portrait-card {
       min-height: 0;
@@ -212,29 +198,13 @@ body::before {
     }
 
     .deck-art-box {
-      min-height: 2.5rem;
+      min-height: 3rem;
     }
   }
 
-  /* Very small phones (e.g. iPhone SE 320px) – tighter so content fits */
-  @media (max-width: 380px) {
-    .deck-banner {
-      padding: 2px 3px;
-      font-size: 7px;
-    }
-
-    .deck-art-box {
-      min-height: 2rem;
-    }
-
-    .badge-card-wrapper {
-      @apply p-0.5;
-    }
-  }
-
-  /* TCG-style card wrapper: no clip, padding for frame; min-w-0 so grid items can shrink */
+  /* TCG-style card wrapper: no clip, padding for frame */
   .badge-card-wrapper {
-    @apply min-w-0 overflow-visible p-1;
+    @apply overflow-visible p-1;
   }
 
   /* TCG double-frame: outer + inner like collectible card templates */
@@ -340,8 +310,39 @@ body::before {
     border: 2px solid rgba(255, 255, 255, 0.15);
     border-radius: 6px;
     background: rgba(0, 0, 0, 0.5);
-    min-height: 4rem;
+    min-height: 3.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
+
+/* ----- Badge detail flip animation ----- */
+
+.badge-flip-wrapper {
+  perspective: 1400px;
+}
+
+.badge-flip-inner {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.badge-flip-wrapper--flipped .badge-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.badge-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.badge-flip-face--back {
+  transform: rotateY(180deg);
+}
 
   .deck-type-footer {
     font-size: 9px;
