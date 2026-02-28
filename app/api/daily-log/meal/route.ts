@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
     await log.save();
 
     const result = log.toObject() as unknown as Record<string, unknown>;
-    const totals = recalcTotalsFromMeals((result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>) ?? []);
+    const meals = (result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; sugar?: number; sodium?: number }>) ?? [];
+    const totals = recalcTotalsFromMeals(meals);
     Object.assign(result, totals);
 
     await awardDailyXp(String(userId), logDate);
@@ -81,7 +82,8 @@ export async function DELETE(req: NextRequest) {
     await log.save();
 
     const result = log.toObject() as unknown as Record<string, unknown>;
-    const totals = recalcTotalsFromMeals((result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>) ?? []);
+    const meals = (result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; sugar?: number; sodium?: number }>) ?? [];
+    const totals = recalcTotalsFromMeals(meals);
     Object.assign(result, totals);
 
     await awardDailyXp(String(userId), logDate);

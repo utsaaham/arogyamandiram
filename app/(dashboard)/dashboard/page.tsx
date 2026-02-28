@@ -294,16 +294,43 @@ export default function DashboardPage() {
                   color="bg-accent-rose"
                   bgColor="bg-accent-rose/10"
                 />
+                <MacroBar
+                  label="Fiber"
+                  current={log?.totalFiber || 0}
+                  target={25}
+                  unit="g"
+                  color="bg-accent-emerald"
+                  bgColor="bg-accent-emerald/10"
+                />
+                <MacroBar
+                  label="Sugar"
+                  current={log?.totalSugar || 0}
+                  target={50}
+                  unit="g"
+                  color="bg-amber-400"
+                  bgColor="bg-amber-400/10"
+                />
+                <MacroBar
+                  label="Sodium"
+                  current={log?.totalSodium || 0}
+                  target={2300}
+                  unit=" mg"
+                  color="bg-sky-500"
+                  bgColor="bg-sky-500/10"
+                />
 
                 {/* Macro Summary Chips */}
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   {[
-                    { label: 'Protein', value: log?.totalProtein || 0, color: 'text-accent-violet' },
-                    { label: 'Carbs', value: log?.totalCarbs || 0, color: 'text-accent-amber' },
-                    { label: 'Fat', value: log?.totalFat || 0, color: 'text-accent-rose' },
+                    { label: 'Protein', value: log?.totalProtein || 0, color: 'text-accent-violet', unit: 'g' },
+                    { label: 'Carbs', value: log?.totalCarbs || 0, color: 'text-accent-amber', unit: 'g' },
+                    { label: 'Fat', value: log?.totalFat || 0, color: 'text-accent-rose', unit: 'g' },
+                    { label: 'Fiber', value: log?.totalFiber || 0, color: 'text-accent-emerald', unit: 'g' },
+                    { label: 'Sugar', value: log?.totalSugar || 0, color: 'text-amber-400', unit: 'g' },
+                    { label: 'Sodium', value: log?.totalSodium || 0, color: 'text-sky-500', unit: 'mg' },
                   ].map((m) => (
                     <div key={m.label} className="rounded-xl bg-white/[0.03] px-3 py-2 text-center">
-                      <p className={cn('text-lg font-bold', m.color)}>{Math.round(m.value)}g</p>
+                      <p className={cn('text-lg font-bold', m.color)}>{Math.round(m.value)}{m.unit}</p>
                       <p className="text-[10px] text-text-muted">{m.label}</p>
                     </div>
                   ))}

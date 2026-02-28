@@ -16,6 +16,10 @@ const MealEntrySchema = new Schema(
     carbs: { type: Number, default: 0, min: 0 },
     fat: { type: Number, default: 0, min: 0 },
     fiber: { type: Number, default: 0, min: 0 },
+    sugar: { type: Number, default: 0, min: 0 },
+    sodium: { type: Number, default: 0, min: 0 },
+    saturatedFat: { type: Number, default: 0, min: 0 },
+    cholesterol: { type: Number, default: 0, min: 0 },
     quantity: { type: Number, default: 1, min: 0 },
     unit: { type: String, default: 'serving' },
     mealType: {
@@ -89,6 +93,9 @@ const DailyLogSchema = new Schema<IDailyLogDocument>(
     totalProtein: { type: Number, default: 0 },
     totalCarbs: { type: Number, default: 0 },
     totalFat: { type: Number, default: 0 },
+    totalFiber: { type: Number, default: 0 },
+    totalSugar: { type: Number, default: 0 },
+    totalSodium: { type: Number, default: 0 },
     caloriesBurned: { type: Number, default: 0 },
     notes: { type: String, default: '', maxlength: 500 },
     // XP already granted for this calendar day (so we can award only the delta).
@@ -119,11 +126,17 @@ DailyLogSchema.pre('save', function (next) {
     this.totalProtein = this.meals.reduce((sum, m) => sum + m.protein, 0);
     this.totalCarbs = this.meals.reduce((sum, m) => sum + m.carbs, 0);
     this.totalFat = this.meals.reduce((sum, m) => sum + m.fat, 0);
+    this.totalFiber = this.meals.reduce((sum, m) => sum + (m.fiber ?? 0), 0);
+    this.totalSugar = this.meals.reduce((sum, m) => sum + (m.sugar ?? 0), 0);
+    this.totalSodium = this.meals.reduce((sum, m) => sum + (m.sodium ?? 0), 0);
   } else {
     this.totalCalories = 0;
     this.totalProtein = 0;
     this.totalCarbs = 0;
     this.totalFat = 0;
+    this.totalFiber = 0;
+    this.totalSugar = 0;
+    this.totalSodium = 0;
   }
 
   if (this.workouts && this.workouts.length > 0) {

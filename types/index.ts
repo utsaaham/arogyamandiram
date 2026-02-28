@@ -142,6 +142,10 @@ export interface MealEntry {
   carbs: number;
   fat: number;
   fiber?: number;
+  sugar?: number;         // g
+  sodium?: number;        // mg
+  saturatedFat?: number; // g
+  cholesterol?: number;   // mg
   quantity: number;
   unit: string;           // g, ml, piece, cup, tbsp, etc.
   mealType: MealType;
@@ -192,6 +196,9 @@ export interface IDailyLog {
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
+  totalFiber?: number;
+  totalSugar?: number;
+  totalSodium?: number;
   caloriesBurned: number;
   notes?: string;
   /** XP already awarded for this specific date (0–50). */

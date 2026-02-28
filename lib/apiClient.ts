@@ -170,6 +170,12 @@ export const api = {
       body: JSON.stringify({ date, mealId }),
     }),
 
+  aiFoodLogger: (text: string) =>
+    apiFetch<{ meal: Record<string, unknown> }>('/ai/food-logger', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+
   // Workouts
   addWorkout: (date: string, workout: Record<string, unknown>) =>
     apiFetch('/workouts', {

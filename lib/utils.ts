@@ -121,17 +121,44 @@ export function debounce<T extends (...args: unknown[]) => void>(
   };
 }
 
+type MealForRecalc = {
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+};
+
 /** Recalculate daily log totals from meals. Meal calories/macros are already totals for the logged amount. */
-export function recalcTotalsFromMeals(
-  meals: Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }>
-): { totalCalories: number; totalProtein: number; totalCarbs: number; totalFat: number } {
+export function recalcTotalsFromMeals(meals: Array<MealForRecalc>): {
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  totalFiber: number;
+  totalSugar: number;
+  totalSodium: number;
+} {
   if (!meals?.length) {
-    return { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 };
+    return {
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFat: 0,
+      totalFiber: 0,
+      totalSugar: 0,
+      totalSodium: 0,
+    };
   }
   return {
     totalCalories: meals.reduce((s, m) => s + (Number(m.calories) || 0), 0),
     totalProtein: meals.reduce((s, m) => s + (Number(m.protein) || 0), 0),
     totalCarbs: meals.reduce((s, m) => s + (Number(m.carbs) || 0), 0),
     totalFat: meals.reduce((s, m) => s + (Number(m.fat) || 0), 0),
+    totalFiber: meals.reduce((s, m) => s + (Number(m.fiber) || 0), 0),
+    totalSugar: meals.reduce((s, m) => s + (Number(m.sugar) || 0), 0),
+    totalSodium: meals.reduce((s, m) => s + (Number(m.sodium) || 0), 0),
   };
 }

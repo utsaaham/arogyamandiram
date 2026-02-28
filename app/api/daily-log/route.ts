@@ -67,6 +67,9 @@ export async function GET(req: NextRequest) {
         totalProtein: 0,
         totalCarbs: 0,
         totalFat: 0,
+        totalFiber: 0,
+        totalSugar: 0,
+        totalSodium: 0,
         caloriesBurned: 0,
         notes: '',
         isNew: true,
@@ -74,7 +77,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Recalculate totals from meals (meal.calories is already total for logged amount)
-    const meals = (log as { meals?: Array<{ calories?: number; protein?: number; carbs?: number; fat?: number }> }).meals ?? [];
+    const meals = (log as { meals?: Array<{ calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; sugar?: number; sodium?: number }> }).meals ?? [];
     const totals = recalcTotalsFromMeals(meals);
     const logWithRecalc = {
       ...log,

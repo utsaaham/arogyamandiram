@@ -60,6 +60,9 @@ export interface DailyLogData {
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
+  totalFiber?: number;
+  totalSugar?: number;
+  totalSodium?: number;
   caloriesBurned: number;
   notes?: string;
 }
