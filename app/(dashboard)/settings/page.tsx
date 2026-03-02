@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, Key, Save, Settings, Target, User, Ruler, Activity, Flag } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
+import PageHeader from '@/components/ui/PageHeader';
 
 const activityLevels = [
   { value: 'sedentary', label: 'Sedentary', desc: 'Little or no exercise' },
@@ -98,156 +100,232 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
-
-      <div className="glass-card rounded-2xl p-6 max-w-3xl">
-        <h2 className="text-base font-semibold text-text-primary mb-5">Profile Information</h2>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="text-xs font-medium text-text-muted">Full Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-text-muted">Date of birth</label>
-            <input
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2 text-left text-sm"
-              max={new Date().toISOString().split('T')[0]}
-            />
-            {dateOfBirth && (
-              <p className="mt-1 text-xs text-text-muted">
-                Age: {(() => {
-                  const birth = new Date(dateOfBirth);
-                  const today = new Date();
-                  let a = today.getFullYear() - birth.getFullYear();
-                  const m = today.getMonth() - birth.getMonth();
-                  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a -= 1;
-                  return a;
-                })()}{' '}
-                years (updated automatically)
-              </p>
-            )}
-          </div>
-          {!dateOfBirth && (
-            <div>
-              <label className="text-xs font-medium text-text-muted">Age (if no date of birth set)</label>
-              <input
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-                min={10}
-                max={120}
-                placeholder="25"
-              />
-            </div>
-          )}
-          <div>
-            <label className="text-xs font-medium text-text-muted">Gender</label>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-text-muted">Height (cm)</label>
-            <input
-              type="number"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-text-muted">Current Weight (kg)</label>
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-              step={0.1}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-text-muted">Target Weight (kg)</label>
-            <input
-              type="number"
-              value={targetWeight}
-              onChange={(e) => setTargetWeight(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
-              step={0.1}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-text-muted">Activity Level</label>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            {activityLevels.map((al) => (
-              <button
-                key={al.value}
-                onClick={() => setActivityLevel(al.value)}
-                className={cn(
-                  'rounded-xl px-3 py-2.5 text-left text-xs transition-all',
-                  activityLevel === al.value
-                    ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
-                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
-                )}
-              >
-                <p className="font-semibold">{al.label}</p>
-                <p className="mt-0.5 text-[10px] opacity-70">{al.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-text-muted">Goal</label>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {goals.map((g) => (
-              <button
-                key={g.value}
-                onClick={() => setGoal(g.value)}
-                className={cn(
-                  'rounded-xl px-3 py-2.5 text-center text-xs transition-all',
-                  goal === g.value
-                    ? 'bg-accent-emerald/15 text-accent-emerald ring-1 ring-accent-emerald/30'
-                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
-                )}
-              >
-                <p className="font-semibold">{g.label}</p>
-                <p className="mt-0.5 text-[10px] opacity-70">{g.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end border-t border-white/[0.06] pt-4">
-          <button
-            onClick={saveProfile}
-            disabled={saving}
-            className="glass-button-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
+      <PageHeader
+        title="Settings"
+        subtitle="Update your profile to keep targets accurate"
+        icon={Settings}
+        actions={(
+          <Link
+            href="/targets"
+            className="glass-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm"
           >
-            {saving ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            Save Changes
-          </button>
+            <Target className="h-4 w-4 text-accent-amber" />
+            Targets
+          </Link>
+        )}
+      />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-start">
+        {/* Left: quick links */}
+        <div className="space-y-6">
+          <div className="glass-card rounded-2xl p-6">
+            <p className="text-sm font-semibold text-text-primary">Quick links</p>
+            <div className="mt-4 space-y-2">
+              {[
+                { href: '/targets', label: 'Targets', icon: Target, iconClass: 'text-accent-amber' },
+                { href: '/preferences', label: 'Preferences', icon: Bell, iconClass: 'text-accent-violet' },
+                { href: '/api-keys', label: 'API Keys', icon: Key, iconClass: 'text-accent-cyan' },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-sm font-medium text-text-secondary transition-all hover:bg-white/[0.04] hover:text-text-primary"
+                >
+                  <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.04]', item.iconClass)}>
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-6">
+            <p className="text-sm font-semibold text-text-primary">Why this matters</p>
+            <p className="mt-2 text-xs leading-relaxed text-text-muted">
+              Your daily targets and recommendations are recalculated using your profile. Keeping your weight, height,
+              activity, and goal up-to-date improves accuracy across calories, water, workouts, and sleep.
+            </p>
+          </div>
+        </div>
+
+        {/* Right: form sections */}
+        <div className="space-y-6 lg:col-span-3">
+          {/* Personal */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-accent-violet" />
+              <h2 className="text-base font-semibold text-text-primary">Personal</h2>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-text-muted">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-text-muted">Date of birth</label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2 text-left text-sm"
+                  max={new Date().toISOString().split('T')[0]}
+                />
+                {dateOfBirth && (
+                  <p className="mt-1 text-xs text-text-muted">
+                    Age:{' '}
+                    {(() => {
+                      const birth = new Date(dateOfBirth);
+                      const today = new Date();
+                      let a = today.getFullYear() - birth.getFullYear();
+                      const m = today.getMonth() - birth.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a -= 1;
+                      return a;
+                    })()}{' '}
+                    years (updated automatically)
+                  </p>
+                )}
+              </div>
+              {!dateOfBirth && (
+                <div>
+                  <label className="text-xs font-medium text-text-muted">Age (if no date of birth set)</label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                    min={10}
+                    max={120}
+                    placeholder="25"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="text-xs font-medium text-text-muted">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Body metrics */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center gap-2">
+              <Ruler className="h-4 w-4 text-accent-cyan" />
+              <h2 className="text-base font-semibold text-text-primary">Body metrics</h2>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="text-xs font-medium text-text-muted">Height (cm)</label>
+                <input
+                  type="number"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-text-muted">Current Weight (kg)</label>
+                <input
+                  type="number"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  step={0.1}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-text-muted">Target Weight (kg)</label>
+                <input
+                  type="number"
+                  value={targetWeight}
+                  onChange={(e) => setTargetWeight(e.target.value)}
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  step={0.1}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Activity */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-accent-rose" />
+              <h2 className="text-base font-semibold text-text-primary">Activity level</h2>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {activityLevels.map((al) => (
+                <button
+                  key={al.value}
+                  type="button"
+                  onClick={() => setActivityLevel(al.value)}
+                  className={cn(
+                    'rounded-2xl border px-3 py-3 text-left text-xs transition-all',
+                    activityLevel === al.value
+                      ? 'border-accent-violet/30 bg-accent-violet/10 text-accent-violet'
+                      : 'border-white/[0.06] bg-white/[0.03] text-text-muted hover:bg-white/[0.05] hover:text-text-primary'
+                  )}
+                >
+                  <p className="font-semibold">{al.label}</p>
+                  <p className="mt-0.5 text-[10px] opacity-70">{al.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Goal */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center gap-2">
+              <Flag className="h-4 w-4 text-accent-emerald" />
+              <h2 className="text-base font-semibold text-text-primary">Goal</h2>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {goals.map((g) => (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => setGoal(g.value)}
+                  className={cn(
+                    'rounded-2xl border px-4 py-3 text-left text-xs transition-all',
+                    goal === g.value
+                      ? 'border-accent-emerald/30 bg-accent-emerald/10 text-accent-emerald'
+                      : 'border-white/[0.06] bg-white/[0.03] text-text-muted hover:bg-white/[0.05] hover:text-text-primary'
+                  )}
+                >
+                  <p className="font-semibold">{g.label}</p>
+                  <p className="mt-0.5 text-[10px] opacity-70">{g.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end border-t border-white/[0.06] pt-4">
+            <button
+              onClick={saveProfile}
+              disabled={saving}
+              className="glass-button-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>

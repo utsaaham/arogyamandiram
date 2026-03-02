@@ -180,7 +180,7 @@ export default function AiInsightsPage() {
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
   const hasBeenOneWeek = accountCreatedAt === 0 || Date.now() - accountCreatedAt >= oneWeekMs;
   const formatGeneratedDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
   if (userLoading) {
     return (
@@ -207,18 +207,23 @@ export default function AiInsightsPage() {
         <div className="flex items-start gap-3 rounded-2xl border border-accent-amber/20 bg-accent-amber/5 p-4">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-accent-amber" />
           <div>
-            <p className="text-sm font-medium text-text-primary">OpenAI API Key Required</p>
+            <p className="text-sm font-medium text-text-primary">Connect your OpenAI API key</p>
             <p className="mt-1 text-xs text-text-muted">
-              Add your OpenAI API key in Settings to enable AI-powered recommendations.
-              Your key is encrypted and stored securely.
+              AI Insights, meal ideas, and workout plans use your own OpenAI API key. Add a key in
+              Settings to turn these cards on. Your key is encrypted and stored securely.
             </p>
-            <Link
-              href="/settings"
-              className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-accent-violet hover:underline"
-            >
-              <Settings className="h-3.5 w-3.5" />
-              Go to Settings
-            </Link>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Link
+                href="/settings"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-accent-violet px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-violet/90"
+              >
+                <Settings className="h-3.5 w-3.5" />
+                Open Settings
+              </Link>
+              <span className="text-[11px] text-text-muted">
+                You can remove or rotate your key at any time.
+              </span>
+            </div>
           </div>
         </div>
       )}

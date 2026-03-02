@@ -13,6 +13,7 @@ import {
   Settings,
   Code2,
   LogOut,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ const moreItems: { href: string; icon: LucideIcon; label: string }[] = [
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/achievements', icon: Trophy, label: 'Achievements' },
+  { href: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
   { href: '/api-keys', icon: Key, label: 'API Keys' },
   { href: '/targets', icon: Target, label: 'Targets' },
   { href: '/preferences', icon: Bell, label: 'Preferences' },

@@ -19,7 +19,7 @@ const steps = [
   {
     id: 'navigation',
     title: 'Navigation & sections',
-    body: 'Use the sidebar to jump between Dashboard, Food, Water, Workout, Sleep, AI Insights, and Settings.',
+    body: 'Use the sidebar (or bottom nav on mobile) to jump between Dashboard, Food, Water, Workout, Sleep, AI Insights, and Settings.',
   },
   {
     id: 'water',

@@ -1,52 +1,117 @@
 'use client';
 
-import { ArrowUpRight, Code2 } from 'lucide-react';
+import { ArrowUpRight, Code2, Dumbbell, Droplets, Moon, Scale, Sparkles, Trophy, Utensils } from 'lucide-react';
+import PageHeader from '@/components/ui/PageHeader';
+import StatCard from '@/components/ui/StatCard';
+import Link from 'next/link';
 
 const GITHUB_REPO = 'https://github.com/utsaaham/arogyamandiram';
 
 export default function ProjectPage() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-text-primary">Project</h1>
-
-      <div className="glass-card rounded-2xl p-6 max-w-2xl space-y-6">
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-text-primary">
-            Arogyamandiram — Open source health & wellness
-          </h2>
-          <p className="mt-2 text-sm text-text-muted">
-            A holistic health and fitness platform to track water, calories, weight, workouts, and sleep in one place,
-            with personalized guidance and smart insights.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="text-sm text-text-secondary">
-            This project is open source. You can view the code, report issues, or contribute on GitHub.
-          </p>
+      <PageHeader
+        title="Project"
+        subtitle="Arogyamandiram is open source — explore, contribute, and build together"
+        icon={Code2}
+        actions={(
           <a
             href={GITHUB_REPO}
             target="_blank"
             rel="noopener noreferrer"
-            className="glass-button-primary mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+            className="glass-button-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
           >
             <Code2 className="h-5 w-5" />
-            View on GitHub
+            GitHub
             <ArrowUpRight className="h-4 w-4" />
           </a>
+        )}
+      />
+
+      {/* Feature grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        <StatCard icon={Moon} label="Sleep" value="Track" subtitle="quality + duration" iconColor="text-accent-violet" />
+        <StatCard icon={Droplets} label="Water" value="Track" subtitle="daily hydration" iconColor="text-accent-cyan" />
+        <StatCard icon={Utensils} label="Food" value="Log" subtitle="meals + macros" iconColor="text-accent-emerald" />
+        <StatCard icon={Scale} label="Weight" value="Log" subtitle="progress over time" iconColor="text-accent-amber" />
+        <StatCard icon={Dumbbell} label="Workout" value="Log" subtitle="sessions + burn" iconColor="text-accent-rose" />
+        <StatCard icon={Trophy} label="Badges" value="Earn" subtitle="streaks + rewards" iconColor="text-accent-amber" />
+        <StatCard icon={Sparkles} label="AI" value="Assist" subtitle="insights + plans" iconColor="text-accent-violet" />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        {/* Left: about + contribute */}
+        <div className="space-y-6">
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="font-heading text-lg font-semibold text-text-primary">
+              Arogyamandiram — Open source health & wellness
+            </h2>
+            <p className="mt-2 text-sm text-text-muted">
+              A holistic health and fitness platform to track water, calories, weight, workouts, and sleep in one place,
+              with personalized guidance and smart insights.
+            </p>
+          </div>
+
+          <div className="glass-card rounded-2xl p-6">
+            <p className="text-sm font-semibold text-text-primary">How to contribute</p>
+            <ul className="mt-3 space-y-2 text-xs leading-relaxed text-text-muted">
+              <li>1) Open the repo on GitHub and check issues / discussions.</li>
+              <li>2) Propose an improvement (UI polish, new tracker ideas, bug fixes).</li>
+              <li>3) Submit a PR with screenshots and a clear test plan.</li>
+            </ul>
+            <a
+              href={GITHUB_REPO}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="glass-button-secondary mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm"
+            >
+              View repository
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </div>
         </div>
 
-        <p className="text-xs text-text-muted">
-          Repository:{' '}
-          <a
-            href={GITHUB_REPO}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent-violet hover:underline"
-          >
-            {GITHUB_REPO}
-          </a>
-        </p>
+        {/* Right: links */}
+        <div className="space-y-6">
+          <div className="glass-card rounded-2xl p-6">
+            <p className="text-sm font-semibold text-text-primary">Quick pages</p>
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {[
+                { href: '/dashboard', label: 'Dashboard' },
+                { href: '/ai-insights', label: 'AI Insights' },
+                { href: '/achievements', label: 'Achievements' },
+                { href: '/api-keys', label: 'API Keys' },
+                { href: '/targets', label: 'Targets' },
+                { href: '/settings', label: 'Settings' },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-center text-xs font-medium text-text-secondary transition-all hover:bg-white/[0.04] hover:text-text-primary"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-6">
+            <p className="text-sm font-semibold text-text-primary">Repository</p>
+            <p className="mt-2 text-xs text-text-muted">
+              <a
+                href={GITHUB_REPO}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-violet hover:underline"
+              >
+                {GITHUB_REPO}
+              </a>
+            </p>
+            <p className="mt-2 text-xs text-text-muted">
+              Report issues, suggest features, or browse the code.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
