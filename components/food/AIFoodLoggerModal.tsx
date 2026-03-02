@@ -74,7 +74,7 @@ export default function AIFoodLoggerModal({ onClose, onAdd, loading }: AIFoodLog
     try {
       const res = await api.aiFoodLogger(trimmed);
       if (res.success && res.data?.meal) {
-        const m = res.data.meal as ParsedMeal;
+        const m = res.data.meal as unknown as ParsedMeal;
         setMeal({
           name: m.name ?? 'Meal',
           calories: Number(m.calories) || 0,
