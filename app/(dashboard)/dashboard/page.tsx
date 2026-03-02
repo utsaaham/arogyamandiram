@@ -164,7 +164,7 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/food"
-          className="glass-button-primary mt-2 hidden items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0 sm:flex"
+          className="glass-button-primary mt-2 hidden items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0 sm:flex lg:hidden"
         >
           <Plus className="h-4 w-4" />
           Log Food
@@ -257,18 +257,20 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-around">
-              {/* Calorie Ring */}
-              <div className="flex flex-col items-center gap-2">
-                <ProgressRing
-                  progress={calPercent}
-                  size={160}
-                  strokeWidth={12}
-                  color={calPercent > 100 ? 'stroke-accent-rose' : 'stroke-accent-emerald'}
-                  value={formatNumber(Math.round(totalCal))}
-                  label="kcal consumed"
-                  sublabel={`of ${formatNumber(targets.dailyCalories)}`}
-                />
+            <div className="flex flex-col sm:flex-row sm:items-stretch sm:justify-around gap-8">
+              {/* Calorie Ring — vertically centered in left half */}
+              <div className="flex flex-1 min-h-0 items-center justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <ProgressRing
+                    progress={calPercent}
+                    size={220}
+                    strokeWidth={14}
+                    color={calPercent > 100 ? 'stroke-accent-rose' : 'stroke-accent-emerald'}
+                    value={formatNumber(Math.round(totalCal))}
+                    label="kcal consumed"
+                    sublabel={`of ${formatNumber(targets.dailyCalories)}`}
+                  />
+                </div>
               </div>
 
               {/* Macro Bars */}
@@ -294,20 +296,31 @@ export default function DashboardPage() {
                   color="bg-accent-rose"
                   bgColor="bg-accent-rose/10"
                 />
+                <MacroBar
+                  label="Fiber"
+                  current={log?.totalFiber || 0}
+                  target={25}
+                  unit="g"
+                  color="bg-accent-emerald"
+                  bgColor="bg-accent-emerald/10"
+                />
+                <MacroBar
+                  label="Sugar"
+                  current={log?.totalSugar || 0}
+                  target={50}
+                  unit="g"
+                  color="bg-amber-400"
+                  bgColor="bg-amber-400/10"
+                />
+                <MacroBar
+                  label="Sodium"
+                  current={log?.totalSodium || 0}
+                  target={2300}
+                  unit=" mg"
+                  color="bg-sky-500"
+                  bgColor="bg-sky-500/10"
+                />
 
-                {/* Macro Summary Chips */}
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  {[
-                    { label: 'Protein', value: log?.totalProtein || 0, color: 'text-accent-violet' },
-                    { label: 'Carbs', value: log?.totalCarbs || 0, color: 'text-accent-amber' },
-                    { label: 'Fat', value: log?.totalFat || 0, color: 'text-accent-rose' },
-                  ].map((m) => (
-                    <div key={m.label} className="rounded-xl bg-white/[0.03] px-3 py-2 text-center">
-                      <p className={cn('text-lg font-bold', m.color)}>{Math.round(m.value)}g</p>
-                      <p className="text-[10px] text-text-muted">{m.label}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -363,16 +376,20 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-4">
-            <ProgressRing
-              progress={waterPercent}
-              size={130}
-              strokeWidth={10}
-              color="stroke-accent-cyan"
-              value={formatWater(log?.waterIntake || 0)}
-              label="of target"
-              sublabel={formatWater(targets.dailyWater)}
-            />
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-4 lg:py-8">
+            <div className="flex w-full flex-1 items-center justify-center">
+              <div className="origin-center scale-100 lg:scale-[1.55]">
+                <ProgressRing
+                  progress={waterPercent}
+                  size={130}
+                  strokeWidth={10}
+                  color="stroke-accent-cyan"
+                  value={formatWater(log?.waterIntake || 0)}
+                  label="of target"
+                  sublabel={formatWater(targets.dailyWater)}
+                />
+              </div>
+            </div>
             <p className="text-sm font-medium text-text-secondary">
               {waterPercent >= 100
                 ? '🎉 Goal reached!'

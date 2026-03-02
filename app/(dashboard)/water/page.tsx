@@ -10,6 +10,7 @@ import {
   Minus,
   BarChart3,
 } from 'lucide-react';
+import WaterGlass from '@/components/water/WaterGlass';
 import ProgressRing from '@/components/ui/ProgressRing';
 import MetricChart from '@/components/ui/MetricChart';
 import { CardSkeleton } from '@/components/ui/Skeleton';
@@ -142,60 +143,12 @@ export default function WaterPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left: Water Visualization */}
         <div className="glass-card flex flex-col items-center rounded-2xl p-6">
-          {/* Animated Water Glass */}
-          <div className="relative mb-6 h-64 w-40">
-            {/* Glass outline */}
-            <div className="absolute inset-0 rounded-b-3xl rounded-t-lg border-2 border-white/[0.08] bg-white/[0.02]">
-              {/* Water fill */}
-              <div
-                className={cn(
-                  'absolute bottom-0 left-0 right-0 rounded-b-[22px] transition-all duration-1000 ease-out',
-                  animateWave && 'animate-water-fill'
-                )}
-                style={{
-                  height: `${Math.min(percent, 100)}%`,
-                  background: 'linear-gradient(180deg, rgba(34,211,238,0.25) 0%, rgba(34,211,238,0.45) 100%)',
-                }}
-              >
-                {/* Water surface: two gentle wave layers (no sliding, subtle bob only) */}
-                {percent > 0 && (
-                  <div className="absolute -top-1 left-0 right-0 h-5 overflow-hidden pointer-events-none">
-                    <svg viewBox="0 0 160 20" className="absolute inset-0 w-full h-full text-accent-cyan/40 water-wave" preserveAspectRatio="none">
-                      <path d="M0 10 Q40 6 80 10 Q120 14 160 10 L160 20 L0 20 Z" fill="currentColor" />
-                    </svg>
-                    <svg viewBox="0 0 160 20" className="absolute inset-0 w-full h-full text-accent-cyan/20 water-wave-slow" preserveAspectRatio="none">
-                      <path d="M0 10 Q40 14 80 10 Q120 6 160 10 L160 20 L0 20 Z" fill="currentColor" />
-                    </svg>
-                  </div>
-                )}
-
-                {/* Ripple on add */}
-                {animateWave && (
-                  <div className="water-ripple pointer-events-none absolute inset-x-0 -top-1 h-3 rounded-full bg-accent-cyan/25 blur-[3px]" />
-                )}
-
-                {/* Bubbles */}
-                {percent > 10 && (
-                  <>
-                    <div className="absolute bottom-4 left-6 h-2 w-2 animate-bounce rounded-full bg-white/20" style={{ animationDelay: '0s', animationDuration: '3s' }} />
-                    <div className="absolute bottom-8 right-8 h-1.5 w-1.5 animate-bounce rounded-full bg-white/15" style={{ animationDelay: '1s', animationDuration: '4s' }} />
-                    <div className="absolute bottom-12 left-12 h-1 w-1 animate-bounce rounded-full bg-white/10" style={{ animationDelay: '2s', animationDuration: '3.5s' }} />
-                  </>
-                )}
-              </div>
-
-              {/* Target line */}
-              <div
-                className="absolute left-0 right-0 border-t border-dashed border-accent-cyan/30"
-                style={{ bottom: '100%', transform: 'translateY(0)' }}
-              />
-
-              {/* Percentage text in center of glass */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-text-primary">{Math.round(percent)}%</span>
-                <span className="text-xs text-text-muted">hydrated</span>
-              </div>
-            </div>
+          <div className="mb-6">
+            <WaterGlass
+              percent={percent}
+              isPouring={animateWave}
+              amount={remaining > 0 ? Math.min(250, remaining) : 250}
+            />
           </div>
 
           {/* Amount Display */}

@@ -352,7 +352,21 @@ body::before {
   }
 }
 
-/* ---------- Water Surface: gentle bob (no sliding) ---------- */
+/* ---------- Water: wave container + horizontal slide ---------- */
+.water-wave-container {
+  width: 100%;
+}
+
+.water-wave-slide-inner {
+  animation: waterWaveSlide 10s linear infinite;
+}
+
+@keyframes waterWaveSlide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Water surface: gentle vertical bob (idle) */
 @keyframes waterSurfaceBob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }
@@ -362,7 +376,6 @@ body::before {
   animation: waterSurfaceBob 3.5s ease-in-out infinite;
 }
 
-/* Second wave layer: slight phase offset for depth */
 @keyframes waterSurfaceBobSlow {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-1px); }
@@ -373,10 +386,50 @@ body::before {
   animation-delay: 0.8s;
 }
 
+/* Slosh: stronger bob when pouring */
+.water-wave-slosh.water-wave {
+  animation: waterSurfaceBobSlosh 0.6s ease-in-out infinite;
+}
+
+.water-wave-slosh.water-wave-slow {
+  animation: waterSurfaceBobSloshSlow 0.7s ease-in-out infinite;
+  animation-delay: 0.1s;
+}
+
+@keyframes waterSurfaceBobSlosh {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes waterSurfaceBobSloshSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 /* Optional: very subtle shimmer on water fill */
 @keyframes waterShimmer {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.97; }
+}
+
+/* ---------- Internal waves: gentle drift inside the water (not on surface) ---------- */
+@keyframes waterInnerWave1 {
+  0%, 100% { transform: translateX(-15%); }
+  50% { transform: translateX(15%); }
+}
+
+@keyframes waterInnerWave2 {
+  0%, 100% { transform: translateX(10%); }
+  50% { transform: translateX(-10%); }
+}
+
+.water-inner-wave-1 {
+  animation: waterInnerWave1 8s ease-in-out infinite;
+}
+
+.water-inner-wave-2 {
+  animation: waterInnerWave2 10s ease-in-out infinite;
+  animation-delay: 1s;
 }
 
 /* ---------- Water Ripple on Add ---------- */
@@ -398,6 +451,36 @@ body::before {
 .water-ripple {
   animation: waterRipple 0.9s ease-out;
   transform-origin: center;
+}
+
+/* ---------- Surface glow: gentle pulse (idle) ---------- */
+@keyframes waterSurfaceGlow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}
+
+.water-surface-glow {
+  animation: waterSurfaceGlow 2.5s ease-in-out infinite;
+}
+
+/* Surface glow when pouring: more intense */
+@keyframes waterSurfaceGlowIntense {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+
+.water-surface-glow-intense {
+  animation: waterSurfaceGlowIntense 0.5s ease-in-out infinite;
+}
+
+/* ---------- Pour stream: subtle width shimmer ---------- */
+@keyframes waterPourStreamShimmer {
+  0%, 100% { opacity: 1; transform: translateX(-50%) scaleX(1); }
+  50% { opacity: 0.85; transform: translateX(-50%) scaleX(1.08); }
+}
+
+.water-pour-stream {
+  animation: waterPourStreamShimmer 0.3s ease-in-out infinite;
 }
 
 /* ---------- Skeleton Loading ---------- */
