@@ -64,6 +64,10 @@ const config: Config = {
         'slide-up': 'slideUp 0.5s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'water-fill': 'waterFill 1s ease-out forwards',
+        'water-wave-slide': 'waterWaveSlide 10s linear infinite',
+        'water-surface-glow': 'waterSurfaceGlow 2.5s ease-in-out infinite',
+        'water-surface-glow-intense': 'waterSurfaceGlowIntense 0.5s ease-in-out infinite',
+        'water-pour-stream': 'waterPourStreamShimmer 0.3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -77,6 +81,22 @@ const config: Config = {
         waterFill: {
           '0%': { height: '0%' },
           '100%': { height: 'var(--fill-height)' },
+        },
+        waterWaveSlide: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        waterSurfaceGlow: {
+          '0%, 100%': { opacity: '0.35' },
+          '50%': { opacity: '0.6' },
+        },
+        waterSurfaceGlowIntense: {
+          '0%, 100%': { opacity: '0.5' },
+          '50%': { opacity: '0.9' },
+        },
+        waterPourStreamShimmer: {
+          '0%, 100%': { opacity: '1', transform: 'translateX(-50%) scaleX(1)' },
+          '50%': { opacity: '0.85', transform: 'translateX(-50%) scaleX(1.08)' },
         },
       },
     },
