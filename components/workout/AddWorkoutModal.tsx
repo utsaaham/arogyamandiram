@@ -11,6 +11,7 @@ import {
   Bike,
   Waves,
   Timer,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import api from '@/lib/apiClient';
@@ -31,6 +32,7 @@ interface AddWorkoutModalProps {
 }
 
 const workoutCategories = [
+  { key: 'recent', label: 'Recent', icon: Clock },
   { key: 'cardio', label: 'Cardio', icon: Heart },
   { key: 'strength', label: 'Strength', icon: Dumbbell },
   { key: 'flexibility', label: 'Flexibility', icon: Waves },
@@ -236,12 +238,13 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
   const handleSubmit = () => {
     const exerciseName = customExercise || exercise;
     if (!exerciseName) return;
+    const sendCategory = category === 'recent' ? 'other' : category;
 
     const totalReps = parseInt(reps) || 0;
     if (isRepBased) {
       onAdd({
         exercise: exerciseName,
-        category,
+        category: sendCategory,
         duration: 0,
         caloriesBurned: parseInt(caloriesBurned) || estimatedCal,
         reps: totalReps,
@@ -252,7 +255,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
 
     onAdd({
       exercise: exerciseName,
-      category,
+      category: sendCategory,
       duration: parseInt(duration) || 0,
       caloriesBurned: parseInt(caloriesBurned) || estimatedCal,
       ...(sets && { sets: parseInt(sets) }),
@@ -276,12 +279,13 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
   const suggestionPool = Array.from(new Set([...allPresetNames, ...historyNames]));
 
   const query = currentExerciseName.trim().toLowerCase();
+  // Only show suggestion pills when user has typed; Recent tab has its own list, other tabs stay minimal until search.
   const suggestions =
     query.length > 0
       ? suggestionPool
           .filter((name) => name.toLowerCase().includes(query) && name !== currentExerciseName)
           .slice(0, 6)
-      : historyNames.slice(0, 6);
+      : [];
 
   const categoryMeta = workoutCategories.find((c) => c.key === category);
   const exerciseEmoji =
@@ -331,25 +335,50 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
             </div>
           </div>
 
-          {/* Preset Exercises */}
+          {/* Exercise: Recent list (when Recent tab) or preset grid (Cardio/Strength/etc.) + search */}
           <div>
             <label className="text-xs font-medium text-text-muted">Exercise</label>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {presets.map((p) => (
-                <button
-                  key={p.name}
-                  onClick={() => handleExerciseSelect(p.name)}
-                  className={cn(
-                    'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
-                    exercise === p.name
-                      ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
-                      : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
-                  )}
-                >
-                  {p.name}
-                </button>
-              ))}
-            </div>
+            {category === 'recent' ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {recentExercises.length === 0 ? (
+                  <p className="text-xs text-text-muted">No recent exercises yet. Log a workout from any category to see them here.</p>
+                ) : (
+                  recentExercises.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => handleSuggestionSelect(item.name)}
+                      className={cn(
+                        'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
+                        (exercise === item.name || customExercise === item.name)
+                          ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                      )}
+                    >
+                      {item.name}
+                      {item.count > 1 && <span className="ml-1 opacity-70">({item.count}×)</span>}
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {presets.map((p) => (
+                  <button
+                    key={p.name}
+                    onClick={() => handleExerciseSelect(p.name)}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
+                      exercise === p.name
+                        ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                        : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                    )}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            )}
             <input
               type="text"
               value={customExercise}

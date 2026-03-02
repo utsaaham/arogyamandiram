@@ -14,6 +14,8 @@ interface CustomFoodModalProps {
     carbs: number;
     fat: number;
     fiber: number;
+    sugar?: number;
+    sodium?: number;
     quantity: number;
     unit: string;
     mealType: string;
@@ -44,6 +46,9 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+  const [fiber, setFiber] = useState('');
+  const [sugar, setSugar] = useState('');
+  const [sodium, setSodium] = useState('');
   const [quantity, setQuantity] = useState('100');
   const [unit, setUnit] = useState('g');
   const [mealType, setMealType] = useState(getDefaultMealType());
@@ -51,6 +56,9 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
 
   const handleSubmit = () => {
     if (!name.trim() || !calories) return;
+    const fiberNum = parseFloat(fiber) || 0;
+    const sugarNum = parseFloat(sugar) || 0;
+    const sodiumNum = parseFloat(sodium) || 0;
     onAdd({
       foodId: `custom-${Date.now()}`,
       name: name.trim(),
@@ -58,7 +66,9 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
       protein: parseFloat(protein) || 0,
       carbs: parseFloat(carbs) || 0,
       fat: parseFloat(fat) || 0,
-      fiber: 0,
+      fiber: fiberNum,
+      ...(sugarNum > 0 && { sugar: sugarNum }),
+      ...(sodiumNum > 0 && { sodium: sodiumNum }),
       quantity: parseFloat(quantity) || 100,
       unit,
       mealType,
@@ -162,6 +172,36 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
+                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-text-muted">Fiber (g)</label>
+              <input
+                type="number"
+                value={fiber}
+                onChange={(e) => setFiber(e.target.value)}
+                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-text-muted">Sugar (g)</label>
+              <input
+                type="number"
+                value={sugar}
+                onChange={(e) => setSugar(e.target.value)}
+                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-text-muted">Sodium (mg)</label>
+              <input
+                type="number"
+                value={sodium}
+                onChange={(e) => setSodium(e.target.value)}
                 className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
                 placeholder="0"
               />
