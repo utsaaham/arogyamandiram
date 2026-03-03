@@ -1,72 +1,16 @@
-'use client';
+import { Suspense, type ReactNode } from 'react';
+import DashboardLayoutClient from '@/components/layout/DashboardLayoutClient';
 
-import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Sidebar from '@/components/layout/Sidebar';
-import MobileNav from '@/components/layout/MobileNav';
-import DashboardTour from '@/components/tour/DashboardTour';
-import api from '@/lib/apiClient';
-
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
-  const [showTour, setShowTour] = useState(false);
-
-  const forceTour = searchParams?.get('tour') === '1';
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-      return;
-    }
-    if (status === 'authenticated') {
-      // Check if onboarding is complete
-      api
-        .getUser()
-        .then((res) => {
-          if (res.success && res.data) {
-            const user = res.data as { onboardingComplete?: boolean };
-            if (!user.onboardingComplete && !forceTour) {
-              router.push('/onboarding');
-              return;
-            }
-            // Always show the platform tour once user has completed onboarding,
-            // or when explicitly forced via query param.
-            setShowTour(true);
-          }
-          setCheckingOnboarding(false);
-        })
-        .catch(() => setCheckingOnboarding(false));
-    }
-  }, [status, router, forceTour]);
-
-  if (status === 'loading' || checkingOnboarding) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!session) return null;
-
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="hide-scrollbar fixed inset-0 overflow-y-auto overscroll-behavior-y-contain">
-      <Sidebar />
-      <MobileNav />
-      <main className="min-h-full pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-          {showTour && (
-            <DashboardTour
-              onClose={() => setShowTour(false)}
-            />
-          )}
-          {children}
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
         </div>
-      </main>
-    </div>
+      }
+    >
+      <DashboardLayoutClient>{children}</DashboardLayoutClient>
+    </Suspense>
   );
 }

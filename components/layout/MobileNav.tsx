@@ -35,12 +35,14 @@ export default function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-medium transition-colors',
+                'flex flex-1 items-center justify-center py-2 transition-colors',
                 isActive ? 'text-accent-violet' : 'text-text-muted'
               )}
             >
-              <item.icon className={cn('h-5 w-5', isActive && 'text-accent-violet')} />
-              <span>{item.label}</span>
+              <item.icon
+                aria-label={item.label}
+                className={cn('h-5 w-5', isActive && 'text-accent-violet')}
+              />
             </Link>
           );
         })}
