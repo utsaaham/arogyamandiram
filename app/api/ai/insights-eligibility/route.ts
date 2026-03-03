@@ -27,9 +27,8 @@ export async function GET() {
     const user = await User.findById(userId).select('createdAt').lean();
     if (!user) return errorResponse('User not found', 404);
 
-    const accountCreatedAt = (user as { createdAt?: string }).createdAt
-      ? new Date((user as { createdAt: string }).createdAt).getTime()
-      : 0;
+    const accountCreatedAt =
+      ((user as { createdAt?: Date }).createdAt?.getTime()) ?? 0;
     const accountAgeDays = accountCreatedAt ? Math.floor((Date.now() - accountCreatedAt) / ONE_DAY_MS) : 0;
 
     const logStats = await DailyLog.aggregate([
