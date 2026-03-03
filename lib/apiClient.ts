@@ -218,10 +218,13 @@ export const api = {
       body: JSON.stringify({ type: 'workout', ...context }),
     }),
 
-  getInsights: () =>
+  getInsightsEligibility: () =>
+    apiFetch('/ai/insights-eligibility'),
+
+  getInsights: (params?: { period?: 'yesterday' | 'week' | 'month' | 'year'; startDate?: string; endDate?: string }) =>
     apiFetch('/ai/recommendations', {
       method: 'POST',
-      body: JSON.stringify({ type: 'insights' }),
+      body: JSON.stringify({ type: 'insights', ...params }),
     }),
 
   getSleepTips: () =>

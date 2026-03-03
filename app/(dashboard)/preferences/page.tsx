@@ -91,10 +91,10 @@ export default function PreferencesPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Left: units */}
-        <div className="space-y-6">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col gap-6 lg:min-h-0">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">Units</p>
             <p className="mt-2 text-xs text-text-muted">
               Choose how weight and height are displayed across the app.
@@ -119,7 +119,7 @@ export default function PreferencesPage() {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 flex-1 min-h-0 flex flex-col">
             <p className="text-sm font-semibold text-text-primary">Tip</p>
             <p className="mt-2 text-xs leading-relaxed text-text-muted">
               Reminders help you build consistency. If you disable all reminders, you can still log manually anytime.
@@ -128,7 +128,7 @@ export default function PreferencesPage() {
         </div>
 
         {/* Right: notifications */}
-        <div className="glass-card rounded-2xl p-6">
+        <div className="glass-card flex h-full flex-col rounded-2xl p-6 lg:min-h-0">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-text-primary">Reminder notifications</p>
@@ -148,7 +148,7 @@ export default function PreferencesPage() {
             ].map((item) => (
               <div
                 key={item.key}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.02] px-4 py-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.04]', item.color)}>
@@ -177,7 +177,7 @@ export default function PreferencesPage() {
             ))}
           </div>
 
-          <div className="mt-6 flex justify-end border-t border-white/[0.06] pt-4">
+          <div className="mt-6 flex justify-end pt-4">
             <button
               onClick={savePreferences}
               disabled={saving}

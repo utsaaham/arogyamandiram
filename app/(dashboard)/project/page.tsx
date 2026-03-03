@@ -39,10 +39,10 @@ export default function ProjectPage() {
         <StatCard icon={Sparkles} label="AI" value="Assist" subtitle="insights + plans" iconColor="text-accent-violet" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Left: about + contribute */}
-        <div className="space-y-6">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col gap-6 lg:min-h-0">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <h2 className="font-heading text-lg font-semibold text-text-primary">
               Arogyamandiram — Open source health & wellness
             </h2>
@@ -52,7 +52,7 @@ export default function ProjectPage() {
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 flex-1 min-h-0 flex flex-col">
             <p className="text-sm font-semibold text-text-primary">How to contribute</p>
             <ul className="mt-3 space-y-2 text-xs leading-relaxed text-text-muted">
               <li>1) Open the repo on GitHub and check issues / discussions.</li>
@@ -72,13 +72,13 @@ export default function ProjectPage() {
         </div>
 
         {/* Right: links */}
-        <div className="space-y-6">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col gap-6 lg:min-h-0">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">Quick pages</p>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {[
                 { href: '/dashboard', label: 'Dashboard' },
-                { href: '/ai-insights', label: 'AI Insights' },
+                { href: '/ai-insights', label: 'Insights' },
                 { href: '/achievements', label: 'Achievements' },
                 { href: '/api-keys', label: 'API Keys' },
                 { href: '/targets', label: 'Targets' },
@@ -87,7 +87,7 @@ export default function ProjectPage() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-center text-xs font-medium text-text-secondary transition-all hover:bg-white/[0.04] hover:text-text-primary"
+                  className="rounded-xl bg-white/[0.02] px-3 py-2 text-center text-xs font-medium text-text-secondary transition-all hover:bg-white/[0.04] hover:text-text-primary"
                 >
                   {item.label}
                 </Link>
@@ -95,7 +95,7 @@ export default function ProjectPage() {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 flex-1 min-h-0 flex flex-col">
             <p className="text-sm font-semibold text-text-primary">Repository</p>
             <p className="mt-2 text-xs text-text-muted">
               <a
@@ -107,9 +107,15 @@ export default function ProjectPage() {
                 {GITHUB_REPO}
               </a>
             </p>
-            <p className="mt-2 text-xs text-text-muted">
-              Report issues, suggest features, or browse the code.
+            <p className="mt-3 text-xs leading-relaxed text-text-muted">
+              Star the repo, open issues for bugs or ideas, and submit pull requests. The codebase is Next.js with
+              TypeScript — clone, install, and run locally to contribute or customize for your own use.
             </p>
+            <ul className="mt-3 space-y-1 text-xs text-text-muted">
+              <li>• <strong className="text-text-secondary">Issues</strong> — Report bugs or request features</li>
+              <li>• <strong className="text-text-secondary">Discussions</strong> — Ask questions and share ideas</li>
+              <li>• <strong className="text-text-secondary">Pull requests</strong> — Propose code changes</li>
+            </ul>
           </div>
         </div>
       </div>

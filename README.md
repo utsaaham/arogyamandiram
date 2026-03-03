@@ -52,8 +52,9 @@ A full-stack health tracking web app built with Next.js 14, featuring Indian foo
 - Burn goal progress ring
 - Category breakdown visualization
 
-### 🤖 AI Insights
-- AI-powered weekly health insights
+### 🤖 Insights
+- AI-powered insights: yesterday, weekly, monthly, yearly (gated by logged data)
+- Privacy-first: we never send your name or email—only anonymized health metrics
 - Personalized Indian meal suggestions
 - Custom workout plan generator
 - Requires OpenAI API key (user provides their own)
@@ -113,7 +114,7 @@ A full-stack health tracking web app built with Next.js 14, featuring Indian foo
 | `NEXTAUTH_SECRET` | Yes | Run `openssl rand -base64 32` |
 | `ENCRYPTION_KEY` | Yes | Run `openssl rand -hex 32` |
 | `NEXTAUTH_URL` | Yes | Use `http://localhost:3000` for local dev |
-| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) — for AI insights |
+| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) — for insights, meal ideas, workout plans |
 | `EDAMAM_APP_ID` & `EDAMAM_APP_KEY` | Optional | [Edamam](https://developer.edamam.com/) — for international food search |
 
 ### Installation
@@ -193,7 +194,7 @@ arogyamandiram/
 │   │   ├── weight/page.tsx       # Weight journal
 │   │   ├── workout/page.tsx      # Workout planner
 │   │   ├── sleep/page.tsx        # Sleep tracker
-│   │   ├── ai-insights/page.tsx  # AI recommendations
+│   │   ├── ai-insights/page.tsx  # Insights (yesterday, weekly, monthly, yearly)
 │   │   ├── achievements/page.tsx # Achievements & streaks
 │   │   └── settings/page.tsx     # Settings
 │   ├── api/

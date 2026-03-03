@@ -104,21 +104,12 @@ export default function SettingsPage() {
         title="Settings"
         subtitle="Update your profile to keep targets accurate"
         icon={Settings}
-        actions={(
-          <Link
-            href="/targets"
-            className="glass-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm"
-          >
-            <Target className="h-4 w-4 text-accent-amber" />
-            Targets
-          </Link>
-        )}
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
         {/* Left: quick links */}
-        <div className="space-y-6">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col gap-6 lg:min-h-0">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">Quick links</p>
             <div className="mt-4 space-y-2">
               {[
@@ -140,19 +131,26 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 flex-1 min-h-0 flex flex-col">
             <p className="text-sm font-semibold text-text-primary">Why this matters</p>
             <p className="mt-2 text-xs leading-relaxed text-text-muted">
-              Your daily targets and recommendations are recalculated using your profile. Keeping your weight, height,
-              activity, and goal up-to-date improves accuracy across calories, water, workouts, and sleep.
+              Your profile drives targets and recommendations across the app. Keeping it up to date improves accuracy everywhere.
             </p>
+            <ul className="mt-3 space-y-2 text-xs leading-relaxed text-text-muted">
+              <li>• <strong className="text-text-secondary">Calories</strong> — Daily intake and burn goals (BMR/TDEE)</li>
+              <li>• <strong className="text-text-secondary">Water</strong> — Hydration target based on weight and activity</li>
+              <li>• <strong className="text-text-secondary">Macros</strong> — Protein, carbs, and fat from your goal</li>
+              <li>• <strong className="text-text-secondary">Sleep</strong> — Recommended hours by age</li>
+              <li>• <strong className="text-text-secondary">Workout</strong> — Suggested duration and calorie burn</li>
+              <li>• <strong className="text-text-secondary">Ideal weight</strong> — Reference from height and build</li>
+            </ul>
           </div>
         </div>
 
-        {/* Right: form sections */}
-        <div className="space-y-6 lg:col-span-3">
+        {/* Right: form sections (align with left till Goal card) */}
+        <div className="flex h-full flex-col gap-6 lg:col-span-3 lg:min-h-0">
           {/* Personal */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-accent-violet" />
               <h2 className="text-base font-semibold text-text-primary">Personal</h2>
@@ -222,7 +220,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Body metrics */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <div className="flex items-center gap-2">
               <Ruler className="h-4 w-4 text-accent-cyan" />
               <h2 className="text-base font-semibold text-text-primary">Body metrics</h2>
@@ -261,7 +259,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Activity */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-accent-rose" />
               <h2 className="text-base font-semibold text-text-primary">Activity level</h2>
@@ -287,7 +285,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Goal */}
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card flex flex-1 min-h-0 flex-col rounded-2xl p-6">
             <div className="flex items-center gap-2">
               <Flag className="h-4 w-4 text-accent-emerald" />
               <h2 className="text-base font-semibold text-text-primary">Goal</h2>
@@ -311,22 +309,23 @@ export default function SettingsPage() {
               ))}
             </div>
           </div>
-
-          <div className="flex justify-end border-t border-white/[0.06] pt-4">
-            <button
-              onClick={saveProfile}
-              disabled={saving}
-              className="glass-button-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
-            >
-              {saving ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              Save Changes
-            </button>
-          </div>
         </div>
+      </div>
+
+      {/* Save below aligned grid (match till Goals card only) */}
+      <div className="flex justify-end pt-2">
+        <button
+          onClick={saveProfile}
+          disabled={saving}
+          className="glass-button-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
+        >
+          {saving ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          Save Changes
+        </button>
       </div>
     </div>
   );

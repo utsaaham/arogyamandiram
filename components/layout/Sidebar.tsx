@@ -31,7 +31,7 @@ const navItems = [
   { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/achievements', icon: Trophy, label: 'Achievements' },
-  { href: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
+  { href: '/ai-insights', icon: Sparkles, label: 'Insights' },
   { href: '/api-keys', icon: Key, label: 'API Keys' },
   { href: '/targets', icon: Target, label: 'Targets' },
   { href: '/preferences', icon: Bell, label: 'Preferences' },

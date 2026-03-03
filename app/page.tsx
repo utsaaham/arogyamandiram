@@ -27,7 +27,7 @@ export default function HomePage() {
     { icon: Droplets, title: 'Water Intake', desc: 'Beautiful hydration tracking with reminders', color: 'text-accent-cyan' },
     { icon: Scale, title: 'Weight Journal', desc: 'Daily weigh-ins with trend visualizations', color: 'text-accent-amber' },
     { icon: Activity, title: 'Workouts', desc: 'Log exercises and track calories burned', color: 'text-accent-rose' },
-    { icon: Sparkles, title: 'AI Insights', desc: 'Personalized meal and workout recommendations', color: 'text-accent-violet' },
+    { icon: Sparkles, title: 'Insights', desc: 'Yesterday, weekly, monthly, yearly insights—personalized without your name or email', color: 'text-accent-violet' },
   ];
 
   return (

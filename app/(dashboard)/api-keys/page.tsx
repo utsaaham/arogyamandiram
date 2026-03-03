@@ -75,7 +75,7 @@ export default function ApiKeysPage() {
             className="glass-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm"
           >
             <Sparkles className="h-4 w-4 text-accent-violet" />
-            AI Insights
+            Insights
           </Link>
         )}
       />
@@ -86,7 +86,7 @@ export default function ApiKeysPage() {
           icon={Sparkles}
           label="OpenAI"
           value={openAiActive ? 'Active' : 'Not connected'}
-          subtitle="Meal ideas, workout plan, AI insights"
+          subtitle="Meal ideas, workout plan, insights"
           iconColor={openAiActive ? 'text-accent-emerald' : 'text-text-muted'}
           className={cn(!openAiActive && 'opacity-90')}
         />
@@ -100,10 +100,10 @@ export default function ApiKeysPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Left: security + usage */}
-        <div className="space-y-6">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col gap-6 lg:min-h-0">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <div className="flex items-start gap-3">
               <Shield className="mt-0.5 h-5 w-5 shrink-0 text-accent-cyan" />
               <div>
@@ -116,7 +116,7 @@ export default function ApiKeysPage() {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 flex-1 min-h-0 flex flex-col">
             <p className="text-sm font-semibold text-text-primary">Where these keys are used</p>
             <div className="mt-4 space-y-2">
               <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-4 py-3">
@@ -124,8 +124,8 @@ export default function ApiKeysPage() {
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-text-primary">AI Insights</p>
-                  <p className="text-[11px] text-text-muted">Personalized recommendations</p>
+                  <p className="text-sm font-medium text-text-primary">Insights</p>
+                  <p className="text-[11px] text-text-muted">Yesterday, weekly, monthly, yearly—private</p>
                 </div>
                 <Link href="/ai-insights" className="ml-auto text-xs font-medium text-accent-violet hover:underline">
                   Open
@@ -160,7 +160,7 @@ export default function ApiKeysPage() {
         </div>
 
         {/* Right: forms */}
-        <div className="glass-card rounded-2xl p-6 space-y-5">
+        <div className="glass-card flex h-full flex-col rounded-2xl p-6 space-y-5 lg:min-h-0">
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export default function ApiKeysPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <div className="rounded-xl bg-white/[0.02] p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-text-primary">Edamam API Key</span>
@@ -239,7 +239,7 @@ export default function ApiKeysPage() {
             </div>
           </div>
 
-          <div className="flex justify-end border-t border-white/[0.06] pt-4">
+          <div className="flex justify-end pt-4">
             <button
               onClick={saveApiKeys}
               disabled={saving}

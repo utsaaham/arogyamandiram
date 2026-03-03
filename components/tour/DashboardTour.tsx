@@ -14,12 +14,12 @@ const steps = [
   {
     id: 'welcome',
     title: 'Welcome to your health hub',
-    body: 'This dashboard brings together your food, water, workouts, weight, sleep, and AI insights in one place.',
+    body: 'This dashboard brings together your food, water, workouts, weight, sleep, and insights in one place.',
   },
   {
     id: 'navigation',
     title: 'Navigation & sections',
-    body: 'Use the sidebar (or bottom nav on mobile) to jump between Dashboard, Food, Water, Workout, Sleep, AI Insights, and Settings.',
+    body: 'Use the sidebar (or bottom nav on mobile) to jump between Dashboard, Food, Water, Workout, Sleep, Insights, and Settings.',
   },
   {
     id: 'water',

@@ -362,7 +362,7 @@ export default function SleepPage() {
             {history.filter((h) => h.sleep).length === 0 ? (
               <p className="py-4 text-center text-xs text-text-muted">No sleep entries yet</p>
             ) : (
-              <div className="hide-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto">
+              <div className="hide-scrollbar min-h-0 flex-1 space-y-2 max-h-[200px] overflow-y-auto pr-1">
                 {history
                   .filter((h) => h.sleep)
                   .slice(-7)

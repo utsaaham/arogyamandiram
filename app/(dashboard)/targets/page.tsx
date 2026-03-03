@@ -162,10 +162,10 @@ export default function TargetsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Left: actions + context */}
-        <div className="space-y-6">
-          <div className="glass-card rounded-2xl p-6">
+        <div className="flex flex-col gap-6 lg:min-h-0">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">How targets work</p>
             <p className="mt-2 text-xs leading-relaxed text-text-muted">
               Targets are calculated from your profile using standard formulas (BMR/TDEE for calories, weight and
@@ -174,7 +174,7 @@ export default function TargetsPage() {
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">Recalculate from profile</p>
             <p className="mt-2 text-xs text-text-muted">
               Refresh calories, water, macros, ideal weight, workout, and sleep using your current profile data.
@@ -195,7 +195,7 @@ export default function TargetsPage() {
           </div>
 
           {user?.hasOpenAiKey && (
-            <div className="glass-card rounded-2xl border border-accent-violet/20 bg-accent-violet/5 p-6">
+            <div className="glass-card rounded-2xl border border-accent-violet/20 bg-accent-violet/5 p-6 shrink-0">
               <p className="text-sm font-semibold text-text-primary">AI Health Plan</p>
               <p className="mt-2 text-xs text-text-muted">
                 Generate personalized targets (calories, water, macros, ideal weight, workout duration, sleep) based on
@@ -218,7 +218,7 @@ export default function TargetsPage() {
           )}
 
           {formulaTargets && (
-            <div className="glass-card rounded-2xl p-6">
+            <div className="glass-card rounded-2xl p-6 flex-1 min-h-0 flex flex-col">
               <p className="text-sm font-semibold text-text-primary">From your profile (formula-based)</p>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                 <div className="rounded-xl bg-white/[0.03] p-3">
@@ -240,10 +240,11 @@ export default function TargetsPage() {
               </div>
             </div>
           )}
+          {!formulaTargets && <div className="flex-1 min-h-0" />}
         </div>
 
         {/* Right: editable targets */}
-        <div className="glass-card rounded-2xl p-6 space-y-6">
+        <div className="glass-card flex h-full flex-col rounded-2xl p-6 space-y-6 lg:min-h-0">
           <div>
             <p className="text-sm font-semibold text-text-primary">Daily targets</p>
             <p className="mt-1 text-xs text-text-muted">These values are used across your dashboard and trackers.</p>
@@ -298,7 +299,7 @@ export default function TargetsPage() {
           </div>
 
           {protein && carbs && fat && (
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="rounded-2xl bg-white/[0.02] p-4">
               <p className="text-xs font-semibold text-text-primary">Macro split</p>
               <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-white/[0.04]">
                 {(() => {
@@ -348,7 +349,7 @@ export default function TargetsPage() {
             </div>
           )}
 
-          <div className="flex justify-end border-t border-white/[0.06] pt-4">
+          <div className="flex justify-end pt-4">
             <button
               onClick={saveTargets}
               disabled={saving}

@@ -25,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Arogyamandiram – Intelligent Health & Wellness OS',
   description:
-    'Arogyamandiram is your intelligent health & wellness companion for tracking nutrition, hydration, weight, workouts, sleep, and more with AI-personalized insights.',
+    'Arogyamandiram is your intelligent health & wellness companion for tracking nutrition, hydration, weight, workouts, sleep, and more with personalized insights (yesterday, weekly, monthly, yearly)—private by design.',
   keywords: [
     'health',
     'wellness',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     'workouts',
     'sleep',
     'water intake',
-    'AI recommendations',
+    'Insights & recommendations',
   ],
   authors: [{ name: 'Arogyamandiram' }],
   manifest: '/manifest.json',
