@@ -27,14 +27,14 @@ export default function HomePage() {
     { icon: Droplets, title: 'Water Intake', desc: 'Beautiful hydration tracking with reminders', color: 'text-accent-cyan' },
     { icon: Scale, title: 'Weight Journal', desc: 'Daily weigh-ins with trend visualizations', color: 'text-accent-amber' },
     { icon: Activity, title: 'Workouts', desc: 'Log exercises and track calories burned', color: 'text-accent-rose' },
-    { icon: Sparkles, title: 'AI Insights', desc: 'Personalized meal and workout recommendations', color: 'text-accent-violet' },
+    { icon: Sparkles, title: 'Insights', desc: 'Yesterday, weekly, monthly, yearly insights—personalized without your name or email', color: 'text-accent-violet' },
   ];
 
   return (
     <div className="fixed inset-0 overflow-x-hidden overflow-y-auto">
-      <main className="flex min-h-[100dvh] flex-col">
+      <main className="flex flex-col">
       {/* Hero */}
-      <section className="relative flex flex-1 flex-col items-center justify-center px-4 py-20 text-center">
+      <section className="relative auth-viewport-min-height flex flex-col items-center justify-center px-4 py-20 text-center">
         {/* Gradient orbs */}
         <div className="pointer-events-none absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-accent-violet/10 blur-[120px]" />
         <div className="pointer-events-none absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-accent-emerald/10 blur-[120px]" />

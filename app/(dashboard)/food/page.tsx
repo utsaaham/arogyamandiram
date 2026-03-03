@@ -299,9 +299,9 @@ export default function FoodLogPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column: Search + Results */}
-        <div className="space-y-4 lg:col-span-2">
+        <div className="flex flex-col gap-4 lg:col-span-2 lg:h-[760px]">
           {/* Search bar + Tabs (search bar always visible; only content in box changes by tab) */}
-          <div className="space-y-3">
+          <div className="shrink-0 space-y-3">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
               <input
@@ -347,7 +347,8 @@ export default function FoodLogPage() {
           </div>
 
           {/* Single content area: recent items or search results */}
-          <div className="glass-card rounded-2xl p-4 sm:p-5">
+          <div className="glass-card flex min-h-0 flex-col rounded-2xl p-4 sm:p-5 lg:min-h-0 lg:flex-1">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 hide-scrollbar lg:min-h-0">
             {selectedTab === 'recent' ? (
               recentLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -360,7 +361,7 @@ export default function FoodLogPage() {
                   <p className="text-xs text-text-muted">Pick a category and log a meal to see recent items.</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1 hide-scrollbar">
+                <div className="space-y-2">
                   <p className="mb-3 text-xs text-text-muted">
                     Your recent foods ({recentFoods.length})
                   </p>
@@ -383,7 +384,7 @@ export default function FoodLogPage() {
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
               </div>
             ) : results.length > 0 ? (
-              <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1 hide-scrollbar">
+              <div className="space-y-2">
                 <p className="mb-3 text-xs text-text-muted">{results.length} results</p>
                 {results.map((food) => (
                   <FoodResultCard
@@ -411,11 +412,12 @@ export default function FoodLogPage() {
                 <p className="text-xs text-text-muted">150+ items: curries, dals, breads, sweets & more</p>
               </div>
             )}
+            </div>
           </div>
         </div>
 
         {/* Right Column: Today's Log */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:h-[760px]">
           {/* Calorie Summary */}
           <div className="glass-card flex flex-col items-center gap-4 rounded-2xl p-4 sm:p-6">
             <ProgressRing
@@ -477,12 +479,13 @@ export default function FoodLogPage() {
           </div>
 
           {/* Logged Meals */}
-          <div className="glass-card flex-1 rounded-2xl p-4 sm:p-5">
-            <div className="mb-3 flex items-center justify-between">
+          <div className="glass-card flex-1 min-h-0 flex flex-col rounded-2xl p-4 sm:p-5">
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <h3 className="text-sm font-semibold text-text-primary">Logged Meals</h3>
               <span className="text-xs text-text-muted">{meals.length} items</span>
             </div>
 
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 hide-scrollbar">
             {meals.length === 0 ? (
               <div className="py-6 text-center">
                 <Utensils className="mx-auto h-6 w-6 text-text-muted" />
@@ -566,6 +569,7 @@ export default function FoodLogPage() {
                 })}
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>

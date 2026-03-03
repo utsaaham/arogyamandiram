@@ -498,7 +498,7 @@ export default function DashboardPage() {
                 { href: '/weight', icon: Scale, label: 'Log Weight', color: 'text-accent-amber' },
                 { href: '/workout', icon: Dumbbell, label: 'Add Workout', color: 'text-accent-rose' },
                 { href: '/sleep', icon: Moon, label: 'Log Sleep', color: 'text-accent-violet' },
-                { href: '/ai-insights', icon: Sparkles, label: 'AI Insights', color: 'text-accent-violet' },
+                { href: '/ai-insights', icon: Sparkles, label: 'Insights', color: 'text-accent-violet' },
               ].map((action) => (
                 <Link
                   key={action.href}

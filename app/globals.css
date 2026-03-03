@@ -67,6 +67,13 @@ body::before {
   }
 }
 
+.auth-viewport-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ---------- Scrollbar: hidden everywhere (invisible scroll, mobile + desktop) ---------- */
 * {
   -ms-overflow-style: none;
@@ -451,6 +458,42 @@ body::before {
 .water-ripple {
   animation: waterRipple 0.9s ease-out;
   transform-origin: center;
+}
+
+.water-ripple-delayed {
+  animation: waterRipple 0.9s ease-out 0.15s both;
+  transform-origin: center;
+}
+
+/* ---------- Fill surge: brief flash when water is added ---------- */
+@keyframes waterFillSurge {
+  0% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+.water-fill-surge {
+  animation: waterFillSurge 0.5s ease-out forwards;
+}
+
+/* ---------- Glass bump: scale bounce when pour starts ---------- */
+@keyframes waterGlassBump {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.water-glass-bump {
+  animation: waterGlassBump 0.35s ease-out;
+  transform-origin: center;
+}
+
+/* ---------- Caustics: slow light drift inside water ---------- */
+@keyframes waterCaustics {
+  0%, 100% { transform: translate(-10%, -5%); opacity: 0.06; }
+  50% { transform: translate(10%, 5%); opacity: 0.12; }
+}
+
+.water-inner-caustics {
+  animation: waterCaustics 12s ease-in-out infinite;
 }
 
 /* ---------- Surface glow: gentle pulse (idle) ---------- */

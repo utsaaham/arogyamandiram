@@ -74,26 +74,30 @@ export function useDailyLog(date?: string) {
 
   const targetDate = date || getToday();
 
-  const fetchLog = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchLog = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const res = await api.getDailyLog(targetDate);
       if (res.success && res.data) {
         setLog(res.data as DailyLogData);
-      } else {
+      } else if (!silent) {
         setError(res.error || 'Failed to fetch daily log');
       }
     } catch {
-      setError('Failed to fetch daily log');
+      if (!silent) setError('Failed to fetch daily log');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [targetDate]);
 
   useEffect(() => {
     fetchLog();
   }, [fetchLog]);
+
+  const refetch = useCallback(() => fetchLog(true), [fetchLog]);
 
   // If the page stays open across midnight, automatically refresh the log
   useEffect(() => {
@@ -110,5 +114,5 @@ export function useDailyLog(date?: string) {
     };
   }, [fetchLog]);
 
-  return { log, loading, error, refetch: fetchLog };
+  return { log, loading, error, refetch };
 }
