@@ -113,6 +113,7 @@ export default function SettingsPage() {
             <p className="text-sm font-semibold text-text-primary">Quick links</p>
             <div className="mt-4 space-y-2">
               {[
+                { href: '/dashboard?tour=1', label: 'Platform tour', icon: Activity, iconClass: 'text-accent-emerald' },
                 { href: '/targets', label: 'Targets', icon: Target, iconClass: 'text-accent-amber' },
                 { href: '/preferences', label: 'Preferences', icon: Bell, iconClass: 'text-accent-violet' },
                 { href: '/api-keys', label: 'API Keys', icon: Key, iconClass: 'text-accent-cyan' },
