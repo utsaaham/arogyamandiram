@@ -12,38 +12,92 @@ interface DashboardTourProps {
 
 const steps = [
   {
-    id: 'welcome',
-    title: 'Welcome to your health hub',
-    body: 'This dashboard brings together your food, water, workouts, weight, sleep, and AI insights in one place.',
+    id: 'dashboard',
+    title: 'Your health dashboard',
+    body: 'This is your Dashboard. Here you see a quick snapshot of your sleep, water, food, workouts, weight, and more in one place.',
   },
   {
-    id: 'navigation',
-    title: 'Navigation & sections',
-    body: 'Use the sidebar to jump between Dashboard, Food, Water, Workout, Sleep, AI Insights, and Settings.',
+    id: 'sleep',
+    title: 'Sleep overview',
+    body: 'In Sleep, you can log how long and how well you slept. You can also lock a day’s sleep entry so it is not changed by mistake.',
   },
   {
     id: 'water',
-    title: 'Track your water',
-    body: 'Add quick glasses or a custom amount, and watch the water glass fill up as you move towards your daily goal.',
+    title: 'Stay hydrated',
+    body: 'Use the Water tracker to add each glass you drink and see how close you are to your daily hydration target.',
   },
   {
     id: 'workout',
     title: 'Log your workouts',
-    body: 'Capture sets, reps, weight, and duration. Arogyamandiram will help you spot trends and personal records over time.',
+    body: 'In Workout, you can record your activity sessions and see how consistently you are moving over time.',
   },
   {
     id: 'food',
-    title: 'Log Indian meals easily',
-    body: 'Search our Indian food database, save recent meals, and see how your calories and macros trend over time.',
+    title: 'Track your food',
+    body: 'In Food, you can log your meals and snacks and later see patterns in your eating, calories, and macros.',
+  },
+  {
+    id: 'weight',
+    title: 'Monitor your weight',
+    body: 'The Weight section helps you track your weight over time so you can see your trend against your goals.',
+  },
+  {
+    id: 'achievements',
+    title: 'Achievements & streaks',
+    body: 'Achievements show your streaks and milestones for habits like logging, water, workouts, and sleep to keep you motivated.',
+  },
+  {
+    id: 'insights',
+    title: 'Insights & trends',
+    body: 'Insights brings together your data to show simple trends across sleep, food, water, workouts, and more.',
+  },
+  {
+    id: 'api-keys',
+    title: 'API keys for developers',
+    body: 'Under API Keys you can generate keys to integrate this platform with your own tools and workflows.',
+  },
+  {
+    id: 'targets',
+    title: 'Set your targets',
+    body: 'Targets lets you set daily goals like water, sleep duration, workout frequency, and calorie intake so progress is measured against what matters to you.',
+  },
+  {
+    id: 'preferences',
+    title: 'Preferences & experience',
+    body: 'In Preferences, you can adjust notifications, units, and other options so the app works the way you like.',
+  },
+  {
+    id: 'project',
+    title: 'About the project',
+    body: 'This is an open wellbeing project. From the Project page you can learn more and find links to contribute with ideas, feedback, or code.',
+  },
+  {
+    id: 'settings',
+    title: 'Settings for everything',
+    body: 'In Settings you can manage your profile, privacy, notifications, and open this platform tour again any time.',
+  },
+  {
+    id: 'closing',
+    title: 'You are ready to explore',
+    body: 'That is the overview of the platform. Explore the dashboard at your own pace—your habits, insights, and goals all live here for you.',
   },
 ];
 
 const stepRoutes: Record<number, string> = {
   0: '/dashboard',
-  1: '/dashboard',
+  1: '/sleep',
   2: '/water',
-  3: '/workout',
-  4: '/food',
+  3: '/food',
+  4: '/weight',
+  5: '/workout',
+  6: '/achievements',
+  7: '/ai-insights',
+  8: '/api-keys',
+  9: '/targets',
+  10: '/preferences',
+  11: '/project',
+  12: '/settings',
+  13: '/dashboard',
 };
 
 export default function DashboardTour({ onClose }: DashboardTourProps) {
@@ -81,14 +135,16 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4rem))] pt-[env(safe-area-inset-top)] lg:items-start lg:justify-end lg:pb-0 lg:pt-0"
+      className="pointer-events-none fixed inset-0 z-40 flex items-end justify-center pb-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.5rem))] pt-[env(safe-area-inset-top)] lg:items-start lg:justify-end lg:pb-0 lg:pt-0"
     >
       {/* Backdrop */}
-      <div className="pointer-events-auto fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={finishTour} />
+      <div className="pointer-events-auto fixed inset-0 bg-black/30" onClick={finishTour} />
 
-      {/* Card: centered on mobile, top-right on desktop; always above bottom nav on mobile */}
-      <div className="pointer-events-auto relative z-50 m-4 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-surface-elevated p-4 shadow-xl outline outline-1 outline-white/5 lg:mt-20 lg:mr-6">
-        <div className="flex items-start justify-between gap-3">
+      {/* Card: bottom on mobile, top-right on desktop; always just above bottom nav on mobile */}
+      <div className="pointer-events-auto relative z-50 mx-4 mb-1 mt-4 w-full max-w-md lg:m-0 lg:mt-4 lg:mr-4">
+        {/* Subtle blur directly behind the card for readability on all devices */}
+        <div className="max-h-[85vh] overflow-y-auto rounded-2xl bg-surface-elevated/90 p-4 shadow-xl outline outline-1 outline-white/5 backdrop-blur-md">
+          <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
               Step {stepIndex + 1} of {totalSteps}
@@ -108,10 +164,10 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
           >
             <X className="h-4 w-4" />
           </button>
-        </div>
+          </div>
 
-        {/* Step indicators */}
-        <div className="mt-4 flex items-center justify-between gap-3">
+          {/* Step indicators */}
+          <div className="mt-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             {steps.map((step, idx) => (
               <button
@@ -161,6 +217,7 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

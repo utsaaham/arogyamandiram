@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
@@ -11,8 +11,11 @@ import api from '@/lib/apiClient';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
-   const [showTour, setShowTour] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  const forceTour = searchParams?.get('tour') === '1';
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -21,23 +24,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     if (status === 'authenticated') {
       // Check if onboarding is complete
-      api.getUser().then((res) => {
-        if (res.success && res.data) {
-          const user = res.data as { onboardingComplete?: boolean; settings?: { dashboardTourComplete?: boolean } };
-          if (!user.onboardingComplete) {
-            router.push('/onboarding');
-            return;
-          }
-          // Only show tour for first-time: not if server says complete, and not if this session already completed it (sessionStorage)
-          const sessionCompleted = typeof window !== 'undefined' && window.sessionStorage.getItem('dashboardTourComplete') === 'true';
-          if (!sessionCompleted && !user.settings?.dashboardTourComplete) {
+      api
+        .getUser()
+        .then((res) => {
+          if (res.success && res.data) {
+            const user = res.data as { onboardingComplete?: boolean };
+            if (!user.onboardingComplete && !forceTour) {
+              router.push('/onboarding');
+              return;
+            }
+            // Always show the platform tour once user has completed onboarding,
+            // or when explicitly forced via query param.
             setShowTour(true);
           }
-        }
-        setCheckingOnboarding(false);
-      }).catch(() => setCheckingOnboarding(false));
+          setCheckingOnboarding(false);
+        })
+        .catch(() => setCheckingOnboarding(false));
     }
-  }, [status, router]);
+  }, [status, router, forceTour]);
 
   if (status === 'loading' || checkingOnboarding) {
     return (

@@ -89,7 +89,7 @@ export default function WaterPage() {
   // Trigger wave animation after adding
   useEffect(() => {
     if (animateWave) {
-      const timer = setTimeout(() => setAnimateWave(false), 1500);
+      const timer = setTimeout(() => setAnimateWave(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [animateWave]);
@@ -140,9 +140,9 @@ export default function WaterPage() {
         <p className="text-sm text-text-muted">{formatDate(today)}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Left: Water Visualization */}
-        <div className="glass-card flex flex-col items-center rounded-2xl p-6">
+        <div className="glass-card flex h-full min-h-[420px] flex-col items-center justify-center rounded-2xl p-6">
           <div className="mb-6">
             <WaterGlass
               percent={percent}
@@ -257,10 +257,10 @@ export default function WaterPage() {
         </div>
 
         {/* Right: Stats + History */}
-        <div className="space-y-4">
+        <div className="flex min-h-[420px] flex-col justify-center space-y-4 lg:h-full lg:min-h-0">
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="glass-card flex flex-col items-center rounded-2xl p-4">
+            <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-4">
               <ProgressRing
                 progress={percent}
                 size={80}
@@ -290,7 +290,7 @@ export default function WaterPage() {
           {/* Glass Indicators */}
           <div className="glass-card rounded-2xl p-4">
             <h3 className="mb-3 text-sm font-semibold text-text-primary">Glass Tracker</h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               {Array.from({ length: targetGlasses }, (_, i) => (
                 <div
                   key={i}
@@ -308,24 +308,46 @@ export default function WaterPage() {
             </div>
           </div>
 
-          {/* Tips */}
-          <div className="glass-card rounded-2xl p-4">
-            <h3 className="mb-2 text-sm font-semibold text-text-primary">💡 Hydration Tips</h3>
-            <ul className="space-y-1.5 text-xs leading-relaxed text-text-muted">
-              <li>
-                • {percent < 25
-                  ? "Start your day with a glass of warm water with lemon. It kickstarts your metabolism and helps with digestion."
-                  : percent < 50
-                  ? "Try keeping a water bottle at your desk. You're more likely to sip regularly when water is within reach."
-                  : percent < 75
-                  ? "Great progress! Having water before meals can help with portion control and aids digestion."
-                  : percent < 100
-                  ? "Almost there! The last few glasses matter most for maintaining energy levels through the evening."
-                  : "Excellent hydration today! Consistent water intake helps with skin health, energy, and overall wellness."}
-              </li>
-              <li>• Even mild dehydration (1–2%) can impair focus, memory, and mood. Your brain is about 75% water — staying hydrated keeps you sharp throughout the day.</li>
-              <li>• Drinking 500 ml of water can boost your metabolism by 24–30% for up to an hour. A glass 30 minutes before meals also aids digestion and helps with portion control.</li>
-            </ul>
+          {/* Recent Water */}
+          <div className="glass-card flex min-h-0 flex-1 flex-col rounded-2xl p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <GlassWater className="h-4 w-4 text-accent-cyan" />
+              Recent Water
+            </h3>
+            {historyLoading ? (
+              <div className="flex flex-1 items-center justify-center text-xs text-text-muted">
+                Loading history...
+              </div>
+            ) : waterHistory.length === 0 ? (
+              <p className="py-4 text-xs text-text-muted">No water entries yet</p>
+            ) : (
+              <div className="hide-scrollbar w-full min-h-0 flex-1 space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                {waterHistory
+                  .slice(-7)
+                  .reverse()
+                  .map((entry) => {
+                    const dayGlasses = Math.floor(entry.waterIntake / glassSize);
+                    return (
+                      <div
+                        key={entry.date}
+                        className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2.5"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-text-primary">
+                            {formatWater(entry.waterIntake)}
+                          </p>
+                          <p className="text-[11px] text-text-muted">
+                            {dayGlasses} glass{dayGlasses === 1 ? '' : 'es'}
+                          </p>
+                        </div>
+                        <span className="text-[11px] text-text-muted">
+                          {formatDate(entry.date)}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         </div>
       </div>
