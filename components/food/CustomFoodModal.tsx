@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { X, Plus, Coffee, Sun, Moon, Cookie } from 'lucide-react';
 import { cn, getCurrentTime } from '@/lib/utils';
