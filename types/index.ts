@@ -47,6 +47,12 @@ export interface UserSettings {
   };
   /** Whether the main dashboard tour has been completed at least once. */
   dashboardTourComplete?: boolean;
+  /**
+   * Version of the dashboard tour the user last completed.
+   * Increment app-side constant when major platform updates ship
+   * and you want to re-show the tour once.
+   */
+  dashboardTourVersion?: number;
 }
 
 export interface UserTargets {

@@ -1,9 +1,7 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { api } from '@/lib/apiClient';
+import { CURRENT_DASHBOARD_TOUR_VERSION } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 interface DashboardTourProps {
@@ -109,6 +107,18 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
   const current = steps[stepIndex];
   const isLast = stepIndex === totalSteps - 1;
 
+  // If the tour somehow mounts after being completed in this browser session, close immediately.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seenKey = 'dashboardTourSeenVersion';
+      const envVersionStr = String(CURRENT_DASHBOARD_TOUR_VERSION);
+      const alreadySeenSession = window.sessionStorage.getItem(seenKey) === envVersionStr;
+      if (alreadySeenSession) {
+        onClose();
+      }
+    }
+  }, [onClose]);
+
   // Navigate to the page for the current step when stepIndex changes
   useEffect(() => {
     const targetPath = stepRoutes[stepIndex] ?? '/dashboard';
@@ -119,14 +129,11 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
 
   async function finishTour() {
     setFinishing(true);
-    // Mark completed in sessionStorage immediately so refresh never shows the tour again in this browser
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('dashboardTourComplete', 'true');
-    }
     try {
-      await api.updateSettings({ dashboardTourComplete: true });
-    } catch {
-      // Still dismiss so UI never hangs; sessionStorage already set above
+      if (typeof window !== 'undefined') {
+        const seenKey = 'dashboardTourSeenVersion';
+        window.sessionStorage.setItem(seenKey, String(CURRENT_DASHBOARD_TOUR_VERSION));
+      }
     } finally {
       setFinishing(false);
       onClose();

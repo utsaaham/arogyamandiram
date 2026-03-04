@@ -1,8 +1,9 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
+import { CURRENT_DASHBOARD_TOUR_VERSION } from '@/lib/constants';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
 import DashboardTour from '@/components/tour/DashboardTour';
@@ -11,11 +12,8 @@ import api from '@/lib/apiClient';
 export default function DashboardLayoutClient({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [showTour, setShowTour] = useState(false);
-
-  const forceTour = searchParams?.get('tour') === '1';
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -27,18 +25,42 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
         .getUser()
         .then((res) => {
           if (res.success && res.data) {
-            const user = res.data as { onboardingComplete?: boolean };
-            if (!user.onboardingComplete && !forceTour) {
+            const user = res.data as {
+              onboardingComplete?: boolean;
+              settings?: {
+                dashboardTourVersion?: number;
+              };
+            };
+
+            if (!user.onboardingComplete) {
               router.push('/onboarding');
               return;
             }
-            setShowTour(true);
+
+            const storedVersion = user.settings?.dashboardTourVersion ?? 0;
+            const envVersion = CURRENT_DASHBOARD_TOUR_VERSION;
+
+            if (typeof window !== 'undefined') {
+              const seenKey = 'dashboardTourSeenVersion';
+              const alreadySeenSession =
+                window.sessionStorage.getItem(seenKey) === String(envVersion);
+
+              if (storedVersion >= envVersion || alreadySeenSession) {
+                // Already seen this version; never show again unless env version increases.
+                setShowTour(false);
+              } else {
+                // Mark as seen immediately in DB and this browser session, then show once.
+                window.sessionStorage.setItem(seenKey, String(envVersion));
+                void api.updateSettings({ dashboardTourVersion: envVersion });
+                setShowTour(true);
+              }
+            }
           }
           setCheckingOnboarding(false);
         })
         .catch(() => setCheckingOnboarding(false));
     }
-  }, [status, router, forceTour]);
+  }, [status, router]);
 
   if (status === 'loading' || checkingOnboarding) {
     return (
