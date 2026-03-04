@@ -39,17 +39,26 @@ function safeAchievementsPayload() {
   });
 }
 
+/** Validate YYYY-MM-DD and return the string if valid, otherwise undefined. */
+function parseTodayParam(value: string | null): string | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const d = new Date(value + 'T00:00:00');
+  return isNaN(d.getTime()) ? undefined : value;
+}
+
 // GET /api/achievements - Get current streaks and badges (and update them)
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
+
+    const todayOverride = parseTodayParam(req.nextUrl.searchParams.get('today'));
 
     await connectDB();
 
     let result;
     try {
-      result = await calculateAchievements(userId);
+      result = await calculateAchievements(userId, todayOverride);
     } catch (calcErr) {
       console.error('[Achievements GET] calculateAchievements failed:', calcErr);
       return safeAchievementsPayload();
