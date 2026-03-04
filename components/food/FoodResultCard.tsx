@@ -1,5 +1,3 @@
-'use client';
-
 import { Leaf, Drumstick, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

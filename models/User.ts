@@ -65,6 +65,8 @@ const UserSchema = new Schema<IUserDocument>(
       },
       // Whether the user has completed the main dashboard walkthrough
       dashboardTourComplete: { type: Boolean, default: false },
+      // Version of the dashboard tour the user has last completed
+      dashboardTourVersion: { type: Number, default: 0 },
     },
     targets: {
       dailyCalories: { type: Number, default: 2000 },

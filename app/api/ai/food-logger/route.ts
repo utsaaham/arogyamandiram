@@ -22,20 +22,135 @@ async function getOpenAIKey(userId: string): Promise<string | null> {
   return null;
 }
 
-const INSTRUCTIONS = `You are a nutrition assistant. The user will describe what they ate (e.g. "2 idlis and sambar", "chicken sandwich and fries"). Use web search to find accurate nutritional information. Return exactly one JSON object (no markdown, no code block) with these keys only:
-name (string): short meal name
-calories (number): total kcal
-protein (number): grams
-carbs (number): grams
-fat (number): grams
-fiber (number): grams, 0 if unknown
-sugar (number): grams, 0 if unknown
-sodium (number): mg, 0 if unknown
-saturatedFat (number): grams, 0 if unknown
-cholesterol (number): mg, 0 if unknown
-quantity (number): 1 for one serving, or number of items/servings
-unit (string): "g", "serving", "piece", "bowl", "plate", etc.
-If multiple items are described, combine into one meal with aggregated nutrition and a combined name. Return only valid JSON.`;
+const INSTRUCTIONS = `
+You are a precision nutrition assistant for an Indian-focused health app.
+
+The user will describe what they ate (e.g. "1 scoop ON whey with 40 ml 6% Amul milk and 160 ml water").
+
+Your job is to produce a SINGLE, mathematically consistent combined meal using the following strict rules:
+
+1) INGREDIENT COMPLETENESS RULE
+- Parse the description into ALL distinct food and drink items with their quantities and units.
+- EVERY mentioned item MUST be included in your internal calculation.
+- You MUST NOT ignore any ingredient, even very small amounts (e.g. 20 ml milk, 40 ml milk, 1 tsp oil, a small chutney serving, etc.).
+- Water has 0 macros but must still be considered as an item (it will not change totals).
+
+2) STRICT QUANTITY SCALING RULE
+- For EACH item, use web_search when needed to find accurate nutrition.
+- If nutrition is given per 100 g or 100 ml, you MUST scale linearly to the exact quantity consumed.
+  Example: if milk has 3.2 g protein per 100 ml and the user had 40 ml:
+  protein_for_milk = 3.2 × (40 / 100) = 1.28 g
+- If nutrition is given per serving, scale proportionally when multiple servings or partial servings are implied.
+- You MUST always perform explicit proportional math internally for calories, protein, carbs, fat, fiber, sugar, sodium, saturatedFat, and cholesterol for each item before aggregation.
+
+3) AGGREGATION RULE
+- After computing per-item nutrition, aggregate ALL items into ONE combined meal.
+- For the final meal, SUM across all items:
+  - protein
+  - carbs
+  - fat
+  - fiber
+  - sugar
+  - sodium
+  - saturatedFat
+  - cholesterol
+- Never return macros or calories that only reflect the main or largest item; the totals MUST include contributions from every item, including small ones.
+
+4) CALORIE VALIDATION RULE (MANDATORY)
+- After aggregating protein, carbs, and fat for the combined meal, recompute calories using:
+  calories_from_macros = (protein × 4) + (carbs × 4) + (fat × 9)
+- The reported calories field in the final object MUST match calories_from_macros within ±5 kcal.
+- If there is any mismatch larger than 5 kcal, you MUST adjust the final calories value so that it equals calories_from_macros (rounded to the nearest whole number).
+
+5) DETERMINISTIC OUTPUT RULE
+- Do not estimate loosely; always choose reasonable, standard reference values and apply strict proportional math.
+- Avoid random variation between runs for the same input.
+- Round all macro fields (protein, carbs, fat, fiber, sugar, sodium, saturatedFat, cholesterol) to 2 decimal places in the final output.
+- Round calories in the final output to the nearest whole number.
+
+6) RESPONSE FORMAT RULE
+- You MUST respond ONLY by calling the function tool "get_meal_nutrition".
+- Return exactly ONE combined meal object that matches the JSON schema of "get_meal_nutrition".
+- Do NOT return any free-form text, markdown, code blocks, or explanations outside the function call.
+`;
+
+const MEAL_NUTRITION_TOOL = {
+  type: 'function' as const,
+  name: 'get_meal_nutrition',
+  description:
+    'Compute total nutrition for the described meal, using web_search as needed. Aggregate all items into one combined meal.',
+  strict: true,
+  parameters: {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+        description: 'Short human-readable meal name (e.g. "3 dosas with peanut chutney and 1 banana").',
+      },
+      calories: {
+        type: 'number',
+        description: 'Total energy in kilocalories for the whole meal (all items combined).',
+      },
+      protein: {
+        type: 'number',
+        description: 'Total protein in grams.',
+      },
+      carbs: {
+        type: 'number',
+        description: 'Total carbohydrates in grams.',
+      },
+      fat: {
+        type: 'number',
+        description: 'Total fat in grams.',
+      },
+      fiber: {
+        type: 'number',
+        description: 'Total dietary fiber in grams. Use 0 if unknown.',
+      },
+      sugar: {
+        type: 'number',
+        description: 'Total sugars in grams. Use 0 if unknown.',
+      },
+      sodium: {
+        type: 'number',
+        description: 'Total sodium in milligrams. Use 0 if unknown.',
+      },
+      saturatedFat: {
+        type: 'number',
+        description: 'Total saturated fat in grams. Use 0 if unknown.',
+      },
+      cholesterol: {
+        type: 'number',
+        description: 'Total cholesterol in milligrams. Use 0 if unknown.',
+      },
+      quantity: {
+        type: 'number',
+        description:
+          'Overall quantity multiplier for this meal. Use 1 for a typical single portion, or a number of portions/items.',
+      },
+      unit: {
+        type: 'string',
+        description:
+          'High-level unit describing the meal amount, like "serving", "plate", "bowl", "piece", etc. Avoid very small units like grams unless appropriate.',
+      },
+    },
+    required: [
+      'name',
+      'calories',
+      'protein',
+      'carbs',
+      'fat',
+      'fiber',
+      'sugar',
+      'sodium',
+      'saturatedFat',
+      'cholesterol',
+      'quantity',
+      'unit',
+    ],
+    additionalProperties: false,
+  },
+} as const;
 
 function extractJsonFromText(text: string): Record<string, unknown> | null {
   const trimmed = text.trim();
@@ -49,14 +164,25 @@ function extractJsonFromText(text: string): Record<string, unknown> | null {
 }
 
 function normalizeMeal(obj: Record<string, unknown>) {
-  const num = (v: unknown) => (typeof v === 'number' && !Number.isNaN(v) ? v : 0);
-  const str = (v: unknown) => (typeof v === 'string' ? v : String(v ?? ''));
+  const num = (v: unknown) =>
+    typeof v === 'number' && !Number.isNaN(v) ? v : 0;
+
+  const str = (v: unknown) =>
+    typeof v === 'string' ? v : String(v ?? '');
+
+  const protein = Math.max(0, num(obj.protein));
+  const carbs = Math.max(0, num(obj.carbs));
+  const fat = Math.max(0, num(obj.fat));
+
+  // Recompute calories deterministically
+  const calories = Math.round((protein * 4) + (carbs * 4) + (fat * 9));
+
   return {
     name: str(obj.name).trim() || 'Meal',
-    calories: Math.max(0, num(obj.calories)),
-    protein: Math.max(0, num(obj.protein)),
-    carbs: Math.max(0, num(obj.carbs)),
-    fat: Math.max(0, num(obj.fat)),
+    calories,
+    protein: Number(protein.toFixed(2)),
+    carbs: Number(carbs.toFixed(2)),
+    fat: Number(fat.toFixed(2)),
     fiber: Math.max(0, num(obj.fiber)),
     sugar: Math.max(0, num(obj.sugar)),
     sodium: Math.max(0, num(obj.sodium)),
@@ -85,7 +211,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userMessage = `What are the nutrition facts for this meal? "${text.trim()}"`;
+    const userMessage = `The user ate: "${text.trim()}". Figure out the combined nutrition for this meal.`;
 
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -97,17 +223,20 @@ export async function POST(req: NextRequest) {
         model: 'gpt-4o',
         instructions: INSTRUCTIONS,
         input: userMessage,
-        text: { format: { type: 'text' } },
         tools: [
+          MEAL_NUTRITION_TOOL,
           {
             type: 'web_search',
             user_location: { type: 'approximate' as const },
             search_context_size: 'medium' as const,
           },
         ],
+        tool_choice: {
+          type: 'function',
+          name: 'get_meal_nutrition',
+        },
         temperature: 0.3,
         max_output_tokens: 2048,
-        include: ['web_search_call.action.sources'],
       }),
     });
 
@@ -120,6 +249,8 @@ export async function POST(req: NextRequest) {
     const data = (await res.json()) as {
       output?: Array<{
         type?: string;
+        name?: string;
+        arguments?: string;
         role?: string;
         content?: Array<{ type?: string; text?: string }>;
       }>;
@@ -130,23 +261,27 @@ export async function POST(req: NextRequest) {
       return errorResponse(data.error.message, 400);
     }
 
-    let responseText = '';
-    for (const item of data.output ?? []) {
-      if (item.type === 'message' && item.role === 'assistant' && Array.isArray(item.content)) {
-        for (const block of item.content) {
-          if (block.type === 'output_text' && typeof block.text === 'string') {
-            responseText += block.text;
-          }
-        }
-      }
+    const toolCall = (data.output ?? []).find(
+      (item) => item.type === 'function_call' && item.name === 'get_meal_nutrition'
+    );
+
+    if (!toolCall || typeof toolCall.arguments !== 'string') {
+      return errorResponse(
+        'Could not parse nutrition data from AI response. Try describing the meal in more detail.',
+        422
+      );
     }
 
-    const parsed = extractJsonFromText(responseText);
-    if (!parsed) {
-      return errorResponse('Could not parse nutrition data from AI response. Try describing the meal in more detail.', 422);
+    const parsedArgs = extractJsonFromText(toolCall.arguments);
+
+    if (!parsedArgs) {
+      return errorResponse(
+        'Could not parse nutrition data from AI response. Try describing the meal in more detail.',
+        422
+      );
     }
 
-    const meal = normalizeMeal(parsed);
+    const meal = normalizeMeal(parsedArgs);
     return maskedResponse({ meal });
   } catch (err) {
     console.error('[AI Food Logger Error]:', err);

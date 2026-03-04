@@ -1,5 +1,3 @@
-'use client';
-
 import { Clock, Plus } from 'lucide-react';
 
 interface RecentFoodCardProps {
