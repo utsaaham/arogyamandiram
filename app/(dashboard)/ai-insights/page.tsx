@@ -94,7 +94,7 @@ const mealTypeLabels: Record<string, string> = {
 
 export default function AiInsightsPage() {
   const { user, loading: userLoading } = useUser();
-  const [activeTab, setActiveTab] = useState<TabKey>('week');
+  const [activeTab, setActiveTab] = useState<TabKey>('yesterday');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

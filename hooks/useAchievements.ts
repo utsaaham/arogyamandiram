@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { UserAchievements, UserBadge, ApiResponse } from '@/types';
+import { getToday } from '@/lib/utils';
 
 interface AchievementsResponse {
   achievements: UserAchievements;
@@ -30,7 +31,9 @@ export function useAchievements(): UseAchievementsResult {
       setLoading(true);
       setError(null);
 
-      const res = await fetch('/api/achievements', {
+      const today = getToday();
+      const url = `/api/achievements?today=${encodeURIComponent(today)}`;
+      const res = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
