@@ -120,9 +120,16 @@ function isAfterMidnight(time: string): boolean {
 export async function calculateStreaks(
   userId: string,
   targets: UserTargets,
-  daysBack: number = 60
+  daysBack: number = 60,
+  todayOverride?: string
 ): Promise<UserStreaks> {
-  const today = startOfDay(new Date());
+  let today: Date;
+  if (todayOverride) {
+    const parsed = parseISO(todayOverride);
+    today = isNaN(parsed.getTime()) ? startOfDay(new Date()) : startOfDay(parsed);
+  } else {
+    today = startOfDay(new Date());
+  }
   const fromDate = subDays(today, daysBack);
 
   const logs = await DailyLog.find({
@@ -307,7 +314,10 @@ function awardBadge(
   existingIds.add(badgeId);
 }
 
-export async function calculateAchievements(userId: string): Promise<AchievementsResult> {
+export async function calculateAchievements(
+  userId: string,
+  todayOverride?: string
+): Promise<AchievementsResult> {
   const user = await User.findById(userId).lean();
   if (!user) {
     throw new Error('User not found');
@@ -336,7 +346,7 @@ export async function calculateAchievements(userId: string): Promise<Achievement
   const nowIso = new Date().toISOString();
 
   const [streaks, logs] = await Promise.all([
-    calculateStreaks(userId, targets),
+    calculateStreaks(userId, targets, 60, todayOverride),
     getLogsForBadges(userId),
   ]);
 
