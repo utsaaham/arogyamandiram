@@ -37,9 +37,20 @@ const navItems = [
   { href: '/preferences', icon: Bell, label: 'Preferences' },
 ];
 
-export default function Sidebar() {
+type SidebarProps = {
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+};
+
+export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedChange }: SidebarProps = {}) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const collapsed = onCollapsedChange ? (controlledCollapsed ?? internalCollapsed) : internalCollapsed;
+  const setCollapsed = onCollapsedChange
+    ? (value: boolean) => {
+        onCollapsedChange(value);
+      }
+    : setInternalCollapsed;
 
   return (
     <aside
@@ -110,6 +121,7 @@ export default function Sidebar() {
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
+          type="button"
           className="mt-2 flex w-full items-center justify-center rounded-xl p-2 text-text-muted hover:bg-white/[0.04]"
         >
           <ChevronLeft
