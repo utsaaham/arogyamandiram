@@ -56,6 +56,18 @@ const config: Config = {
         'glow-amber': '0 0 20px rgba(245, 158, 11, 0.15)',
         card: '0 4px 24px rgba(0, 0, 0, 0.4)',
       },
+      minHeight: {
+        'screen-safe': '100dvh',
+      },
+      height: {
+        'screen-safe': '100dvh',
+      },
+      spacing: {
+        'safe-top': 'var(--sat, env(safe-area-inset-top, 0px))',
+        'safe-bottom': 'var(--sab, env(safe-area-inset-bottom, 0px))',
+        'safe-left': 'var(--sal, env(safe-area-inset-left, 0px))',
+        'safe-right': 'var(--sar, env(safe-area-inset-right, 0px))',
+      },
       backdropBlur: {
         xs: '2px',
       },

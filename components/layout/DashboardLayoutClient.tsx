@@ -64,7 +64,10 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
 
   if (status === 'loading' || checkingOnboarding) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{ paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))' }}
+      >
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
       </div>
     );
@@ -73,10 +76,17 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
   if (!session) return null;
 
   return (
-    <div className="hide-scrollbar fixed inset-0 overflow-y-auto overscroll-behavior-y-contain">
+    <div
+      className="app-viewport hide-scrollbar fixed inset-0 overflow-y-auto overscroll-behavior-y-contain"
+      style={{
+        paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))',
+        paddingLeft: 'var(--sal, env(safe-area-inset-left, 0px))',
+        paddingRight: 'var(--sar, env(safe-area-inset-right, 0px))',
+      }}
+    >
       <Sidebar />
       <MobileNav />
-      <main className="dashboard-main min-h-full pb-[max(5rem,calc(env(safe-area-inset-bottom)+3.75rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
+      <main className="min-h-full pb-[max(5.5rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+4rem))] lg:pl-[240px] lg:pb-0 lg:pt-0">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
           {children}
