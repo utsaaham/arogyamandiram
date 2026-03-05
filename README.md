@@ -108,14 +108,14 @@ A full-stack health tracking web app built with Next.js 14, featuring Indian foo
 
 **What you need to provide:**
 
-| Item | Required? | Where to get it |
-|------|-----------|-----------------|
-| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) — create a free cluster, copy connection string |
-| `NEXTAUTH_SECRET` | Yes | Run `openssl rand -base64 32` |
-| `ENCRYPTION_KEY` | Yes | Run `openssl rand -hex 32` |
-| `NEXTAUTH_URL` | Yes | Use `http://localhost:3000` for local dev |
-| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) — for insights, meal ideas, workout plans |
-| `EDAMAM_APP_ID` & `EDAMAM_APP_KEY` | Optional | [Edamam](https://developer.edamam.com/) — for international food search |
+| Item | Required? | Where to get it | Notes |
+|------|-----------|-----------------|-------|
+| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) — create a free cluster, copy connection string | Use the same cluster for local + Vercel if you want to share data. |
+| `NEXTAUTH_SECRET` | Yes | Run `openssl rand -base64 32` | Must stay stable per deployed environment. |
+| `ENCRYPTION_KEY` | Yes | Run `openssl rand -hex 32` | **If you share a MongoDB cluster between local and Vercel, this MUST be the same value everywhere. Changing it will make all previously stored API keys (OpenAI/Edamam) undecryptable until users re-enter them.** |
+| `NEXTAUTH_URL` | Yes | Use `http://localhost:3000` for local dev | Set to your Vercel URL in production. |
+| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) — for insights, meal ideas, workout plans | Optional server-wide fallback. Users can also add their own key in **Settings → API Keys**, which is AES-256 encrypted in MongoDB. In production (Vercel), it is recommended to set this so AI continues to work even if a user key is missing or broken. |
+| `EDAMAM_APP_ID` & `EDAMAM_APP_KEY` | Optional | [Edamam](https://developer.edamam.com/) — for international food search | Optional server-wide fallback; users can still use the built-in Indian food database without this. |
 
 ### Installation
 

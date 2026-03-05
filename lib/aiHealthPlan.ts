@@ -12,7 +12,19 @@ export async function getOpenAIKeyForHealthPlan(userId: string): Promise<string 
   await connectDB();
   const user = await User.findById(userId).select('+apiKeys.openai').lean();
   const apiKeys = user?.apiKeys as { openai?: string } | undefined;
-  if (apiKeys?.openai) return decrypt(apiKeys.openai);
+
+  if (apiKeys?.openai) {
+    try {
+      return decrypt(apiKeys.openai);
+    } catch (err) {
+      console.error('[AI Health Plan Encryption Error]: Failed to decrypt user OpenAI key', {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // fall through to server-level key or null
+    }
+  }
+
   if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
   return null;
 }

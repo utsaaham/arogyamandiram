@@ -171,6 +171,68 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// PUT /api/workouts - Update a workout
+export async function PUT(req: NextRequest) {
+  try {
+    const userId = await getAuthUserId();
+    if (!isUserId(userId)) return userId;
+
+    const { date, workoutId, workout: workoutPayload } = await req.json();
+    const logDate = date || getToday();
+
+    if (!workoutId) {
+      return errorResponse('Workout ID is required', 400);
+    }
+    if (!workoutPayload?.exercise) {
+      return errorResponse('Exercise name is required', 400);
+    }
+
+    const duration = Number(workoutPayload.duration);
+    const reps = Number(workoutPayload.reps);
+    const hasDuration = Number.isFinite(duration) && duration >= 0;
+    const hasReps = Number.isFinite(reps) && reps > 0;
+    if (!hasDuration && !hasReps) {
+      return errorResponse('Either duration (min) or reps is required', 400);
+    }
+
+    await connectDB();
+
+    const category = ['cardio', 'strength', 'flexibility', 'sports', 'other'].includes(workoutPayload.category)
+      ? workoutPayload.category
+      : 'other';
+    const updateFields: Record<string, unknown> = {
+      'workouts.$.exercise': String(workoutPayload.exercise).trim(),
+      'workouts.$.category': category,
+      'workouts.$.duration': Math.max(0, Number(workoutPayload.duration) || 0),
+      'workouts.$.caloriesBurned': Math.max(0, Number(workoutPayload.caloriesBurned) || 0),
+      'workouts.$.notes': workoutPayload.notes != null ? String(workoutPayload.notes).trim() : '',
+    };
+    if (workoutPayload.sets != null) updateFields['workouts.$.sets'] = Math.max(0, Math.round(Number(workoutPayload.sets)));
+    if (workoutPayload.reps != null) updateFields['workouts.$.reps'] = Math.max(0, Math.round(Number(workoutPayload.reps)));
+    if (workoutPayload.weight != null) updateFields['workouts.$.weight'] = Math.max(0, Number(workoutPayload.weight));
+
+    const log = await DailyLog.findOneAndUpdate(
+      { userId, date: logDate, 'workouts._id': workoutId },
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!log) {
+      return errorResponse('Workout or log not found', 404);
+    }
+
+    await log.save();
+
+    const result = log.toObject();
+    return maskedResponse(stripSensitive(result as unknown as Record<string, unknown>), {
+      message: 'Workout updated',
+    });
+  } catch (err) {
+    console.error('[Workout Update Error]:', err);
+    return errorResponse('Failed to update workout', 500);
+  }
+}
+
 // DELETE /api/workouts - Remove a workout
 export async function DELETE(req: NextRequest) {
   try {

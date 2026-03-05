@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   Dumbbell,
+  Pencil,
   Plus,
   Trash2,
   Flame,
@@ -14,6 +15,7 @@ import {
   TrendingUp,
   Timer,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -28,6 +30,8 @@ import {
 import ProgressRing from '@/components/ui/ProgressRing';
 import StatCard from '@/components/ui/StatCard';
 import AddWorkoutModal from '@/components/workout/AddWorkoutModal';
+import AIWorkoutLoggerModal from '@/components/workout/AIWorkoutLoggerModal';
+import EditWorkoutModal, { type WorkoutEntryForEdit } from '@/components/workout/EditWorkoutModal';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -79,6 +83,10 @@ export default function WorkoutPage() {
   const { log, loading, refetch } = useDailyLog();
   const [showAdd, setShowAdd] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [showAiLogger, setShowAiLogger] = useState(false);
+  const [addingFromAi, setAddingFromAi] = useState(false);
+  const [editingWorkout, setEditingWorkout] = useState<WorkoutEntryForEdit | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [history, setHistory] = useState<WorkoutHistoryPoint[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -131,6 +139,71 @@ export default function WorkoutPage() {
       showToast('Failed to add workout', 'error');
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleAddFromAi = async (
+    aiWorkouts: {
+      exercise: string;
+      category: string;
+      duration: number;
+      caloriesBurned: number;
+      sets?: number;
+      reps?: number;
+      weight?: number;
+      notes?: string;
+    }[],
+  ) => {
+    if (!aiWorkouts || aiWorkouts.length === 0) return;
+    setAddingFromAi(true);
+    try {
+      let successCount = 0;
+
+      for (const workout of aiWorkouts) {
+        const res = await api.addWorkout(today, workout as unknown as Record<string, unknown>);
+        if (res.success) {
+          successCount += 1;
+        } else {
+          showToast(
+            res.error || `Failed to add ${workout.exercise || 'workout'}`,
+            'error',
+          );
+        }
+      }
+
+      if (successCount > 0) {
+        if (successCount === 1) {
+          const name = aiWorkouts[0].exercise || 'Workout';
+          showToast(`${name} added!`, 'success');
+        } else {
+          showToast(`${successCount} workouts added!`, 'success');
+        }
+        setShowAiLogger(false);
+        refetch();
+      }
+    } catch {
+      showToast('Failed to add AI workouts', 'error');
+    } finally {
+      setAddingFromAi(false);
+    }
+  };
+
+  const handleEditSave = async (updated: Omit<WorkoutEntryForEdit, 'id'>) => {
+    if (!editingWorkout) return;
+    setSavingEdit(true);
+    try {
+      const res = await api.updateWorkout(today, editingWorkout.id, updated);
+      if (res.success) {
+        showToast('Workout updated', 'success');
+        setEditingWorkout(null);
+        refetch();
+      } else {
+        showToast(res.error || 'Failed to update workout', 'error');
+      }
+    } catch {
+      showToast('Failed to update workout', 'error');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -221,18 +294,27 @@ export default function WorkoutPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Workouts</h1>
           <p className="text-sm text-text-muted">{formatDate(today)}</p>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="glass-button-primary mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium sm:mt-0"
-        >
-          <Plus className="h-4 w-4" />
-          Add Workout
-        </button>
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <button
+            onClick={() => setShowAdd(true)}
+            className="glass-button-primary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+          >
+            <Plus className="h-4 w-4" />
+            Add Workout
+          </button>
+          <button
+            onClick={() => setShowAiLogger(true)}
+            className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+          >
+            <Sparkles className="h-4 w-4 text-accent-violet" />
+            AI Logger
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -310,17 +392,38 @@ export default function WorkoutPage() {
                               <p className="text-sm font-semibold text-text-primary">{workout.exercise}</p>
                               <p className="text-xs capitalize text-text-muted">{cat}</p>
                             </div>
-                            <button
-                              onClick={() => workout._id && handleDelete(workout._id)}
-                              disabled={deletingId === workout._id}
-                              className="shrink-0 rounded-lg p-1.5 text-text-muted opacity-0 transition-all hover:bg-accent-rose/10 hover:text-accent-rose group-hover:opacity-100"
-                            >
-                              {deletingId === workout._id ? (
-                                <div className="h-3.5 w-3.5 animate-spin rounded-full border border-accent-rose border-t-transparent" />
-                              ) : (
-                                <Trash2 className="h-3.5 w-3.5" />
-                              )}
-                            </button>
+                            <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-all group-hover:opacity-100">
+                              <button
+                                onClick={() =>
+                                  workout._id &&
+                                  setEditingWorkout({
+                                    id: String(workout._id),
+                                    exercise: workout.exercise ?? '',
+                                    category: workout.category ?? 'other',
+                                    duration: workout.duration ?? 0,
+                                    caloriesBurned: workout.caloriesBurned ?? 0,
+                                    sets: workout.sets,
+                                    reps: workout.reps,
+                                    weight: workout.weight,
+                                    notes: workout.notes,
+                                  })
+                                }
+                                className="rounded-lg p-1.5 text-text-muted hover:bg-white/[0.06] hover:text-text-primary"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => workout._id && handleDelete(workout._id)}
+                                disabled={deletingId === workout._id}
+                                className="rounded-lg p-1.5 text-text-muted hover:bg-accent-rose/10 hover:text-accent-rose"
+                              >
+                                {deletingId === workout._id ? (
+                                  <div className="h-3.5 w-3.5 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                            </div>
                           </div>
 
                           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -582,12 +685,27 @@ export default function WorkoutPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modals */}
       {showAdd && (
         <AddWorkoutModal
           onClose={() => setShowAdd(false)}
           onAdd={(workout) => handleAdd(workout as Record<string, unknown>)}
           loading={adding}
+        />
+      )}
+      {showAiLogger && (
+        <AIWorkoutLoggerModal
+          onClose={() => setShowAiLogger(false)}
+          onAdd={handleAddFromAi}
+          loading={addingFromAi}
+        />
+      )}
+      {editingWorkout && (
+        <EditWorkoutModal
+          workout={editingWorkout}
+          onClose={() => setEditingWorkout(null)}
+          onSave={handleEditSave}
+          loading={savingEdit}
         />
       )}
     </div>

@@ -35,6 +35,7 @@ function createEmptyStreaks(): UserStreaks {
   return {
     current: {
       logging: 0,
+      healthy: 0,
       calories: 0,
       water: 0,
       workout: 0,
@@ -43,6 +44,7 @@ function createEmptyStreaks(): UserStreaks {
     },
     best: {
       logging: 0,
+      healthy: 0,
       calories: 0,
       water: 0,
       workout: 0,
@@ -154,6 +156,7 @@ export async function calculateStreaks(
 
   let currentDate = today;
   let keepLogging = true;
+  let keepHealthy = true;
   let keepCalories = true;
   let keepWater = true;
   let keepWorkout = true;
@@ -163,17 +166,29 @@ export async function calculateStreaks(
   // Track the first calendar day included in the *current* streak run
   // for each habit so the UI can say "Streak started Feb 12".
   let startLogging: string | undefined;
+  let startHealthy: string | undefined;
   let startCalories: string | undefined;
   let startWater: string | undefined;
   let startWorkout: string | undefined;
   let startSleep: string | undefined;
   let startWeight: string | undefined;
 
-  while (keepLogging || keepCalories || keepWater || keepWorkout || keepSleep || keepWeight) {
+  // 24-hour grace: "today" never breaks the streak — user has until end of day.
+  // Streak only breaks *tomorrow* if they didn't complete today (see e.g. Duolingo, Snapchat).
+  while (keepLogging || keepHealthy || keepCalories || keepWater || keepWorkout || keepSleep || keepWeight) {
     const dateKey = formatISO(currentDate, { representation: 'date' });
     const log = byDate.get(dateKey);
+    const isToday = isSameDay(currentDate, today);
 
-    if (!log) break;
+    if (!log) {
+      if (isToday) {
+        // Grace: today not over yet — skip today, count streak from yesterday backward
+        currentDate = subDays(currentDate, 1);
+        if (currentDate < fromDate) break;
+        continue;
+      }
+      break; // past day with no log = streak broken
+    }
 
     const caloriesSuccess = isCalorieSuccess(log, targets);
     const waterSuccess = isWaterSuccess(log, targets);
@@ -183,55 +198,73 @@ export async function calculateStreaks(
 
     const healthySuccess =
       caloriesSuccess || waterSuccess || sleepSuccess || workoutSuccess || weightSuccess;
+    const perfectDay = isPerfectDay(log, targets);
+
+    // If today has a log but failed, still give grace (don't break until tomorrow)
+    const effectiveLoggingOk = healthySuccess || isToday;
+    const effectiveHealthyOk = perfectDay || isToday;
+    const effectiveCaloriesOk = caloriesSuccess || isToday;
+    const effectiveWaterOk = waterSuccess || isToday;
+    const effectiveWorkoutOk = workoutSuccess || isToday;
+    const effectiveSleepOk = sleepSuccess || isToday;
+    const effectiveWeightOk = weightSuccess || isToday;
 
     if (keepLogging && healthySuccess) {
       streaks.current.logging += 1;
       startLogging = dateKey;
-    } else {
+    } else if (!effectiveLoggingOk) {
       keepLogging = false;
+    }
+
+    if (keepHealthy && perfectDay) {
+      streaks.current.healthy += 1;
+      startHealthy = dateKey;
+    } else if (!effectiveHealthyOk) {
+      keepHealthy = false;
     }
 
     if (keepCalories && caloriesSuccess) {
       streaks.current.calories += 1;
       startCalories = dateKey;
-    } else {
+    } else if (!effectiveCaloriesOk) {
       keepCalories = false;
     }
 
     if (keepWater && waterSuccess) {
       streaks.current.water += 1;
       startWater = dateKey;
-    } else {
+    } else if (!effectiveWaterOk) {
       keepWater = false;
     }
 
     if (keepWorkout && workoutSuccess) {
       streaks.current.workout += 1;
       startWorkout = dateKey;
-    } else {
+    } else if (!effectiveWorkoutOk) {
       keepWorkout = false;
     }
 
     if (keepSleep && sleepSuccess) {
       streaks.current.sleep += 1;
       startSleep = dateKey;
-    } else {
+    } else if (!effectiveSleepOk) {
       keepSleep = false;
     }
 
     if (keepWeight && weightSuccess) {
       streaks.current.weight += 1;
       startWeight = dateKey;
-    } else {
+    } else if (!effectiveWeightOk) {
       keepWeight = false;
     }
 
     currentDate = subDays(currentDate, 1);
-    if (!isSameDay(currentDate, fromDate) && currentDate < fromDate) break;
+    if (currentDate < fromDate) break;
   }
 
   // Best streaks across the entire window (not just the current run)
   let runLogging = 0;
+  let runHealthy = 0;
   let runCalories = 0;
   let runWater = 0;
   let runWorkout = 0;
@@ -247,8 +280,10 @@ export async function calculateStreaks(
 
     const healthySuccess =
       caloriesSuccess || waterSuccess || sleepSuccess || workoutSuccess || weightSuccess;
+    const perfectDay = isPerfectDay(log, targets);
 
     runLogging = healthySuccess ? runLogging + 1 : 0;
+    runHealthy = perfectDay ? runHealthy + 1 : 0;
     runCalories = caloriesSuccess ? runCalories + 1 : 0;
     runWater = waterSuccess ? runWater + 1 : 0;
     runWorkout = workoutSuccess ? runWorkout + 1 : 0;
@@ -256,6 +291,7 @@ export async function calculateStreaks(
     runWeight = weightSuccess ? runWeight + 1 : 0;
 
     streaks.best.logging = Math.max(streaks.best.logging, runLogging);
+    streaks.best.healthy = Math.max(streaks.best.healthy, runHealthy);
     streaks.best.calories = Math.max(streaks.best.calories, runCalories);
     streaks.best.water = Math.max(streaks.best.water, runWater);
     streaks.best.workout = Math.max(streaks.best.workout, runWorkout);
@@ -266,6 +302,7 @@ export async function calculateStreaks(
   // Attach optional start dates only when the streak is non-zero.
   streaks.starts = {
     logging: streaks.current.logging > 0 ? startLogging : undefined,
+    healthy: streaks.current.healthy > 0 ? startHealthy : undefined,
     calories: streaks.current.calories > 0 ? startCalories : undefined,
     water: streaks.current.water > 0 ? startWater : undefined,
     workout: streaks.current.workout > 0 ? startWorkout : undefined,

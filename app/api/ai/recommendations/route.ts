@@ -8,30 +8,12 @@ import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import DailyLog from '@/models/DailyLog';
-import { decrypt } from '@/lib/encryption';
+import { resolveOpenAIKey } from '@/lib/openaiKey';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday, getYesterday, getAgeFromDateOfBirth, toLocalDateString } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
-
-async function getOpenAIKey(userId: string): Promise<string | null> {
-  await connectDB();
-  const user = await User.findById(userId).select('+apiKeys.openai').lean();
-  const apiKeys = user?.apiKeys as { openai?: string } | undefined;
-
-  // User's own key first
-  if (apiKeys?.openai) {
-    return decrypt(apiKeys.openai);
-  }
-
-  // Fallback to server default
-  if (process.env.OPENAI_API_KEY) {
-    return process.env.OPENAI_API_KEY;
-  }
-
-  return null;
-}
 
 async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: string) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -54,7 +36,20 @@ async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: stri
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `OpenAI API error: ${res.status}`);
+    const status = res.status;
+    const rawMessage: string | undefined = err.error?.message;
+
+    if (status === 401 || status === 403) {
+      throw new Error(
+        'Your OpenAI API key looks invalid or expired. Update it in Settings → API Keys.'
+      );
+    }
+
+    if (status >= 500) {
+      throw new Error('AI service is temporarily unavailable. Please try again in a few minutes.');
+    }
+
+    throw new Error(rawMessage || `OpenAI API error: ${status}`);
   }
 
   const data = await res.json();
@@ -68,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     const { type, ...context } = await req.json();
 
-    const apiKey = await getOpenAIKey(userId);
+    const apiKey = await resolveOpenAIKey(userId);
     if (!apiKey) {
       return errorResponse(
         'OpenAI API key required. Add your key in Settings to enable AI features.',
