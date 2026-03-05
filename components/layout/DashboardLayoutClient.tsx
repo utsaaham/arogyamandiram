@@ -76,7 +76,7 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
     <div className="hide-scrollbar fixed inset-0 overflow-y-auto overscroll-behavior-y-contain">
       <Sidebar />
       <MobileNav />
-      <main className="min-h-full pb-[max(5rem,calc(env(safe-area-inset-bottom)+3.75rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
+      <main className="dashboard-main min-h-full pb-[max(5rem,calc(env(safe-area-inset-bottom)+3.75rem))] pt-[env(safe-area-inset-top)] lg:pl-[240px] lg:pb-0 lg:pt-0">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
           {children}
