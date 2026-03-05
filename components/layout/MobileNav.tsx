@@ -20,17 +20,27 @@ const mobileNav = [
   { href: '/more', icon: MoreHorizontal, label: 'More' },
 ];
 
+/** True when app is launched from home screen (PWA standalone). No Safari chrome. */
+function isStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia('(display-mode: standalone)').matches) return true;
+  const nav = navigator as { standalone?: boolean };
+  return Boolean(nav.standalone);
+}
+
 /**
- * On iOS Safari, when the bottom toolbar (share, add to home screen) hides,
- * the visual viewport grows but the layout viewport doesn't update, so
- * position: fixed; bottom: 0 leaves a gap. We use the Visual Viewport API
- * to push the nav down so it always sits at the visible bottom.
+ * On iOS Safari (in-browser only), when the bottom toolbar hides, the visual
+ * viewport grows but the layout viewport doesn't update, so we push the nav
+ * down. In standalone (add-to-home-screen) we use no offset so the nav stays
+ * flush at the bottom.
  */
 function useVisualViewportBottomOffset(): number {
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
-    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (isStandalone()) return;
+
+    const vv = window.visualViewport;
     if (!vv) return;
 
     const update = () => {
