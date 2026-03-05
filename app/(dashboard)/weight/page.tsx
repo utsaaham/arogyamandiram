@@ -69,13 +69,19 @@ export default function WeightPage() {
     fetchHistory(period);
   }, [period, fetchHistory]);
 
-  // Pre-fill with today's weight if exists
+  const units = user?.settings?.units || 'metric';
+
+  // Pre-fill with today's weight if exists (API stores kg; show lbs when imperial)
   useEffect(() => {
     const todayEntry = history.find((e) => e.date === today);
     if (todayEntry) {
-      setWeight(todayEntry.weight.toString());
+      const display =
+        units === 'imperial'
+          ? (todayEntry.weight * 2.20462).toFixed(1)
+          : todayEntry.weight.toString();
+      setWeight(display);
     }
-  }, [history, today]);
+  }, [history, today, units]);
 
   const handleLogWeight = async () => {
     const val = parseFloat(weight);
@@ -83,11 +89,13 @@ export default function WeightPage() {
       showToast('Please enter a valid weight', 'error');
       return;
     }
+    // API always stores kg: convert lbs → kg when user has imperial units
+    const weightKg = units === 'imperial' ? val / 2.20462 : val;
     setSaving(true);
     try {
-      const res = await api.logWeight(today, val);
+      const res = await api.logWeight(today, weightKg);
       if (res.success) {
-        showToast(`Weight logged: ${formatWeight(val, user?.settings?.units)}`, 'success');
+        showToast(`Weight logged: ${formatWeight(weightKg, units)}`, 'success');
         fetchHistory(period);
       } else {
         showToast(res.error || 'Failed to log weight', 'error');
@@ -98,8 +106,6 @@ export default function WeightPage() {
       setSaving(false);
     }
   };
-
-  const units = user?.settings?.units || 'metric';
   const targetWeight = user?.profile?.targetWeight;
   const idealWeight = getTargetsForUser(user ?? undefined).idealWeight;
   const currentWeight = history.length > 0 ? history[history.length - 1].weight : user?.profile?.weight;
