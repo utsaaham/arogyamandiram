@@ -88,10 +88,19 @@ export default function AIFoodLoggerModal({ onClose, onAdd, loading }: AIFoodLog
           unit: m.unit ?? 'serving',
         });
       } else {
-        setError(res.error || 'Could not get nutrition. Try again.');
+        const rawError = res.error || 'Could not get nutrition. Try again.';
+        const normalized = rawError.toLowerCase();
+
+        if (normalized.includes('openai api key required')) {
+          setError('Connect your OpenAI API key in Settings → API Keys to use AI Food Logger.');
+        } else if (normalized.includes('invalid') && normalized.includes('api key')) {
+          setError('Your OpenAI API key looks invalid or expired. Update it in Settings → API Keys.');
+        } else {
+          setError(rawError);
+        }
       }
     } catch {
-      setError('Something went wrong. Try again.');
+      setError('Something went wrong while talking to AI. Try again in a moment.');
     } finally {
       setFetching(false);
     }

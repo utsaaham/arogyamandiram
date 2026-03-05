@@ -29,7 +29,7 @@ export default function MobileNav() {
         paddingBottom: 'var(--sab, env(safe-area-inset-bottom, 0px))',
       }}
     >
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-center justify-around py-1.5">
         {mobileNav.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (

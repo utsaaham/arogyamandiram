@@ -17,7 +17,19 @@ async function getOpenAIKey(userId: string): Promise<string | null> {
   await connectDB();
   const user = await User.findById(userId).select('+apiKeys.openai').lean();
   const apiKeys = user?.apiKeys as { openai?: string } | undefined;
-  if (apiKeys?.openai) return decrypt(apiKeys.openai);
+
+  if (apiKeys?.openai) {
+    try {
+      return decrypt(apiKeys.openai);
+    } catch (err) {
+      console.error('[AI Food Logger Encryption Error]: Failed to decrypt user OpenAI key', {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Fall through to server-level key or null so we don't crash the route
+    }
+  }
+
   if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
   return null;
 }
@@ -242,8 +254,25 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      const msg = (err as { error?: { message?: string } })?.error?.message || `OpenAI API error: ${res.status}`;
-      return errorResponse(msg, res.status >= 500 ? 502 : 400);
+      const status = res.status;
+      const apiError = (err as { error?: { message?: string } })?.error;
+      const rawMessage = apiError?.message;
+
+      if (status === 401 || status === 403) {
+        return errorResponse(
+          'Your OpenAI API key looks invalid or expired. Update it in Settings → API Keys.',
+          400
+        );
+      }
+
+      if (status >= 500) {
+        return errorResponse(
+          'AI service is temporarily unavailable. Please try again in a few minutes.',
+          502
+        );
+      }
+
+      return errorResponse(rawMessage || `OpenAI API error: ${status}`, 400);
     }
 
     const data = (await res.json()) as {
@@ -285,6 +314,10 @@ export async function POST(req: NextRequest) {
     return maskedResponse({ meal });
   } catch (err) {
     console.error('[AI Food Logger Error]:', err);
-    return errorResponse('Failed to get nutrition from AI', 500);
+    const message =
+      err instanceof Error && err.message
+        ? err.message
+        : 'Failed to get nutrition from AI';
+    return errorResponse(message, 500);
   }
 }

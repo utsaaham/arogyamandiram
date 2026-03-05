@@ -100,6 +100,7 @@ const UserSchema = new Schema<IUserDocument>(
       streaks: {
         current: {
           logging: { type: Number, default: 0 },
+          healthy: { type: Number, default: 0 },
           calories: { type: Number, default: 0 },
           water: { type: Number, default: 0 },
           workout: { type: Number, default: 0 },
@@ -108,6 +109,7 @@ const UserSchema = new Schema<IUserDocument>(
         },
         best: {
           logging: { type: Number, default: 0 },
+          healthy: { type: Number, default: 0 },
           calories: { type: Number, default: 0 },
           water: { type: Number, default: 0 },
           workout: { type: Number, default: 0 },

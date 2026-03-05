@@ -10,6 +10,7 @@ interface StreakBarProps {
 const EMPTY_STREAKS: UserStreaks = {
   current: {
     logging: 0,
+    healthy: 0,
     calories: 0,
     water: 0,
     workout: 0,
@@ -18,6 +19,7 @@ const EMPTY_STREAKS: UserStreaks = {
   },
   best: {
     logging: 0,
+    healthy: 0,
     calories: 0,
     water: 0,
     workout: 0,
@@ -29,7 +31,8 @@ const EMPTY_STREAKS: UserStreaks = {
 export function StreakBar({ streaks }: StreakBarProps) {
   const s = streaks ?? EMPTY_STREAKS;
   const items = [
-    { key: 'logging' as const, label: 'Healthy days' },
+    { key: 'logging' as const, label: 'Active days' },
+    { key: 'healthy' as const, label: 'Healthy days' },
     { key: 'calories' as const, label: 'Food log' },
     { key: 'water' as const, label: 'Water' },
     { key: 'weight' as const, label: 'Weight' },

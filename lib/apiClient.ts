@@ -176,6 +176,12 @@ export const api = {
       body: JSON.stringify({ text }),
     }),
 
+  aiWorkoutLogger: (text: string) =>
+    apiFetch<{ workouts: Record<string, unknown>[] }>('/ai/workout-logger', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+
   // Workouts
   addWorkout: (date: string, workout: Record<string, unknown>) =>
     apiFetch('/workouts', {
@@ -185,6 +191,12 @@ export const api = {
 
   getWorkoutExercises: (days: number = 90) =>
     apiFetch(`/workouts/exercises?days=${days}`),
+
+  updateWorkout: (date: string, workoutId: string, workout: Record<string, unknown>) =>
+    apiFetch('/workouts', {
+      method: 'PUT',
+      body: JSON.stringify({ date, workoutId, workout }),
+    }),
 
   removeWorkout: (date: string, workoutId: string) =>
     apiFetch('/workouts', {
