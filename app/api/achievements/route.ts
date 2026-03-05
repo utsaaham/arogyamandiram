@@ -14,8 +14,8 @@ import { getLevelProgress } from '@/lib/level';
 export const dynamic = 'force-dynamic';
 
 const EMPTY_STREAKS = {
-  current: { logging: 0, calories: 0, water: 0, workout: 0, sleep: 0, weight: 0 },
-  best: { logging: 0, calories: 0, water: 0, workout: 0, sleep: 0, weight: 0 },
+  current: { logging: 0, healthy: 0, calories: 0, water: 0, workout: 0, sleep: 0, weight: 0 },
+  best: { logging: 0, healthy: 0, calories: 0, water: 0, workout: 0, sleep: 0, weight: 0 },
   starts: {} as Record<string, undefined>,
 };
 

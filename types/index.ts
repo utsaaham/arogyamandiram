@@ -69,7 +69,8 @@ export interface UserTargets {
 
 export interface UserStreaks {
   current: {
-    logging: number;    // consecutive days with any log
+    logging: number;    // consecutive active days (any log / any goal)
+    healthy: number;   // consecutive healthy days (all goals met)
     calories: number;   // consecutive days within calorie target
     water: number;      // consecutive days meeting water goal
     workout: number;    // consecutive days with a workout (meeting burn threshold)
@@ -78,6 +79,7 @@ export interface UserStreaks {
   };
   best: {
     logging: number;
+    healthy: number;
     calories: number;
     water: number;
     workout: number;    // longest run of days meeting workout burn threshold
@@ -91,6 +93,7 @@ export interface UserStreaks {
    */
   starts?: {
     logging?: string;
+    healthy?: string;
     calories?: string;
     water?: string;
     workout?: string;

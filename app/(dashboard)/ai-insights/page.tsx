@@ -143,7 +143,25 @@ export default function AiInsightsPage() {
         setInsights(data.insights || []);
         setInsightsGeneratedAt(data.generatedAt || new Date().toISOString());
       } else {
-        setError(res.error || 'Failed to fetch insights');
+        const rawError = res.error || 'Failed to fetch insights';
+        const normalized = rawError.toLowerCase();
+
+        if (normalized.includes('openai api key required')) {
+          setError('Connect your OpenAI API key in Settings → API Keys to generate insights.');
+        } else if (
+          normalized.includes('invalid') &&
+          normalized.includes('api key')
+        ) {
+          setError('Your OpenAI API key looks invalid or expired. Update it in Settings → API Keys.');
+        } else if (
+          normalized.includes('unsupported state') ||
+          normalized.includes('unable to authenticate') ||
+          normalized.includes('unauthorized')
+        ) {
+          setError('OpenAI could not authenticate your key. Double-check the key in Settings → API Keys.');
+        } else {
+          setError(rawError);
+        }
       }
     } catch {
       setError('Failed to fetch insights');

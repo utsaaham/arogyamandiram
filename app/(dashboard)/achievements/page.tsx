@@ -81,13 +81,13 @@ export default function AchievementsPage() {
             <div className="glass-card-elevated flex flex-col gap-1 rounded-2xl px-3 py-2">
               <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
                 <Flame className="h-3 w-3 text-accent-amber" />
-                Best streak
+                Best active
               </span>
               <span className="text-sm font-semibold text-text-primary">
-                {bestLoggingStreak}d
+                {bestLoggingStreak} active days
               </span>
               <span className="text-[10px] text-text-muted">
-                Current {loggingStreak}d
+                Current {loggingStreak} active days
               </span>
             </div>
           </div>
@@ -110,8 +110,8 @@ export default function AchievementsPage() {
         <StreakBar streaks={streaks} />
         <p className="text-[11px] text-text-muted">
           {loggingStreak >= 7
-            ? 'Keep your streak alive to climb to the next badge tier.'
-            : `Just ${Math.max(1, 7 - loggingStreak)} day${Math.max(1, 7 - loggingStreak) === 1 ? '' : 's'} away from your first 7-day streak badge.`}
+            ? 'Keep your active-day streak alive to climb to the next badge tier.'
+            : `Just ${Math.max(1, 7 - loggingStreak)} active day${Math.max(1, 7 - loggingStreak) === 1 ? '' : 's'} away from your first 7-day streak badge.`}
         </p>
       </div>
 
