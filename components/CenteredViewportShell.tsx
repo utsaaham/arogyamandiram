@@ -8,7 +8,7 @@ type CenteredViewportShellProps = {
    */
   background?: ReactNode;
   /**
-   * Extra classes for the viewport container (`auth-viewport-min-height` + flex center).
+   * Extra classes for the viewport container (full-height flex center).
    */
   containerClassName?: string;
   /**
@@ -24,10 +24,16 @@ export default function CenteredViewportShell({
   contentClassName,
 }: CenteredViewportShellProps) {
   return (
-    <main className="fixed inset-0 overflow-x-hidden overflow-y-auto">
+    <main
+      className="fixed inset-0 overflow-x-hidden overflow-y-auto"
+      style={{
+        paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))',
+        paddingBottom: 'var(--sab, env(safe-area-inset-bottom, 0px))',
+      }}
+    >
       <div
         className={clsx(
-          'relative auth-viewport-min-height flex flex-col items-center justify-center px-4 py-6',
+          'relative min-h-full flex flex-col items-center justify-center px-4 py-6',
           containerClassName,
         )}
       >

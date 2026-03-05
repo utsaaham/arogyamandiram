@@ -44,9 +44,10 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/[0.04] bg-bg-surface/80 backdrop-blur-xl transition-all duration-300 lg:flex',
+        'fixed left-0 top-0 z-40 hidden h-screen-safe flex-col border-r border-white/[0.04] bg-bg-surface/80 backdrop-blur-xl transition-all duration-300 lg:flex',
         collapsed ? 'w-[72px]' : 'w-[240px]'
       )}
+      style={{ paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))' }}
     >
       {/* Nav Items */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">

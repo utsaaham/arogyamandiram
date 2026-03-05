@@ -142,7 +142,7 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-40 flex items-end justify-center pb-[max(4.75rem,calc(env(safe-area-inset-bottom)+3.5rem))] pt-[env(safe-area-inset-top)] lg:items-start lg:justify-end lg:pb-0 lg:pt-0"
+      className="pointer-events-none fixed inset-0 z-40 flex items-end justify-center pb-[max(4.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+3.5rem))] pt-[var(--sat,env(safe-area-inset-top,0px))] lg:items-start lg:justify-end lg:pb-0 lg:pt-0"
     >
       {/* Backdrop */}
       <div className="pointer-events-auto fixed inset-0 bg-black/30" onClick={finishTour} />

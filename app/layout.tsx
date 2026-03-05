@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, JetBrains_Mono } from 'next/font/google';
 import AuthProvider from '@/components/AuthProvider';
+import { SafeAreaProvider } from '@/components/SafeAreaProvider';
 import ToastContainer from '@/components/ui/Toast';
 import './globals.css';
 
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="font-body bg-bg-primary text-text-primary antialiased">
+        <SafeAreaProvider />
         <AuthProvider>
           {children}
           <ToastContainer />

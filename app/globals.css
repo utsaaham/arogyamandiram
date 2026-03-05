@@ -22,8 +22,17 @@
   --border-default: rgba(255, 255, 255, 0.06);
 }
 
-/* ---------- Base Styles ---------- */
+/* ---------- Base Styles & Root Layout ---------- */
 html {
+  height: 100%;
+  min-height: calc(100% + env(safe-area-inset-top));
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  width: 100%;
+  overflow-x: hidden;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -31,15 +40,47 @@ html {
 }
 
 body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: hidden;
   background-color: var(--bg-primary);
-  min-height: 100vh;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
+}
+
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+/* iOS Safari fallback for viewport height */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Blurred status bar / Dynamic Island overlay */
+@supports (padding: env(safe-area-inset-top)) {
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    height: env(safe-area-inset-top, 0px);
+    background: rgba(8, 8, 13, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    pointer-events: none;
+  }
 }
 
 /* ---------- Noise Texture Overlay ---------- */
-body::before {
+body::after {
   content: '';
   position: fixed;
   top: 0;
@@ -61,9 +102,40 @@ body::before {
 .auth-viewport-min-height {
   min-height: 100vh;
 }
-@supports (height: 100svh) {
+
+@supports (height: 100dvh) {
   .auth-viewport-min-height {
-    min-height: 100svh;
+    min-height: 100dvh;
+  }
+}
+
+/* ---------- App viewport (full-screen, including iOS visual viewport) ---------- */
+.app-viewport {
+  min-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .app-viewport {
+    min-height: 100dvh;
+  }
+}
+
+/* ---------- iOS PWA Standalone Mode ---------- */
+@media all and (display-mode: standalone) {
+  html {
+    min-height: calc(100% + env(safe-area-inset-top));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @supports (height: 100dvh) {
+    html {
+      min-height: calc(100dvh + env(safe-area-inset-top));
+    }
+  }
+
+  body {
+    min-height: 100dvh;
+    height: 100%;
   }
 }
 
@@ -542,20 +614,6 @@ body::before {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
-}
-
-/* ---------- Mobile Bottom Nav Safe Area ---------- */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .pb-safe {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
-  }
-}
-
-/* ---------- PWA Standalone: tighten bottom padding when Safari URL bar is gone ---------- */
-@media all and (display-mode: standalone) {
-  .dashboard-main {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 3.5rem) !important;
-  }
 }
 
 /* ---------- Hide Scrollbar ---------- */
