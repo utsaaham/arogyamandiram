@@ -551,6 +551,13 @@ body::before {
   }
 }
 
+/* ---------- PWA Standalone: tighten bottom padding when Safari URL bar is gone ---------- */
+@media all and (display-mode: standalone) {
+  .dashboard-main {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 3.5rem) !important;
+  }
+}
+
 /* ---------- Hide Scrollbar ---------- */
 .hide-scrollbar {
   -ms-overflow-style: none;
