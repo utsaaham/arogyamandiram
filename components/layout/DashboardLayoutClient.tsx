@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { CURRENT_DASHBOARD_TOUR_VERSION } from '@/lib/constants';
+import { DebugLogsProvider } from '@/contexts/DebugLogsContext';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
 import DashboardTour from '@/components/tour/DashboardTour';
@@ -96,7 +97,7 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
       >
         <div className="mx-auto max-w-6xl w-full px-4 py-6 sm:px-6 lg:px-8">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
-          {children}
+          <DebugLogsProvider>{children}</DebugLogsProvider>
         </div>
       </main>
     </div>

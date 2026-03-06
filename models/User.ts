@@ -12,6 +12,18 @@ export interface IUserDocument extends Omit<IUser, '_id'>, Document {
 
 const UserSchema = new Schema<IUserDocument>(
   {
+    username: {
+      type: String,
+      required: false, // legacy users may not have it; new users get it at registration
+      unique: true,
+      sparse: true, // allow multiple nulls for legacy users
+      lowercase: true,
+      trim: true,
+      index: true,
+      minlength: [3, 'Username must be at least 3 characters'],
+      maxlength: [30, 'Username must be at most 30 characters'],
+      match: [/^[a-z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'],
+    },
     email: {
       type: String,
       required: [true, 'Email is required'],

@@ -14,3 +14,6 @@ out/
 
 # IDE
 .idea/
+
+# Debug logs (persisted locally, not committed)
+.debug-logs/

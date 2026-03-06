@@ -224,6 +224,8 @@ export async function POST(req: NextRequest) {
     }
 
     const userMessage = `The user ate: "${text.trim()}". Figure out the combined nutrition for this meal.`;
+    const requestedAt = new Date().toISOString();
+    const startMs = Date.now();
 
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -311,7 +313,26 @@ export async function POST(req: NextRequest) {
     }
 
     const meal = normalizeMeal(parsedArgs);
-    return maskedResponse({ meal });
+    const latencyMs = Date.now() - startMs;
+
+    const payload: { meal: typeof meal; debugLog?: unknown } = { meal };
+    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+      const usage = (data as { usage?: { prompt_tokens?: number; completion_tokens?: number } }).usage;
+      payload.debugLog = {
+        userRequest: { text: text.trim(), requestedAt },
+        instructions: INSTRUCTIONS,
+        prompt: userMessage,
+        response: toolCall.arguments,
+        metadata: {
+          model: 'gpt-4o',
+          usage: usage ? { prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens } : undefined,
+          latencyMs,
+          timestamp: new Date().toISOString(),
+          status: 'success',
+        },
+      };
+    }
+    return maskedResponse(payload);
   } catch (err) {
     console.error('[AI Food Logger Error]:', err);
     const message =

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import {
   Sparkles,
-  Utensils,
   Dumbbell,
   TrendingUp,
   Loader2,
@@ -11,9 +10,6 @@ import {
   CheckCircle2,
   Info,
   Lightbulb,
-  ChefHat,
-  Leaf,
-  Drumstick,
   Clock,
   Flame,
   Settings,
@@ -24,18 +20,6 @@ import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-
-interface MealSuggestion {
-  name: string;
-  description: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  mealType: string;
-  ingredients: string[];
-  isVegetarian: boolean;
-}
 
 interface WorkoutPlan {
   name: string;
@@ -60,11 +44,10 @@ interface Insight {
 }
 
 type InsightPeriod = 'yesterday' | 'week' | 'month' | 'year';
-type TabKey = InsightPeriod | 'meals' | 'workout';
+type TabKey = InsightPeriod | 'workout';
 
 const tabs: { key: TabKey; label: string; icon: typeof Sparkles }[] = [
   { key: 'yesterday', label: "Yesterday's insights", icon: TrendingUp },
-  { key: 'meals', label: 'Meal Ideas', icon: Utensils },
   { key: 'workout', label: 'Workout Plan', icon: Dumbbell },
   { key: 'week', label: 'Week insights', icon: TrendingUp },
   { key: 'month', label: 'Month insights', icon: TrendingUp },
@@ -85,13 +68,6 @@ const insightColors = {
   tip: 'text-accent-violet bg-accent-violet/10 border-accent-violet/20',
 };
 
-const mealTypeLabels: Record<string, string> = {
-  breakfast: '🌅 Breakfast',
-  lunch: '☀️ Lunch',
-  dinner: '🌙 Dinner',
-  snack: '🍪 Snack',
-};
-
 export default function AiInsightsPage() {
   const { user, loading: userLoading } = useUser();
   const [activeTab, setActiveTab] = useState<TabKey>('yesterday');
@@ -101,12 +77,7 @@ export default function AiInsightsPage() {
   const [insights, setInsights] = useState<Insight[] | null>(null);
   const [insightsGeneratedAt, setInsightsGeneratedAt] = useState<string | null>(null);
   const [eligibility, setEligibility] = useState<{ yesterday: boolean; week: boolean; month: boolean; year: boolean } | null>(null);
-  const [meals, setMeals] = useState<MealSuggestion[] | null>(null);
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
-
-  // Meal preferences
-  const [mealType, setMealType] = useState('');
-  const [mealPrefs, setMealPrefs] = useState('');
 
   // Workout preferences
   const [focusArea, setFocusArea] = useState('');
@@ -177,27 +148,6 @@ export default function AiInsightsPage() {
       (insightPeriod === 'month' && (eligibility?.month ?? false)) ||
       (insightPeriod === 'year' && (eligibility?.year ?? false)));
 
-  const fetchMeals = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const context: Record<string, string> = {};
-      if (mealType) context.mealType = mealType;
-      if (mealPrefs) context.preferences = mealPrefs;
-      const res = await api.getMealSuggestions(context);
-      if (res.success && res.data) {
-        const data = res.data as { suggestions: MealSuggestion[] };
-        setMeals(data.suggestions || []);
-      } else {
-        setError(res.error || 'Failed to fetch meal ideas');
-      }
-    } catch {
-      setError('Failed to fetch meal ideas');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchWorkout = async () => {
     setLoading(true);
     setError(null);
@@ -222,7 +172,6 @@ export default function AiInsightsPage() {
   const handleGenerate = () => {
     setError(null);
     if (isInsightsTab) fetchInsights();
-    else if (activeTab === 'meals') fetchMeals();
     else if (activeTab === 'workout') fetchWorkout();
   };
 
@@ -256,7 +205,7 @@ export default function AiInsightsPage() {
           <div>
             <p className="text-sm font-medium text-text-primary">Connect your OpenAI API key</p>
             <p className="mt-1 text-xs text-text-muted">
-              Insights, meal ideas, and workout plans use your own OpenAI API key. Add a key in
+              Insights and workout plans use your own OpenAI API key. Add a key in
               Settings to turn these cards on. Your key is encrypted and stored securely.
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -275,7 +224,7 @@ export default function AiInsightsPage() {
         </div>
       )}
 
-      {/* Tabs: Year / Month / Week / Yesterday insights on top, then Meal Ideas & Workout Plan */}
+      {/* Tabs: Year / Month / Week / Yesterday insights on top, then Workout Plan */}
       <div className="flex flex-wrap gap-2">
         {tabs.map((tab) => {
           const isInsightPeriod = tab.key === 'year' || tab.key === 'month' || tab.key === 'week' || tab.key === 'yesterday';
@@ -406,112 +355,6 @@ export default function AiInsightsPage() {
                 <TrendingUp className="h-10 w-10 text-text-muted" />
                 <p className="text-sm text-text-muted">Click Generate to get AI-powered insights</p>
                 <p className="text-xs text-text-muted">Based on your selected period</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Meals Tab */}
-        {activeTab === 'meals' && (
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-text-primary">AI Meal Suggestions</h2>
-              <button
-                onClick={handleGenerate}
-                disabled={loading || !hasApiKey}
-                className="glass-button-primary flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChefHat className="h-4 w-4" />}
-                {meals ? 'Regenerate' : 'Get Suggestions'}
-              </button>
-            </div>
-
-            {/* Preferences */}
-            <div className="mb-4 flex flex-wrap gap-3">
-              <select
-                value={mealType}
-                onChange={(e) => setMealType(e.target.value)}
-                className="glass-input rounded-xl px-3 py-2 text-xs"
-              >
-                <option value="">All meals</option>
-                <option value="breakfast">Breakfast</option>
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
-                <option value="snack">Snack</option>
-              </select>
-              <input
-                type="text"
-                value={mealPrefs}
-                onChange={(e) => setMealPrefs(e.target.value)}
-                placeholder="Preferences (e.g., vegetarian, high protein)"
-                className="glass-input flex-1 rounded-xl px-3 py-2 text-xs"
-              />
-            </div>
-
-            {loading ? (
-              <div className="flex flex-col items-center gap-3 py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-accent-violet" />
-                <p className="text-sm text-text-muted">Creating meal suggestions...</p>
-              </div>
-            ) : meals ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {meals.map((meal, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all hover:border-white/[0.1]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-text-primary">{meal.name}</p>
-                        <p className="text-[11px] text-text-muted">
-                          {mealTypeLabels[meal.mealType] || meal.mealType}
-                        </p>
-                      </div>
-                      {meal.isVegetarian ? (
-                        <Leaf className="h-4 w-4 shrink-0 text-accent-emerald" />
-                      ) : (
-                        <Drumstick className="h-4 w-4 shrink-0 text-accent-rose" />
-                      )}
-                    </div>
-                    <p className="mt-2 text-xs leading-relaxed text-text-secondary">{meal.description}</p>
-
-                    {/* Macros */}
-                    <div className="mt-3 grid grid-cols-4 gap-1 rounded-lg bg-white/[0.03] p-2">
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-accent-emerald">{meal.calories}</p>
-                        <p className="text-[9px] text-text-muted">kcal</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-accent-violet">{meal.protein}g</p>
-                        <p className="text-[9px] text-text-muted">P</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-accent-amber">{meal.carbs}g</p>
-                        <p className="text-[9px] text-text-muted">C</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-accent-rose">{meal.fat}g</p>
-                        <p className="text-[9px] text-text-muted">F</p>
-                      </div>
-                    </div>
-
-                    {/* Ingredients */}
-                    {meal.ingredients?.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-[10px] font-medium text-text-muted">Ingredients:</p>
-                        <p className="text-[11px] text-text-secondary">
-                          {meal.ingredients.join(', ')}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3 py-16 text-center">
-                <ChefHat className="h-10 w-10 text-text-muted" />
-                <p className="text-sm text-text-muted">Get personalized Indian meal suggestions</p>
-                <p className="text-xs text-text-muted">Based on your goals and nutritional needs</p>
               </div>
             )}
           </div>

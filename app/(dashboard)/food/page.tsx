@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  ChefHat,
 } from 'lucide-react';
 import ProgressRing from '@/components/ui/ProgressRing';
 import MacroBar from '@/components/ui/MacroBar';
@@ -22,7 +23,9 @@ import FoodResultCard from '@/components/food/FoodResultCard';
 import RecentFoodCard from '@/components/food/RecentFoodCard';
 import AddMealModal from '@/components/food/AddMealModal';
 import CustomFoodModal from '@/components/food/CustomFoodModal';
+import MealIdeasModal from '@/components/food/MealIdeasModal';
 import AIFoodLoggerModal from '@/components/food/AIFoodLoggerModal';
+import { useDebugLogs } from '@/contexts/DebugLogsContext';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -92,6 +95,7 @@ const tabs = [{ key: 'recent', label: 'Recent' }, ...categories];
 export default function FoodLogPage() {
   const { user, loading: userLoading } = useUser();
   const { log, loading: logLoading, refetch } = useDailyLog();
+  const { addMealIdeasLog, setAiLoggerLog } = useDebugLogs();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FoodItem[]>([]);
@@ -101,6 +105,7 @@ export default function FoodLogPage() {
   const [selectedTab, setSelectedTab] = useState<string>('all');
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [showCustom, setShowCustom] = useState(false);
+  const [showMealIdeas, setShowMealIdeas] = useState(false);
   const [showAILogger, setShowAILogger] = useState(false);
   const [addingMeal, setAddingMeal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -212,6 +217,7 @@ export default function FoodLogPage() {
         showToast(`${meal.name} added to ${mealLabels[(meal.mealType as string) || 'snack']}`, 'success');
         setSelectedFood(null);
         setShowCustom(false);
+        setShowMealIdeas(false);
         setShowAILogger(false);
         refetch();
       } else {
@@ -286,13 +292,22 @@ export default function FoodLogPage() {
             Custom Food
           </button>
           {user?.hasOpenAiKey && (
-            <button
-              onClick={() => setShowAILogger(true)}
-              className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI Logger
-            </button>
+            <>
+              <button
+                onClick={() => setShowMealIdeas(true)}
+                className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+              >
+                <ChefHat className="h-4 w-4" />
+                Meal Ideas
+              </button>
+              <button
+                onClick={() => setShowAILogger(true)}
+                className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Logger
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -627,6 +642,24 @@ export default function FoodLogPage() {
         />
       )}
 
+      {showMealIdeas && (
+        <MealIdeasModal
+          onClose={() => setShowMealIdeas(false)}
+          onDebugLog={(log) => {
+            const debugLog = log as import('@/contexts/DebugLogsContext').MealIdeasDebugLog;
+            addMealIdeasLog(debugLog);
+            if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+              fetch('/api/debug-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ page: 'food', agent: 'meal-ideas', log: debugLog }),
+                credentials: 'include',
+              }).catch(() => {});
+            }
+          }}
+        />
+      )}
+
       {showCustom && (
         <CustomFoodModal
           onClose={() => setShowCustom(false)}
@@ -639,6 +672,17 @@ export default function FoodLogPage() {
         <AIFoodLoggerModal
           onClose={() => setShowAILogger(false)}
           onAdd={(meal) => handleAddMeal(meal as Record<string, unknown>)}
+          onDebugLog={(log) => {
+            setAiLoggerLog(log);
+            if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+              fetch('/api/debug-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ page: 'food', agent: 'ai-logger', log }),
+                credentials: 'include',
+              }).catch(() => {});
+            }
+          }}
           loading={addingMeal}
         />
       )}

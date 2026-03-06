@@ -8,14 +8,32 @@ import User from '@/models/User';
 import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 
+function normalizeUsername(raw: string): string {
+  return raw.toLowerCase().trim().replace(/\s+/g, '_');
+}
+
+function validateUsername(username: string): string | null {
+  const normalized = normalizeUsername(username);
+  if (normalized.length < 3) return 'Username must be at least 3 characters';
+  if (normalized.length > 30) return 'Username must be at most 30 characters';
+  if (!/^[a-z0-9_]+$/.test(normalized)) return 'Username can only contain letters, numbers, and underscores';
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, name, dateOfBirth } = await req.json();
+    const { email, password, name, dateOfBirth, username: rawUsername } = await req.json();
 
     // Validation
     if (!email || !password) {
       return errorResponse('Email and password are required', 400);
     }
+    if (!rawUsername || typeof rawUsername !== 'string') {
+      return errorResponse('Username is required', 400);
+    }
+    const usernameErr = validateUsername(rawUsername);
+    if (usernameErr) return errorResponse(usernameErr, 400);
+    const username = normalizeUsername(rawUsername);
     if (password.length < 8) {
       return errorResponse('Password must be at least 8 characters', 400);
     }
@@ -37,13 +55,18 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     // Check if user exists
-    const existing = await User.findOne({ email: email.toLowerCase() }).lean();
-    if (existing) {
+    const existingEmail = await User.findOne({ email: email.toLowerCase() }).lean();
+    if (existingEmail) {
       return errorResponse('An account with this email already exists', 409);
+    }
+    const existingUsername = await User.findOne({ username }).lean();
+    if (existingUsername) {
+      return errorResponse('This username is already taken', 409);
     }
 
     // Create user (password hashed by pre-save hook); store dateOfBirth, age derived on read
     const user = await User.create({
+      username,
       email: email.toLowerCase(),
       password,
       profile: { name: name || '', dateOfBirth: dob },

@@ -19,11 +19,12 @@ import {
   LogOut,
   ChevronLeft,
   Sparkles,
+  Bug,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-const navItems = [
+const baseNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },
@@ -36,6 +37,12 @@ const navItems = [
   { href: '/targets', icon: Target, label: 'Targets' },
   { href: '/preferences', icon: Bell, label: 'Preferences' },
 ];
+
+const debugNavItem = { href: '/debug', icon: Bug, label: 'Debugger' };
+const navItems =
+  process.env.NEXT_PUBLIC_DEBUG_MODE === 'true'
+    ? [...baseNavItems, debugNavItem]
+    : baseNavItems;
 
 type SidebarProps = {
   collapsed?: boolean;

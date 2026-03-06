@@ -25,19 +25,54 @@ export async function POST(req: NextRequest) {
       return errorResponse('Meal name and calories are required', 400);
     }
 
+    // Sanitize meal: only include fields expected by MealEntrySchema.
+    // Exclude "weight" — DailyLog.weight is body weight (kg, min 20); meal "weight" is food weight (g)
+    // and must not be applied to the document's top-level weight field.
+    const {
+      weight: _omitWeight,
+      ...sanitizedMeal
+    } = meal as Record<string, unknown>;
+    void _omitWeight;
+
     await connectDB();
+
+    // Use pipeline to: (1) push meal, (2) fix corrupted weight.
+    // Documents may have weight < 20 from a previous bug (food weight leaked to body weight).
+    // Clear it so validation passes.
+    const pipeline: Record<string, unknown>[] = [
+      {
+        $set: {
+          meals: { $concatArrays: [{ $ifNull: ['$meals', []] }, [sanitizedMeal]] },
+          userId: { $ifNull: ['$userId', userId] },
+          date: { $ifNull: ['$date', logDate] },
+        },
+      },
+      {
+        $set: {
+          weight: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ['$weight', null] },
+                  { $lt: ['$weight', 20] },
+                ],
+              },
+              then: '$$REMOVE',
+              else: '$weight',
+            },
+          },
+        },
+      },
+    ];
 
     const log = await DailyLog.findOneAndUpdate(
       { userId, date: logDate },
-      {
-        $push: { meals: meal },
-        $setOnInsert: { userId, date: logDate },
-      },
+      pipeline,
       { new: true, upsert: true, runValidators: true }
     );
 
     // Trigger recalculation
-    await log.save();
+    await log!.save();
 
     const result = log.toObject() as unknown as Record<string, unknown>;
     const meals = (result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; sugar?: number; sodium?: number }>) ?? [];

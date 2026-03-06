@@ -23,6 +23,7 @@ interface AIFoodLoggerModalProps {
     time: string;
     isCustom: boolean;
   }) => void;
+  onDebugLog?: (log: unknown) => void;
   loading?: boolean;
 }
 
@@ -56,7 +57,7 @@ interface ParsedMeal {
   unit: string;
 }
 
-export default function AIFoodLoggerModal({ onClose, onAdd, loading }: AIFoodLoggerModalProps) {
+export default function AIFoodLoggerModal({ onClose, onAdd, onDebugLog, loading }: AIFoodLoggerModalProps) {
   const [text, setText] = useState('');
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState('');
@@ -72,7 +73,9 @@ export default function AIFoodLoggerModal({ onClose, onAdd, loading }: AIFoodLog
     try {
       const res = await api.aiFoodLogger(trimmed);
       if (res.success && res.data?.meal) {
-        const m = res.data.meal as unknown as ParsedMeal;
+        const data = res.data as { meal: ParsedMeal; debugLog?: unknown };
+        if (data.debugLog != null && onDebugLog) onDebugLog(data.debugLog);
+        const m = data.meal;
         setMeal({
           name: m.name ?? 'Meal',
           calories: Number(m.calories) || 0,
