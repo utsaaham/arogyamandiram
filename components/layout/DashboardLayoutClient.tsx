@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { CURRENT_DASHBOARD_TOUR_VERSION } from '@/lib/constants';
 import { DebugLogsProvider } from '@/contexts/DebugLogsContext';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 export default function DashboardLayoutClient({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [showTour, setShowTour] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -64,6 +65,16 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
         .catch(() => setCheckingOnboarding(false));
     }
   }, [status, router]);
+
+  // Ensure each dashboard page starts scrolled to top (especially on mobile)
+  useEffect(() => {
+    const viewport = document.querySelector<HTMLElement>('.app-viewport');
+    if (viewport) {
+      viewport.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [pathname]);
 
   if (status === 'loading' || checkingOnboarding) {
     return (
