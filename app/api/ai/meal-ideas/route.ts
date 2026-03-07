@@ -1,5 +1,5 @@
 // ============================================
-// /api/ai/meal-ideas — Smart Meal Ideas (history + two-step AI)
+// /api/ai/meal-ideas — Meal Ideas (history + single AI call)
 // ============================================
 // POST: selectedMealTypes, preferences. Returns suggestions + optional debugLog when DEBUG_MODE.
 

@@ -2,20 +2,31 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
-/** Meal Ideas debug log shape (matches API response). */
+/** Meal Ideas debug log shape (matches API response). New format: prompt/response. Legacy: step1/step2. */
 export interface MealIdeasDebugLog {
   userRequest: { selectedMealTypes: string[]; preferences: string; requestedAt: string };
-  mealHistorySent: Record<string, string[]>;
-  step1Prompt: string;
-  step1Response: string;
-  step2Prompt: string;
-  step2Response: string;
+  /** @deprecated Use mealHistoryByDay. Kept for legacy logs. */
+  mealHistorySent?: Record<string, string[]>;
+  /** Per-day meal history for display (date -> mealType -> { items, totalCalories }). */
+  mealHistoryByDay?: Record<string, Record<string, { items: string[]; totalCalories: number }>>;
+  /** User profile context (height, weight, targetWeight, activityLevel, goal). */
+  userContext?: { height?: number; weight?: number; targetWeight?: number; activityLevel?: string; goal?: string; age?: number };
+  systemPrompt?: string;
+  userPrompt?: string;
+  prompt?: string;
+  response?: string;
+  step1Prompt?: string;
+  step1Response?: string;
+  step2Prompt?: string;
+  step2Response?: string;
   metadata: {
     model: string;
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+    latencyMs?: number;
     step1Usage?: { prompt_tokens?: number; completion_tokens?: number };
     step2Usage?: { prompt_tokens?: number; completion_tokens?: number };
-    step1LatencyMs: number;
-    step2LatencyMs: number;
+    step1LatencyMs?: number;
+    step2LatencyMs?: number;
     timestamp: string;
   };
 }

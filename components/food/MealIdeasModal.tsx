@@ -45,7 +45,6 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
   const [mealPrefs, setMealPrefs] = useState('');
   const [meals, setMeals] = useState<MealSuggestion[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState<1 | 2>(1);
   const [error, setError] = useState<string | null>(null);
 
   const toggleMealType = (value: string) => {
@@ -57,17 +56,12 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
   const fetchMeals = async () => {
     if (selectedMealTypes.length === 0) return;
     setLoading(true);
-    setLoadingStep(1);
     setError(null);
-    let step2Timer: ReturnType<typeof setTimeout> | null = setTimeout(() => setLoadingStep(2), 1800);
     try {
       const res = await api.getMealSuggestions({
         selectedMealTypes,
         preferences: mealPrefs,
       });
-      if (step2Timer) clearTimeout(step2Timer);
-      step2Timer = null;
-      setLoadingStep(2);
       if (res.success && res.data) {
         const data = res.data as { suggestions: MealSuggestion[]; debugLog?: unknown };
         setMeals(data.suggestions || []);
@@ -80,7 +74,6 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
     } catch {
       setError('Failed to fetch meal ideas');
     } finally {
-      if (step2Timer) clearTimeout(step2Timer);
       setLoading(false);
     }
   };
@@ -166,9 +159,7 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
         {loading && (
           <div className="flex flex-col items-center gap-3 py-8">
             <Loader2 className="h-8 w-8 animate-spin text-accent-violet" />
-            <p className="text-sm text-text-muted">
-              {loadingStep === 1 ? 'Step 1: Analyzing your taste…' : 'Step 2: Generating ideas…'}
-            </p>
+            <p className="text-sm text-text-muted">Generating meal ideas…</p>
           </div>
         )}
 
