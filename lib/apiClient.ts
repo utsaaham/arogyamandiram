@@ -178,7 +178,11 @@ export const api = {
     }),
 
   aiFoodLogger: (text: string) =>
-    apiFetch<{ meal: Record<string, unknown>; debugLog?: unknown }>('/ai/food-logger', {
+    apiFetch<{
+      items: Record<string, unknown>[];
+      total?: Record<string, unknown>;
+      debugLog?: unknown;
+    }>('/ai/food-logger', {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),

@@ -90,7 +90,7 @@ const categories = [
   { key: 'other', label: 'Other' },
 ];
 
-const tabs = [{ key: 'recent', label: 'Recent' }, ...categories];
+const tabs = [{ key: 'logged', label: 'Logged' }, { key: 'recent', label: 'Recent' }, ...categories];
 
 export default function FoodLogPage() {
   const { user, loading: userLoading } = useUser();
@@ -138,13 +138,13 @@ export default function FoodLogPage() {
   const handleSearchChange = (value: string) => {
     setQuery(value);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    const cat = selectedTab === 'recent' ? 'all' : selectedTab;
+    const cat = selectedTab === 'recent' || selectedTab === 'logged' ? 'all' : selectedTab;
     searchTimerRef.current = setTimeout(() => doSearch(value, cat), 300);
   };
 
   const handleTabChange = (key: string) => {
     setSelectedTab(key);
-    if (key === 'recent') return;
+    if (key === 'recent' || key === 'logged') return;
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     doSearch(query, key);
   };
@@ -225,6 +225,27 @@ export default function FoodLogPage() {
       }
     } catch {
       showToast('Failed to add meal', 'error');
+    } finally {
+      setAddingMeal(false);
+    }
+  };
+
+  const handleAddMealBatch = async (meals: Record<string, unknown>[]) => {
+    if (!meals.length) return;
+    setAddingMeal(true);
+    try {
+      for (const meal of meals) {
+        const res = await api.addMeal(today, meal);
+        if (!res.success) {
+          showToast(res.error || 'Failed to add some items', 'error');
+          return;
+        }
+      }
+      showToast(`${meals.length} item${meals.length === 1 ? '' : 's'} added`, 'success');
+      setShowAILogger(false);
+      refetch();
+    } catch {
+      showToast('Failed to add meals', 'error');
     } finally {
       setAddingMeal(false);
     }
@@ -349,7 +370,7 @@ export default function FoodLogPage() {
                   className={cn(
                     'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                     selectedTab === tab.key
-                      ? tab.key === 'recent'
+                      ? tab.key === 'recent' || tab.key === 'logged'
                         ? 'bg-accent-emerald/15 text-accent-emerald ring-1 ring-accent-emerald/30'
                         : 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
                       : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
@@ -364,7 +385,37 @@ export default function FoodLogPage() {
           {/* Single content area: recent items or search results */}
           <div className="glass-card flex min-h-0 flex-col rounded-2xl p-4 sm:p-5 lg:min-h-0 lg:flex-1">
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 hide-scrollbar lg:min-h-0">
-            {selectedTab === 'recent' ? (
+            {selectedTab === 'logged' ? (
+              meals.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Utensils className="h-8 w-8 text-text-muted" />
+                  <p className="text-sm text-text-muted">Nothing logged today yet</p>
+                  <p className="text-xs text-text-muted">Use search or AI Logger to add meals.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="mb-3 text-xs text-text-muted">Today&apos;s logged ({meals.length})</p>
+                  {meals.map((meal, i) => (
+                    <div
+                      key={meal._id || i}
+                      className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-text-primary">{meal.name}</p>
+                          <p className="text-[11px] text-text-muted">
+                            {meal.quantity}{meal.unit} · {mealLabels[meal.mealType || 'snack']} · {formatTime(meal.time)}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-xs font-semibold text-text-secondary">
+                          {Math.round(meal.calories)} kcal
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : selectedTab === 'recent' ? (
               recentLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-emerald border-t-transparent" />
@@ -672,6 +723,7 @@ export default function FoodLogPage() {
         <AIFoodLoggerModal
           onClose={() => setShowAILogger(false)}
           onAdd={(meal) => handleAddMeal(meal as Record<string, unknown>)}
+          onAddBatch={(batch) => handleAddMealBatch(batch as Record<string, unknown>[])}
           onDebugLog={(log) => {
             setAiLoggerLog(log);
             if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {

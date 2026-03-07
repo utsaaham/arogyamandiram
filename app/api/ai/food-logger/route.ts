@@ -37,15 +37,20 @@ async function getOpenAIKey(userId: string): Promise<string | null> {
 const INSTRUCTIONS = `
 You are a precision nutrition assistant for an Indian-focused health app.
 
-The user will describe what they ate (e.g. "1 scoop ON whey with 40 ml 6% Amul milk and 160 ml water").
+The user will describe what they ate (e.g. "2 idlis and sambar, chicken sandwich and fries").
 
-Your job is to produce a SINGLE, mathematically consistent combined meal using the following strict rules:
+Your job is to produce a LIST of distinct food and drink items with per-item nutrition using the following strict rules:
 
 1) INGREDIENT COMPLETENESS RULE
 - Parse the description into ALL distinct food and drink items with their quantities and units.
-- EVERY mentioned item MUST be included in your internal calculation.
+- EVERY mentioned item MUST be included as its own entry in the items array.
 - You MUST NOT ignore any ingredient, even very small amounts (e.g. 20 ml milk, 40 ml milk, 1 tsp oil, a small chutney serving, etc.).
 - Water has 0 macros but must still be considered as an item (it will not change totals).
+- Example: "2 idlis and sambar, chicken sandwich and fries" MUST become at least:
+  - 2 idlis
+  - sambar
+  - chicken sandwich
+  - fries
 
 2) STRICT QUANTITY SCALING RULE
 - For EACH item, use web_search when needed to find accurate nutrition.
@@ -82,7 +87,7 @@ Your job is to produce a SINGLE, mathematically consistent combined meal using t
 
 6) RESPONSE FORMAT RULE
 - You MUST respond ONLY by calling the function tool "get_meal_nutrition".
-- Return exactly ONE combined meal object that matches the JSON schema of "get_meal_nutrition".
+- Return an object with an "items" array. Each element in "items" is ONE food or drink item from the meal description with its own nutrition.
 - Do NOT return any free-form text, markdown, code blocks, or explanations outside the function call.
 `;
 
@@ -90,76 +95,89 @@ const MEAL_NUTRITION_TOOL = {
   type: 'function' as const,
   name: 'get_meal_nutrition',
   description:
-    'Compute total nutrition for the described meal, using web_search as needed. Aggregate all items into one combined meal.',
+    'Compute nutrition for ALL distinct items in the described meal, using web_search as needed. Return a list of items with per-item nutrition.',
   strict: true,
   parameters: {
     type: 'object',
     properties: {
-      name: {
-        type: 'string',
-        description: 'Short human-readable meal name (e.g. "3 dosas with peanut chutney and 1 banana").',
-      },
-      calories: {
-        type: 'number',
-        description: 'Total energy in kilocalories for the whole meal (all items combined).',
-      },
-      protein: {
-        type: 'number',
-        description: 'Total protein in grams.',
-      },
-      carbs: {
-        type: 'number',
-        description: 'Total carbohydrates in grams.',
-      },
-      fat: {
-        type: 'number',
-        description: 'Total fat in grams.',
-      },
-      fiber: {
-        type: 'number',
-        description: 'Total dietary fiber in grams. Use 0 if unknown.',
-      },
-      sugar: {
-        type: 'number',
-        description: 'Total sugars in grams. Use 0 if unknown.',
-      },
-      sodium: {
-        type: 'number',
-        description: 'Total sodium in milligrams. Use 0 if unknown.',
-      },
-      saturatedFat: {
-        type: 'number',
-        description: 'Total saturated fat in grams. Use 0 if unknown.',
-      },
-      cholesterol: {
-        type: 'number',
-        description: 'Total cholesterol in milligrams. Use 0 if unknown.',
-      },
-      quantity: {
-        type: 'number',
+      items: {
+        type: 'array',
         description:
-          'Overall quantity multiplier for this meal. Use 1 for a typical single portion, or a number of portions/items.',
-      },
-      unit: {
-        type: 'string',
-        description:
-          'High-level unit describing the meal amount, like "serving", "plate", "bowl", "piece", etc. Avoid very small units like grams unless appropriate.',
+          'List of ALL distinct food and drink items in the described meal, each with its own nutrition and quantity.',
+        items: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description:
+                'Short human-readable item name (e.g. "idli", "sambar", "chicken sandwich", "fries").',
+            },
+            calories: {
+              type: 'number',
+              description: 'Total energy in kilocalories for this ONE item (after scaling by quantity).',
+            },
+            protein: {
+              type: 'number',
+              description: 'Total protein in grams for this item.',
+            },
+            carbs: {
+              type: 'number',
+              description: 'Total carbohydrates in grams for this item.',
+            },
+            fat: {
+              type: 'number',
+              description: 'Total fat in grams for this item.',
+            },
+            fiber: {
+              type: 'number',
+              description: 'Total dietary fiber in grams for this item. Use 0 if unknown.',
+            },
+            sugar: {
+              type: 'number',
+              description: 'Total sugars in grams for this item. Use 0 if unknown.',
+            },
+            sodium: {
+              type: 'number',
+              description: 'Total sodium in milligrams for this item. Use 0 if unknown.',
+            },
+            saturatedFat: {
+              type: 'number',
+              description: 'Total saturated fat in grams for this item. Use 0 if unknown.',
+            },
+            cholesterol: {
+              type: 'number',
+              description: 'Total cholesterol in milligrams for this item. Use 0 if unknown.',
+            },
+            quantity: {
+              type: 'number',
+              description:
+                'Quantity multiplier for this item (e.g. 2 idlis, 1 bowl of sambar, 1 sandwich). Use 1 for a typical single portion.',
+            },
+            unit: {
+              type: 'string',
+              description:
+                'High-level unit describing the amount for this item, like "piece", "bowl", "sandwich", "serving", etc.',
+            },
+          },
+          required: [
+            'name',
+            'calories',
+            'protein',
+            'carbs',
+            'fat',
+            'fiber',
+            'sugar',
+            'sodium',
+            'saturatedFat',
+            'cholesterol',
+            'quantity',
+            'unit',
+          ],
+          additionalProperties: false,
+        },
       },
     },
-    required: [
-      'name',
-      'calories',
-      'protein',
-      'carbs',
-      'fat',
-      'fiber',
-      'sugar',
-      'sodium',
-      'saturatedFat',
-      'cholesterol',
-      'quantity',
-      'unit',
-    ],
+    required: ['items'],
     additionalProperties: false,
   },
 } as const;
@@ -175,22 +193,34 @@ function extractJsonFromText(text: string): Record<string, unknown> | null {
   }
 }
 
-function normalizeMeal(obj: Record<string, unknown>) {
+type NormalizedItem = {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  saturatedFat: number;
+  cholesterol: number;
+  quantity: number;
+  unit: string;
+};
+
+function normalizeItem(obj: Record<string, unknown>): NormalizedItem {
   const num = (v: unknown) =>
     typeof v === 'number' && !Number.isNaN(v) ? v : 0;
-
   const str = (v: unknown) =>
     typeof v === 'string' ? v : String(v ?? '');
 
   const protein = Math.max(0, num(obj.protein));
   const carbs = Math.max(0, num(obj.carbs));
   const fat = Math.max(0, num(obj.fat));
-
-  // Recompute calories deterministically
   const calories = Math.round((protein * 4) + (carbs * 4) + (fat * 9));
 
   return {
-    name: str(obj.name).trim() || 'Meal',
+    name: str(obj.name).trim() || 'Item',
     calories,
     protein: Number(protein.toFixed(2)),
     carbs: Number(carbs.toFixed(2)),
@@ -202,6 +232,20 @@ function normalizeMeal(obj: Record<string, unknown>) {
     cholesterol: Math.max(0, num(obj.cholesterol)),
     quantity: Math.max(0.1, num(obj.quantity)) || 1,
     unit: str(obj.unit).trim() || 'serving',
+  };
+}
+
+function computeTotal(items: NormalizedItem[]) {
+  return {
+    calories: items.reduce((s, i) => s + i.calories, 0),
+    protein: items.reduce((s, i) => s + i.protein, 0),
+    carbs: items.reduce((s, i) => s + i.carbs, 0),
+    fat: items.reduce((s, i) => s + i.fat, 0),
+    fiber: items.reduce((s, i) => s + i.fiber, 0),
+    sugar: items.reduce((s, i) => s + i.sugar, 0),
+    sodium: items.reduce((s, i) => s + i.sodium, 0),
+    saturatedFat: items.reduce((s, i) => s + i.saturatedFat, 0),
+    cholesterol: items.reduce((s, i) => s + i.cholesterol, 0),
   };
 }
 
@@ -223,7 +267,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userMessage = `The user ate: "${text.trim()}". Figure out the combined nutrition for this meal.`;
+    const userMessage = `The user ate: "${text.trim()}". List EACH food and drink item separately with its own nutrition (per-item calories, protein, carbs, fat, etc.). Return an "items" array with one object per item.`;
     const requestedAt = new Date().toISOString();
     const startMs = Date.now();
 
@@ -250,7 +294,7 @@ export async function POST(req: NextRequest) {
           name: 'get_meal_nutrition',
         },
         temperature: 0.3,
-        max_output_tokens: 2048,
+        max_output_tokens: 4096,
       }),
     });
 
@@ -312,10 +356,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const meal = normalizeMeal(parsedArgs);
+    const rawItems = Array.isArray(parsedArgs.items) ? parsedArgs.items : [];
+    const items: NormalizedItem[] = rawItems
+      .filter((x): x is Record<string, unknown> => x != null && typeof x === 'object')
+      .map(normalizeItem)
+      .filter((i) => (i.name && i.name !== 'Item') || i.calories > 0);
+
+    if (items.length === 0) {
+      return errorResponse(
+        'Could not parse any food items from the description. Try listing each item clearly (e.g. "100g rice, 50ml dal, 2 chapatis").',
+        422
+      );
+    }
+
+    // Guard against pathological cases where the AI returns zero calories and zero macros
+    // for every item. In that scenario it is safer to fail than to silently log zeros.
+    const allZeroNutrition = items.every(
+      (item) =>
+        item.calories === 0 &&
+        item.protein === 0 &&
+        item.carbs === 0 &&
+        item.fat === 0
+    );
+
+    if (allZeroNutrition) {
+      return errorResponse(
+        'AI could not reliably estimate nutrition for this description. Try adding more detail (quantities, units, item names).',
+        422
+      );
+    }
+
+    const total = computeTotal(items);
     const latencyMs = Date.now() - startMs;
 
-    const payload: { meal: typeof meal; debugLog?: unknown } = { meal };
+    const payload: { items: NormalizedItem[]; total: ReturnType<typeof computeTotal>; debugLog?: unknown } = {
+      items,
+      total,
+    };
     if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
       const usage = (data as { usage?: { prompt_tokens?: number; completion_tokens?: number } }).usage;
       payload.debugLog = {
