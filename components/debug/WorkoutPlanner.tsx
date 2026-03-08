@@ -1,0 +1,38 @@
+'use client';
+
+import DebugLogsPage from './DebugLogsPage';
+import { GenericJsonLogView } from './DebuggerPanel';
+import { getPageLabel, getAgentLabel } from '@/lib/debugLogsConfig';
+
+function getLogTimestamp(log: Record<string, unknown>): string {
+  const meta = log.metadata as { timestamp?: string } | undefined;
+  const req = log.userRequest as { requestedAt?: string } | undefined;
+  return req?.requestedAt ?? meta?.timestamp ?? '';
+}
+
+function requestTypeLabel(log: Record<string, unknown>): string {
+  const req = log.userRequest as { text?: string; focusArea?: string } | undefined;
+  const text = req?.text ?? req?.focusArea ?? '';
+  return text.length > 40 ? `${text.slice(0, 40)}…` : text || '—';
+}
+
+function getLogTokens(log: Record<string, unknown>): number {
+  const meta = log.metadata as { usage?: { prompt_tokens?: number; completion_tokens?: number } } | undefined;
+  const u = meta?.usage ?? {};
+  return (u.prompt_tokens ?? 0) + (u.completion_tokens ?? 0);
+}
+
+export default function WorkoutPlannerPage() {
+  return (
+    <DebugLogsPage<Record<string, unknown>>
+      page="workout"
+      agent="workout-planner"
+      pageLabel={getPageLabel('workout')}
+      agentLabel={getAgentLabel('workout-planner')}
+      getLogTimestamp={getLogTimestamp}
+      requestTypeLabel={requestTypeLabel}
+      getLogTokens={getLogTokens}
+      LogView={GenericJsonLogView}
+    />
+  );
+}

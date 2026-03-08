@@ -1,19 +1,23 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { CURRENT_DASHBOARD_TOUR_VERSION } from '@/lib/constants';
+import { DebugLogsProvider } from '@/contexts/DebugLogsContext';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
 import DashboardTour from '@/components/tour/DashboardTour';
 import api from '@/lib/apiClient';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayoutClient({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [showTour, setShowTour] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -62,6 +66,16 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
     }
   }, [status, router]);
 
+  // Ensure each dashboard page starts scrolled to top (especially on mobile)
+  useEffect(() => {
+    const viewport = document.querySelector<HTMLElement>('.app-viewport');
+    if (viewport) {
+      viewport.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [pathname]);
+
   if (status === 'loading' || checkingOnboarding) {
     return (
       <div
@@ -84,12 +98,17 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
         paddingRight: 'var(--sar, env(safe-area-inset-right, 0px))',
       }}
     >
-      <Sidebar />
+      <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       <MobileNav />
-      <main className="min-h-full pb-[max(5.5rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+4rem))] lg:pl-[240px] lg:pb-0 lg:pt-0">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      <main
+        className={cn(
+          'min-h-full pb-[max(5.5rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+4rem))] lg:pb-0 lg:pt-0 transition-[padding-left] duration-300',
+          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[240px]'
+        )}
+      >
+        <div className="mx-auto max-w-6xl w-full px-4 py-6 sm:px-6 lg:px-8">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
-          {children}
+          <DebugLogsProvider>{children}</DebugLogsProvider>
         </div>
       </main>
     </div>

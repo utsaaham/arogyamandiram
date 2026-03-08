@@ -41,14 +41,33 @@ export async function PUT(req: NextRequest) {
 
     const body = await req.json();
     const { profile, settings, targets } = body;
+    // Username must be top-level; support body.username or body.profile?.username for robustness
+    const rawUsername = body.username !== undefined ? body.username : (profile && typeof profile === 'object' ? profile.username : undefined);
 
     await connectDB();
 
     const updateData: Record<string, unknown> = {};
 
-    if (profile) {
-      // Build dot-notation updates for nested fields
+    if (rawUsername !== undefined && rawUsername !== null) {
+      const str = typeof rawUsername === 'string' ? rawUsername : String(rawUsername);
+      if (!str.trim()) {
+        return errorResponse('Username cannot be empty', 400);
+      }
+      const normalized = str.toLowerCase().trim().replace(/\s+/g, '_');
+      if (normalized.length < 3) return errorResponse('Username must be at least 3 characters', 400);
+      if (normalized.length > 30) return errorResponse('Username must be at most 30 characters', 400);
+      if (!/^[a-z0-9_]+$/.test(normalized)) {
+        return errorResponse('Username can only contain letters, numbers, and underscores', 400);
+      }
+      const existing = await User.findOne({ username: normalized, _id: { $ne: userId } }).lean();
+      if (existing) return errorResponse('This username is already taken', 409);
+      updateData.username = normalized;
+    }
+
+    if (profile && typeof profile === 'object') {
+      // Build dot-notation updates for nested fields (do not set profile.username - use top-level username only)
       for (const [key, value] of Object.entries(profile)) {
+        if (key === 'username') continue; // username is top-level on User, not under profile
         if (key === 'dateOfBirth' && value) {
           updateData['profile.dateOfBirth'] = new Date(value as string);
         } else {

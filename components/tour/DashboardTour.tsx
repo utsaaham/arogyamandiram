@@ -25,14 +25,14 @@ const steps = [
     body: 'Use the Water tracker to add each glass you drink and see how close you are to your daily hydration target.',
   },
   {
-    id: 'workout',
-    title: 'Log your workouts',
-    body: 'In Workout, you can record your activity sessions and see how consistently you are moving over time.',
-  },
-  {
     id: 'food',
     title: 'Track your food',
     body: 'In Food, you can log your meals and snacks and later see patterns in your eating, calories, and macros.',
+  },
+  {
+    id: 'workout',
+    title: 'Log your workouts',
+    body: 'In Workout, you can record your activity sessions and see how consistently you are moving over time.',
   },
   {
     id: 'weight',
@@ -86,8 +86,8 @@ const stepRoutes: Record<number, string> = {
   1: '/sleep',
   2: '/water',
   3: '/food',
-  4: '/weight',
-  5: '/workout',
+  4: '/workout',
+  5: '/weight',
   6: '/achievements',
   7: '/ai-insights',
   8: '/api-keys',

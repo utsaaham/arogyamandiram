@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +27,15 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!name || !email || !password) {
+    if (!name || !username || !email || !password) {
       return showToast('Please fill in all fields', 'error');
+    }
+    const un = username.trim().toLowerCase();
+    if (un.length < 3) {
+      return showToast('Username must be at least 3 characters', 'error');
+    }
+    if (!/^[a-z0-9_]+$/.test(un)) {
+      return showToast('Username can only contain letters, numbers, and underscores', 'error');
     }
     if (!dateOfBirth) {
       return showToast('Please enter your date of birth', 'error');
@@ -55,7 +63,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, dateOfBirth, password }),
+        body: JSON.stringify({ name, username: un, email, dateOfBirth, password }),
       });
 
       const data = await res.json();
@@ -129,6 +137,25 @@ export default function RegisterPage() {
             autoComplete="name"
             required
           />
+        </div>
+
+        <div>
+          <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-text-secondary">
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="e.g. john_doe"
+            className="glass-input"
+            autoComplete="username"
+            required
+            minLength={3}
+            maxLength={30}
+          />
+          <p className="mt-1 text-xs text-text-muted">Letters, numbers, underscores only. Unique across the platform.</p>
         </div>
 
         <div>

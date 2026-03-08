@@ -19,8 +19,8 @@ import {
 import { cn } from '@/lib/utils';
 
 const moreItems: { href: string; icon: LucideIcon; label: string }[] = [
-  { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
+  { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/achievements', icon: Trophy, label: 'Achievements' },
   { href: '/ai-insights', icon: Sparkles, label: 'Insights' },

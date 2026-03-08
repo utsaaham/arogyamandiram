@@ -128,6 +128,7 @@ export interface UserAchievements {
 
 export interface IUser {
   _id: Types.ObjectId;
+  username?: string;
   email: string;
   password: string;
   profile: UserProfile;
@@ -266,6 +267,7 @@ export interface ApiResponse<T = unknown> {
 // Safe user (no sensitive fields) - sent to client
 export interface SafeUser {
   id: string;
+  username?: string;
   email: string;
   profile: UserProfile;
   settings: UserSettings;

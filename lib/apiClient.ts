@@ -89,6 +89,13 @@ export const api = {
       body: JSON.stringify({ profile }),
     }),
 
+  /** Update user profile and/or username in one request. */
+  updateUser: (body: { profile?: Record<string, unknown>; username?: string }) =>
+    apiFetch('/user', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
   updateSettings: (settings: Record<string, unknown>) =>
     apiFetch('/user', {
       method: 'PUT',
@@ -164,14 +171,19 @@ export const api = {
       body: JSON.stringify({ date, meal }),
     }),
 
-  removeMeal: (date: string, mealId: string) =>
-    apiFetch('/daily-log/meal', {
-      method: 'DELETE',
-      body: JSON.stringify({ date, mealId }),
-    }),
+  removeMeal: (date: string, mealId?: string, index?: number) => {
+    const params: Record<string, string> = { date };
+    if (mealId) params.mealId = mealId;
+    else if (typeof index === 'number' && index >= 0) params.index = String(index);
+    return apiFetch(`/daily-log/meal?${new URLSearchParams(params).toString()}`, { method: 'DELETE' });
+  },
 
   aiFoodLogger: (text: string) =>
-    apiFetch<{ meal: Record<string, unknown> }>('/ai/food-logger', {
+    apiFetch<{
+      items: Record<string, unknown>[];
+      total?: Record<string, unknown>;
+      debugLog?: unknown;
+    }>('/ai/food-logger', {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
@@ -218,10 +230,23 @@ export const api = {
     apiFetch(`/sleep?days=${days}`),
 
   // AI
-  getMealSuggestions: (context: Record<string, unknown>) =>
-    apiFetch('/ai/recommendations', {
+  getMealSuggestions: (params: { selectedMealTypes: string[]; preferences?: string }) =>
+    apiFetch<{ suggestions: Array<{
+      name: string;
+      description: string;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      mealType: string;
+      ingredients: string[];
+      isVegetarian: boolean;
+    }>; debugLog?: unknown }>('/ai/meal-ideas', {
       method: 'POST',
-      body: JSON.stringify({ type: 'meal', ...context }),
+      body: JSON.stringify({
+        selectedMealTypes: params.selectedMealTypes,
+        preferences: params.preferences ?? '',
+      }),
     }),
 
   getWorkoutPlan: (context: Record<string, unknown>) =>

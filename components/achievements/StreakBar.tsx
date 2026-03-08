@@ -59,7 +59,7 @@ export function StreakBar({ streaks }: StreakBarProps) {
           {activeItems.map((item) => (
             <div
               key={item.key}
-              className="min-w-[160px] max-w-[200px] flex-1 sm:min-w-[132px] sm:max-w-[160px]"
+              className="shrink-0 w-[165px] sm:w-[175px] lg:w-[175px]"
             >
               <StreakCard label={item.label} current={s.current[item.key]} best={s.best[item.key]} />
             </div>
