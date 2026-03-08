@@ -305,10 +305,10 @@ export default function FoodLogPage() {
           <h1 className="text-2xl font-bold text-text-primary">Food Log</h1>
           <p className="text-sm text-text-muted">{formatDate(today)}</p>
         </div>
-        <div className="flex min-h-[44px] flex-wrap items-center gap-2 sm:mt-0">
+        <div className="flex min-h-[44px] flex-nowrap items-center gap-2 overflow-x-auto sm:mt-0">
           <button
             onClick={() => setShowCustom(true)}
-            className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+            className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
           >
             <PlusCircle className="h-4 w-4" />
             Custom Food
@@ -317,14 +317,14 @@ export default function FoodLogPage() {
             <>
               <button
                 onClick={() => setShowMealIdeas(true)}
-                className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+                className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
               >
                 <ChefHat className="h-4 w-4" />
                 Meal Ideas
               </button>
               <button
                 onClick={() => setShowAILogger(true)}
-                className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+                className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
               >
                 <Sparkles className="h-4 w-4" />
                 AI Logger
