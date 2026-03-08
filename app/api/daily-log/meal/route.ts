@@ -3,6 +3,7 @@
 // ============================================
 
 import { NextRequest } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse, stripSensitive } from '@/lib/apiMask';
@@ -25,19 +26,57 @@ export async function POST(req: NextRequest) {
       return errorResponse('Meal name and calories are required', 400);
     }
 
+    // Sanitize meal: only include fields expected by MealEntrySchema.
+    // Exclude "weight" — DailyLog.weight is body weight (kg, min 20); meal "weight" is food weight (g)
+    // and must not be applied to the document's top-level weight field.
+    const {
+      weight: _omitWeight,
+      ...sanitizedMeal
+    } = meal as Record<string, unknown>;
+    void _omitWeight;
+
+    // Assign _id so the meal can be identified for DELETE. Without this, delete does nothing.
+    const mealToPush = { ...sanitizedMeal, _id: new mongoose.Types.ObjectId() };
+
     await connectDB();
+
+    // Use pipeline to: (1) push meal, (2) fix corrupted weight.
+    // Documents may have weight < 20 from a previous bug (food weight leaked to body weight).
+    // Clear it so validation passes.
+    const pipeline: Record<string, unknown>[] = [
+      {
+        $set: {
+          meals: { $concatArrays: [{ $ifNull: ['$meals', []] }, [mealToPush]] },
+          userId: { $ifNull: ['$userId', userId] },
+          date: { $ifNull: ['$date', logDate] },
+        },
+      },
+      {
+        $set: {
+          weight: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ['$weight', null] },
+                  { $lt: ['$weight', 20] },
+                ],
+              },
+              then: '$$REMOVE',
+              else: '$weight',
+            },
+          },
+        },
+      },
+    ];
 
     const log = await DailyLog.findOneAndUpdate(
       { userId, date: logDate },
-      {
-        $push: { meals: meal },
-        $setOnInsert: { userId, date: logDate },
-      },
+      pipeline,
       { new: true, upsert: true, runValidators: true }
     );
 
     // Trigger recalculation
-    await log.save();
+    await log!.save();
 
     const result = log.toObject() as unknown as Record<string, unknown>;
     const meals = (result.meals as Array<{ calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; sugar?: number; sodium?: number }>) ?? [];
@@ -55,30 +94,56 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE /api/daily-log/meal - Remove a meal
+// DELETE /api/daily-log/meal - Remove a meal (query params: date, mealId OR index)
+// Uses query params because DELETE request bodies are often dropped or unreadable in Next.js.
+// If mealId is present, remove by _id. If not, use index (for legacy meals without _id).
 export async function DELETE(req: NextRequest) {
   try {
     const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
 
-    const { date, mealId } = await req.json();
-    const logDate = date || getToday();
-
-    if (!mealId) {
-      return errorResponse('Meal ID is required', 400);
-    }
+    const { searchParams } = req.nextUrl;
+    const mealId = searchParams.get('mealId');
+    const indexParam = searchParams.get('index');
+    const logDate = searchParams.get('date') || getToday();
 
     await connectDB();
 
-    const log = await DailyLog.findOneAndUpdate(
-      { userId, date: logDate },
-      { $pull: { meals: { _id: mealId } } },
-      { new: true }
-    );
+    type LogDoc = InstanceType<typeof DailyLog>;
+    let log: LogDoc | null = null;
+
+    if (mealId) {
+      let mealObjectId: mongoose.Types.ObjectId;
+      try {
+        mealObjectId = new mongoose.Types.ObjectId(mealId);
+      } catch {
+        return errorResponse('Invalid meal ID', 400);
+      }
+      log = await DailyLog.findOneAndUpdate(
+        { userId, date: logDate },
+        { $pull: { meals: { _id: mealObjectId } } },
+        { new: true }
+      );
+    } else if (indexParam !== null && indexParam !== '') {
+      const index = parseInt(indexParam, 10);
+      if (!Number.isFinite(index) || index < 0) {
+        return errorResponse('Invalid index', 400);
+      }
+      const found = await DailyLog.findOne({ userId, date: logDate });
+      if (!found) return errorResponse('Daily log not found', 404);
+      const mealsArray = found.meals ?? [];
+      if (index >= mealsArray.length) return errorResponse('Meal not found', 404);
+      mealsArray.splice(index, 1);
+      found.meals = mealsArray;
+      await found.save();
+      log = found;
+    } else {
+      return errorResponse('Meal ID or index is required', 400);
+    }
 
     if (!log) return errorResponse('Daily log not found', 404);
 
-    // Trigger recalculation
+    // Trigger recalculation (for mealId path; no-op if already saved)
     await log.save();
 
     const result = log.toObject() as unknown as Record<string, unknown>;

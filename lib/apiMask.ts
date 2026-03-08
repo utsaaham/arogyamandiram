@@ -56,6 +56,7 @@ export function maskUser(user: IUser | Record<string, unknown>): SafeUser {
 
   return {
     id: String(u._id),
+    username: u.username as string | undefined,
     email: u.email as string,
     profile: profile as unknown as SafeUser['profile'],
     settings: settings as unknown as SafeUser['settings'],

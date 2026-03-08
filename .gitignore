@@ -12,5 +12,11 @@ node_modules/
 .next/
 out/
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # IDE
 .idea/
+
+# Debug logs (persisted locally, not committed)
+.debug-logs/

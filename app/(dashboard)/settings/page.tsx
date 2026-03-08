@@ -28,6 +28,7 @@ export default function SettingsPage() {
   const { user, loading, refetch } = useUser();
   const [saving, setSaving] = useState(false);
 
+  const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [age, setAge] = useState('');
@@ -39,7 +40,9 @@ export default function SettingsPage() {
   const [targetWeight, setTargetWeight] = useState('');
 
   useEffect(() => {
-    if (!user?.profile) return;
+    if (!user) return;
+    setUsername(user.username || '');
+    if (!user.profile) return;
     const p = user.profile;
     setName(p.name || '');
     if (p.dateOfBirth) {
@@ -61,7 +64,20 @@ export default function SettingsPage() {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      const payload: Record<string, unknown> = {
+      if (username.trim()) {
+        const un = username.trim().toLowerCase().replace(/\s+/g, '_');
+        if (un.length < 3) {
+          showToast('Username must be at least 3 characters', 'error');
+          setSaving(false);
+          return;
+        }
+        if (!/^[a-z0-9_]+$/.test(un)) {
+          showToast('Username can only contain letters, numbers, and underscores', 'error');
+          setSaving(false);
+          return;
+        }
+      }
+      const profilePayload: Record<string, unknown> = {
         name,
         gender,
         height: parseFloat(height),
@@ -70,12 +86,20 @@ export default function SettingsPage() {
         goal,
         targetWeight: parseFloat(targetWeight),
       };
-      if (dateOfBirth) payload.dateOfBirth = dateOfBirth;
-      else if (age) payload.age = parseInt(age, 10);
-      const res = await api.updateProfile(payload);
+      if (dateOfBirth) profilePayload.dateOfBirth = dateOfBirth;
+      else if (age) profilePayload.age = parseInt(age, 10);
+      // Send username at top level so API persists it to MongoDB (not inside profile)
+      const normalizedUsername = username.trim() ? username.trim().toLowerCase().replace(/\s+/g, '_') : undefined;
+      const body: { profile: Record<string, unknown>; username?: string } = {
+        profile: profilePayload,
+        ...(normalizedUsername && { username: normalizedUsername }),
+      };
+      const res = await api.updateUser(body);
       if (res.success) {
         showToast('Profile updated', 'success');
-        refetch();
+        const updated = res.data as { username?: string } | undefined;
+        if (updated?.username) setUsername(updated.username);
+        await refetch();
       } else {
         showToast(res.error || 'Failed to save', 'error');
       }
@@ -166,6 +190,19 @@ export default function SettingsPage() {
                   onChange={(e) => setName(e.target.value)}
                   className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
                 />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-text-muted">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. john_doe"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  minLength={3}
+                  maxLength={30}
+                />
+                <p className="mt-1 text-xs text-text-muted">Letters, numbers, underscores only. Unique across the platform.</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-text-muted">Date of birth</label>

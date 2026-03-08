@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  ChefHat,
 } from 'lucide-react';
 import ProgressRing from '@/components/ui/ProgressRing';
 import MacroBar from '@/components/ui/MacroBar';
@@ -22,7 +23,9 @@ import FoodResultCard from '@/components/food/FoodResultCard';
 import RecentFoodCard from '@/components/food/RecentFoodCard';
 import AddMealModal from '@/components/food/AddMealModal';
 import CustomFoodModal from '@/components/food/CustomFoodModal';
+import MealIdeasModal from '@/components/food/MealIdeasModal';
 import AIFoodLoggerModal from '@/components/food/AIFoodLoggerModal';
+import { useDebugLogs } from '@/contexts/DebugLogsContext';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -87,20 +90,22 @@ const categories = [
   { key: 'other', label: 'Other' },
 ];
 
-const tabs = [{ key: 'recent', label: 'Recent' }, ...categories];
+const tabs = [{ key: 'logged', label: 'Logged' }, { key: 'recent', label: 'Recent' }, ...categories];
 
 export default function FoodLogPage() {
   const { user, loading: userLoading } = useUser();
   const { log, loading: logLoading, refetch } = useDailyLog();
+  const { addMealIdeasLog, setAiLoggerLog } = useDebugLogs();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FoodItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [recentFoods, setRecentFoods] = useState<{ name: string; lastDate: string; count: number }[]>([]);
   const [recentLoading, setRecentLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState<string>('all');
+  const [selectedTab, setSelectedTab] = useState<string>('logged');
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [showCustom, setShowCustom] = useState(false);
+  const [showMealIdeas, setShowMealIdeas] = useState(false);
   const [showAILogger, setShowAILogger] = useState(false);
   const [addingMeal, setAddingMeal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -133,13 +138,13 @@ export default function FoodLogPage() {
   const handleSearchChange = (value: string) => {
     setQuery(value);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    const cat = selectedTab === 'recent' ? 'all' : selectedTab;
+    const cat = selectedTab === 'recent' || selectedTab === 'logged' ? 'all' : selectedTab;
     searchTimerRef.current = setTimeout(() => doSearch(value, cat), 300);
   };
 
   const handleTabChange = (key: string) => {
     setSelectedTab(key);
-    if (key === 'recent') return;
+    if (key === 'recent' || key === 'logged') return;
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     doSearch(query, key);
   };
@@ -212,6 +217,7 @@ export default function FoodLogPage() {
         showToast(`${meal.name} added to ${mealLabels[(meal.mealType as string) || 'snack']}`, 'success');
         setSelectedFood(null);
         setShowCustom(false);
+        setShowMealIdeas(false);
         setShowAILogger(false);
         refetch();
       } else {
@@ -224,10 +230,32 @@ export default function FoodLogPage() {
     }
   };
 
-  const handleRemoveMeal = async (mealId: string) => {
-    setDeletingId(mealId);
+  const handleAddMealBatch = async (meals: Record<string, unknown>[]) => {
+    if (!meals.length) return;
+    setAddingMeal(true);
     try {
-      const res = await api.removeMeal(today, mealId);
+      for (const meal of meals) {
+        const res = await api.addMeal(today, meal);
+        if (!res.success) {
+          showToast(res.error || 'Failed to add some items', 'error');
+          return;
+        }
+      }
+      showToast(`${meals.length} item${meals.length === 1 ? '' : 's'} added`, 'success');
+      setShowAILogger(false);
+      refetch();
+    } catch {
+      showToast('Failed to add meals', 'error');
+    } finally {
+      setAddingMeal(false);
+    }
+  };
+
+  const handleRemoveMeal = async (mealId: string | undefined, index?: number) => {
+    const key = mealId ?? `index-${index}`;
+    setDeletingId(key);
+    try {
+      const res = await api.removeMeal(today, mealId, index);
       if (res.success) {
         showToast('Meal removed', 'info');
         refetch();
@@ -286,13 +314,22 @@ export default function FoodLogPage() {
             Custom Food
           </button>
           {user?.hasOpenAiKey && (
-            <button
-              onClick={() => setShowAILogger(true)}
-              className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI Logger
-            </button>
+            <>
+              <button
+                onClick={() => setShowMealIdeas(true)}
+                className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+              >
+                <ChefHat className="h-4 w-4" />
+                Meal Ideas
+              </button>
+              <button
+                onClick={() => setShowAILogger(true)}
+                className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Logger
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -334,7 +371,7 @@ export default function FoodLogPage() {
                   className={cn(
                     'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                     selectedTab === tab.key
-                      ? tab.key === 'recent'
+                      ? tab.key === 'recent' || tab.key === 'logged'
                         ? 'bg-accent-emerald/15 text-accent-emerald ring-1 ring-accent-emerald/30'
                         : 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
                       : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
@@ -349,7 +386,55 @@ export default function FoodLogPage() {
           {/* Single content area: recent items or search results */}
           <div className="glass-card flex min-h-0 flex-col rounded-2xl p-4 sm:p-5 lg:min-h-0 lg:flex-1">
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 hide-scrollbar lg:min-h-0">
-            {selectedTab === 'recent' ? (
+            {selectedTab === 'logged' ? (
+              meals.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Utensils className="h-8 w-8 text-text-muted" />
+                  <p className="text-sm text-text-muted">Nothing logged today yet</p>
+                  <p className="text-xs text-text-muted">Use search or AI Logger to add meals.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="mb-3 text-xs text-text-muted">Today&apos;s logged ({meals.length})</p>
+                  {meals.map((meal, i) => {
+                    const mealId = meal._id ?? (meal as { id?: string }).id;
+                    const deleteKey = mealId ?? `index-${i}`;
+                    return (
+                      <div
+                        key={mealId || i}
+                        className="group flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-text-primary">{meal.name}</p>
+                          <p className="text-[11px] text-text-muted">
+                            {meal.quantity}{meal.unit} · {mealLabels[meal.mealType || 'snack']} · {formatTime(meal.time)}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-xs font-semibold text-text-secondary">
+                          {Math.round(meal.calories)} kcal
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveMeal(mealId, i);
+                          }}
+                          disabled={deletingId === deleteKey}
+                          title="Remove meal"
+                          className="shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                        >
+                          {deletingId === deleteKey ? (
+                            <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : selectedTab === 'recent' ? (
               recentLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-emerald border-t-transparent" />
@@ -523,45 +608,50 @@ export default function FoodLogPage() {
 
                       {isExpanded && (
                         <div className="space-y-1 border-t border-white/[0.04] px-3 py-2">
-                          {items.map((meal, i) => (
-                            <div
-                              key={meal._id || i}
-                              className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/[0.03]"
-                            >
-                              {meal.isCustom ? (
-                                <PlusCircle className="h-3 w-3 shrink-0 text-accent-amber" />
-                              ) : (
-                                <div className={cn(
-                                  'h-1.5 w-1.5 shrink-0 rounded-full',
-                                  // Approximate veg detection by name
-                                  'bg-accent-emerald'
-                                )} />
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs text-text-primary">{meal.name}</p>
-                                <p className="text-[10px] text-text-muted">
-                                  {meal.quantity}{meal.unit} · {formatTime(meal.time)}
-                                </p>
-                              </div>
-                              <span className="shrink-0 text-xs text-text-secondary">
-                                {Math.round(meal.calories)}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (meal._id) handleRemoveMeal(meal._id);
-                                }}
-                                disabled={deletingId === meal._id}
-                                className="ml-1 shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                          {items.map((meal, idxInGroup) => {
+                            const mealId = meal._id ?? (meal as { id?: string }).id;
+                            const globalIndex = meals.indexOf(meal);
+                            const deleteKey = mealId ?? `index-${globalIndex}`;
+                            return (
+                              <div
+                                key={mealId ?? `${type}-${idxInGroup}`}
+                                className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/[0.03]"
                               >
-                                {deletingId === meal._id ? (
-                                  <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                                {meal.isCustom ? (
+                                  <PlusCircle className="h-3 w-3 shrink-0 text-accent-amber" />
                                 ) : (
-                                  <Trash2 className="h-3 w-3" />
+                                  <div className={cn(
+                                    'h-1.5 w-1.5 shrink-0 rounded-full',
+                                    'bg-accent-emerald'
+                                  )} />
                                 )}
-                              </button>
-                            </div>
-                          ))}
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-xs text-text-primary">{meal.name}</p>
+                                  <p className="text-[10px] text-text-muted">
+                                    {meal.quantity}{meal.unit} · {formatTime(meal.time)}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-xs text-text-secondary">
+                                  {Math.round(meal.calories)}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveMeal(mealId, globalIndex);
+                                  }}
+                                  disabled={deletingId === deleteKey}
+                                  title="Remove meal"
+                                  className="ml-1 shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                                >
+                                  {deletingId === deleteKey ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                                  ) : (
+                                    <Trash2 className="h-3 w-3" />
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -627,6 +717,24 @@ export default function FoodLogPage() {
         />
       )}
 
+      {showMealIdeas && (
+        <MealIdeasModal
+          onClose={() => setShowMealIdeas(false)}
+          onDebugLog={(log) => {
+            const debugLog = log as import('@/contexts/DebugLogsContext').MealIdeasDebugLog;
+            addMealIdeasLog(debugLog);
+            if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+              fetch('/api/debug-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ page: 'food', agent: 'meal-ideas', log: debugLog }),
+                credentials: 'include',
+              }).catch(() => {});
+            }
+          }}
+        />
+      )}
+
       {showCustom && (
         <CustomFoodModal
           onClose={() => setShowCustom(false)}
@@ -639,6 +747,18 @@ export default function FoodLogPage() {
         <AIFoodLoggerModal
           onClose={() => setShowAILogger(false)}
           onAdd={(meal) => handleAddMeal(meal as Record<string, unknown>)}
+          onAddBatch={(batch) => handleAddMealBatch(batch as Record<string, unknown>[])}
+          onDebugLog={(log) => {
+            setAiLoggerLog(log);
+            if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+              fetch('/api/debug-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ page: 'food', agent: 'ai-logger', log }),
+                credentials: 'include',
+              }).catch(() => {});
+            }
+          }}
           loading={addingMeal}
         />
       )}

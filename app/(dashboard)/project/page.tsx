@@ -29,14 +29,14 @@ export default function ProjectPage() {
       />
 
       {/* Feature grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-        <StatCard icon={Moon} label="Sleep" value="Track" subtitle="quality + duration" iconColor="text-accent-violet" />
-        <StatCard icon={Droplets} label="Water" value="Track" subtitle="daily hydration" iconColor="text-accent-cyan" />
-        <StatCard icon={Utensils} label="Food" value="Log" subtitle="meals + macros" iconColor="text-accent-emerald" />
-        <StatCard icon={Scale} label="Weight" value="Log" subtitle="progress over time" iconColor="text-accent-amber" />
-        <StatCard icon={Dumbbell} label="Workout" value="Log" subtitle="sessions + burn" iconColor="text-accent-rose" />
-        <StatCard icon={Trophy} label="Badges" value="Earn" subtitle="streaks + rewards" iconColor="text-accent-amber" />
-        <StatCard icon={Sparkles} label="AI" value="Assist" subtitle="insights + plans" iconColor="text-accent-violet" />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        <StatCard compact icon={Moon} label="" value="Sleep Track" subtitle="Quality and duration" iconColor="text-accent-violet" />
+        <StatCard compact icon={Droplets} label="" value="Water Track" subtitle="Daily hydration" iconColor="text-accent-cyan" />
+        <StatCard compact icon={Utensils} label="" value="Food Log" subtitle="Meals and macros" iconColor="text-accent-emerald" />
+        <StatCard compact icon={Scale} label="" value="Weight Log" subtitle="Progress over time" iconColor="text-accent-amber" />
+        <StatCard compact icon={Dumbbell} label="" value="Workout Log" subtitle="Sessions and burn" iconColor="text-accent-rose" />
+        <StatCard compact icon={Trophy} label="" value="Badges Earn" subtitle="Streaks and rewards" iconColor="text-accent-amber" />
+        <StatCard compact icon={Sparkles} label="" value="AI Assist" subtitle="Insights and plans" iconColor="text-accent-violet" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">

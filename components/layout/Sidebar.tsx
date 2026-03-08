@@ -19,17 +19,18 @@ import {
   LogOut,
   ChevronLeft,
   Sparkles,
+  Bug,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-const navItems = [
+const baseNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/food', icon: Utensils, label: 'Food' },
-  { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
+  { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/achievements', icon: Trophy, label: 'Achievements' },
   { href: '/ai-insights', icon: Sparkles, label: 'Insights' },
   { href: '/api-keys', icon: Key, label: 'API Keys' },
@@ -37,9 +38,26 @@ const navItems = [
   { href: '/preferences', icon: Bell, label: 'Preferences' },
 ];
 
-export default function Sidebar() {
+const debugNavItem = { href: '/debug', icon: Bug, label: 'Debugger' };
+const navItems =
+  process.env.NEXT_PUBLIC_DEBUG_MODE === 'true'
+    ? [...baseNavItems, debugNavItem]
+    : baseNavItems;
+
+type SidebarProps = {
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+};
+
+export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedChange }: SidebarProps = {}) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const collapsed = onCollapsedChange ? (controlledCollapsed ?? internalCollapsed) : internalCollapsed;
+  const setCollapsed = onCollapsedChange
+    ? (value: boolean) => {
+        onCollapsedChange(value);
+      }
+    : setInternalCollapsed;
 
   return (
     <aside
@@ -110,6 +128,7 @@ export default function Sidebar() {
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
+          type="button"
           className="mt-2 flex w-full items-center justify-center rounded-xl p-2 text-text-muted hover:bg-white/[0.04]"
         >
           <ChevronLeft
