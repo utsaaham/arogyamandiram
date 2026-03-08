@@ -1,7 +1,12 @@
 // ============================================
-// /api/ai/food-logger - AI Food Logger with Web Search
+// /api/ai/food-logger - AI Food Logger (Two-Step SOTA Pipeline)
 // ============================================
-// Uses OpenAI Responses API with web_search to get nutrition for user-described meals.
+// Architecture: User Text → [Step 1: Parse] → Structured Items → [Step 2: Nutrition] → Final Output
+//
+// Step 1: Food parser only — extracts items (name, quantity, unit). No nutrition. Reduces hallucination.
+// Step 2: Nutrition engine — takes parsed items, uses web_search, computes macros. Deterministic scaling.
+//
+// Benefits: smaller prompts, stable parsing, fewer wrong quantities, production-grade pipeline.
 // Requires user's OpenAI API key or server default.
 
 import { NextRequest } from 'next/server';
@@ -34,68 +39,82 @@ async function getOpenAIKey(userId: string): Promise<string | null> {
   return null;
 }
 
-const INSTRUCTIONS = `
-You are a precision nutrition assistant for an Indian-focused health app.
+// ============================================
+// STEP 1 — Meal Understanding (Food Parser)
+// ============================================
+// Only extracts foods. No nutrition, no calories. Reduces hallucination.
 
-The user will describe what they ate (e.g. "2 idlis and sambar, chicken sandwich and fries").
+const PARSE_INSTRUCTIONS = `
+You are a food parsing engine for a global nutrition tracking app.
 
-Your job is to produce a LIST of distinct food and drink items with per-item nutrition using the following strict rules:
+The user may describe meals from ANY cuisine (Indian, American, European, Asian, etc.).
 
-1) INGREDIENT COMPLETENESS RULE
-- Parse the description into ALL distinct food and drink items with their quantities and units.
-- EVERY mentioned item MUST be included as its own entry in the items array.
-- You MUST NOT ignore any ingredient, even very small amounts (e.g. 20 ml milk, 40 ml milk, 1 tsp oil, a small chutney serving, etc.).
-- Water has 0 macros but must still be considered as an item (it will not change totals).
-- Example: "2 idlis and sambar, chicken sandwich and fries" MUST become at least:
-  - 2 idlis
-  - sambar
-  - chicken sandwich
-  - fries
+Your task is ONLY to identify the foods eaten.
 
-2) STRICT QUANTITY SCALING RULE
-- For EACH item, use web_search when needed to find accurate nutrition.
-- If nutrition is given per 100 g or 100 ml, you MUST scale linearly to the exact quantity consumed.
-  Example: if milk has 3.2 g protein per 100 ml and the user had 40 ml:
-  protein_for_milk = 3.2 × (40 / 100) = 1.28 g
-- If nutrition is given per serving, scale proportionally when multiple servings or partial servings are implied.
-- You MUST always perform explicit proportional math internally for calories, protein, carbs, fat, fiber, sugar, sodium, saturatedFat, and cholesterol for each item before aggregation.
+Rules:
+- Break the meal into distinct food items.
+- Separate combined foods when possible (e.g., "idli with sambar" → idli + sambar).
+- Identify quantity if mentioned.
+- If quantity is missing, use quantity = 1 and unit = "serving".
+- Use standard units: piece, bowl, serving, cup, g, ml, tbsp, tsp.
+- Include all items mentioned, even small ones (sauces, oil, chutney, milk).
 
-3) AGGREGATION RULE
-- After computing per-item nutrition, aggregate ALL items into ONE combined meal.
-- For the final meal, SUM across all items:
-  - protein
-  - carbs
-  - fat
-  - fiber
-  - sugar
-  - sodium
-  - saturatedFat
-  - cholesterol
-- Never return macros or calories that only reflect the main or largest item; the totals MUST include contributions from every item, including small ones.
+Return JSON only using tool: parse_meal_foods
+`;
 
-4) CALORIE VALIDATION RULE (MANDATORY)
-- After aggregating protein, carbs, and fat for the combined meal, recompute calories using:
-  calories_from_macros = (protein × 4) + (carbs × 4) + (fat × 9)
-- The reported calories field in the final object MUST match calories_from_macros within ±5 kcal.
-- If there is any mismatch larger than 5 kcal, you MUST adjust the final calories value so that it equals calories_from_macros (rounded to the nearest whole number).
+const PARSE_MEAL_TOOL = {
+  type: 'function' as const,
+  name: 'parse_meal_foods',
+  description: 'Extract distinct food items from the meal description. No nutrition.',
+  strict: true,
+  parameters: {
+    type: 'object',
+    properties: {
+      items: {
+        type: 'array',
+        description: 'List of distinct food and drink items.',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Food item name (e.g. "sambar rice", "chips", "curd rice").' },
+            quantity: { type: 'number', description: 'Numeric quantity (e.g. 2 for "2 idlis"). Use 1 if unknown.' },
+            unit: { type: 'string', description: 'Unit: piece, bowl, serving, cup, ml, g, tbsp, tsp, etc.' },
+          },
+          required: ['name', 'quantity', 'unit'],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ['items'],
+    additionalProperties: false,
+  },
+} as const;
 
-5) DETERMINISTIC OUTPUT RULE
-- Do not estimate loosely; always choose reasonable, standard reference values and apply strict proportional math.
-- Avoid random variation between runs for the same input.
-- Round all macro fields (protein, carbs, fat, fiber, sugar, sodium, saturatedFat, cholesterol) to 2 decimal places in the final output.
-- Round calories in the final output to the nearest whole number.
+// ============================================
+// STEP 2 — Nutrition Calculation
+// ============================================
+// Takes structured items, computes nutrition. Deterministic scaling.
+// Quantity and unit must be preserved from input (no changing 200 g → 1 serving).
 
-6) RESPONSE FORMAT RULE
-- You MUST respond ONLY by calling the function tool "get_meal_nutrition".
-- Return an object with an "items" array. Each element in "items" is ONE food or drink item from the meal description with its own nutrition.
-- Do NOT return any free-form text, markdown, code blocks, or explanations outside the function call.
+const NUTRITION_INSTRUCTIONS = `
+You calculate nutrition for foods.
+
+Input: structured items with name, quantity, unit.
+
+Rules:
+- Estimate nutrition per item; scale using the given quantity.
+- calories = (protein × 4) + (carbs × 4) + (fat × 9). Round macros to 2 decimals.
+- Never change the quantity or unit provided in the input. Return the same quantity and unit for each item.
+- If fiber, sugar, sodium, saturatedFat, or cholesterol are unknown, return 0.
+
+Return JSON only using tool: get_meal_nutrition
 `;
 
 const MEAL_NUTRITION_TOOL = {
   type: 'function' as const,
   name: 'get_meal_nutrition',
   description:
-    'Compute nutrition for ALL distinct items in the described meal, using web_search as needed. Return a list of items with per-item nutrition.',
+    'Estimate nutrition for each item. Use web_search if needed. Return same quantity and unit as input; scale nutrition by quantity.',
   strict: true,
   parameters: {
     type: 'object',
@@ -151,12 +170,12 @@ const MEAL_NUTRITION_TOOL = {
             quantity: {
               type: 'number',
               description:
-                'Quantity multiplier for this item (e.g. 2 idlis, 1 bowl of sambar, 1 sandwich). Use 1 for a typical single portion.',
+                'Must match the input quantity exactly (e.g. input 200 g → quantity 200). Do not change to 1 or serving.',
             },
             unit: {
               type: 'string',
               description:
-                'High-level unit describing the amount for this item, like "piece", "bowl", "sandwich", "serving", etc.',
+                'Must match the input unit exactly (e.g. g, ml, piece, serving). Do not change the unit from the input.',
             },
           },
           required: [
@@ -267,9 +286,99 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userMessage = `The user ate: "${text.trim()}". List EACH food and drink item separately with its own nutrition (per-item calories, protein, carbs, fat, etc.). Return an "items" array with one object per item.`;
+    const mealText = text.trim();
     const requestedAt = new Date().toISOString();
     const startMs = Date.now();
+
+    // ——— STEP 1: Parse meal text → structured food items only ———
+    const parseRes = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        instructions: PARSE_INSTRUCTIONS,
+        input: `User text: ${mealText}`,
+        tools: [PARSE_MEAL_TOOL],
+        tool_choice: { type: 'function', name: 'parse_meal_foods' },
+        temperature: 0.2,
+        max_output_tokens: 1024,
+      }),
+    });
+
+    if (!parseRes.ok) {
+      const err = await parseRes.json().catch(() => ({}));
+      const status = parseRes.status;
+      const apiError = (err as { error?: { message?: string } })?.error;
+      const rawMessage = apiError?.message;
+
+      if (status === 401 || status === 403) {
+        return errorResponse(
+          'Your OpenAI API key looks invalid or expired. Update it in Settings → API Keys.',
+          400
+        );
+      }
+
+      if (status >= 500) {
+        return errorResponse(
+          'AI service is temporarily unavailable. Please try again in a few minutes.',
+          502
+        );
+      }
+
+      return errorResponse(rawMessage || `OpenAI API error: ${status}`, 400);
+    }
+
+    const parseData = (await parseRes.json()) as {
+      output?: Array<{ type?: string; name?: string; arguments?: string }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number };
+      error?: { message?: string };
+    };
+
+    if (parseData.error?.message) {
+      return errorResponse(parseData.error.message, 400);
+    }
+
+    const parseToolCall = (parseData.output ?? []).find(
+      (item) => item.type === 'function_call' && item.name === 'parse_meal_foods'
+    );
+
+    if (!parseToolCall || typeof parseToolCall.arguments !== 'string') {
+      return errorResponse(
+        'Could not parse meal description. Try listing items clearly (e.g. "2 idlis, sambar, curd rice").',
+        422
+      );
+    }
+
+    const parsedArgs = extractJsonFromText(parseToolCall.arguments);
+    if (!parsedArgs || !Array.isArray(parsedArgs.items) || parsedArgs.items.length === 0) {
+      return errorResponse(
+        'Could not extract food items from the description. Try listing each item (e.g. "100g rice, 2 chapatis").',
+        422
+      );
+    }
+
+    type ParsedItem = { name: string; quantity: number; unit: string };
+    const parsedItems: ParsedItem[] = parsedArgs.items
+      .filter((x): x is Record<string, unknown> => x != null && typeof x === 'object')
+      .map((x) => ({
+        name: String(x.name ?? '').trim() || 'Item',
+        quantity: typeof x.quantity === 'number' && !Number.isNaN(x.quantity) ? Math.max(0.1, x.quantity) : 1,
+        unit: String(x.unit ?? 'serving').trim() || 'serving',
+      }))
+      .filter((i) => i.name && i.name !== 'Item');
+
+    if (parsedItems.length === 0) {
+      return errorResponse(
+        'Could not extract any food items. Try describing the meal in more detail.',
+        422
+      );
+    }
+
+    // ——— STEP 2: Compute nutrition for parsed items ———
+    const nutritionInput = JSON.stringify({ items: parsedItems }, null, 2);
 
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -279,8 +388,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        instructions: INSTRUCTIONS,
-        input: userMessage,
+        instructions: NUTRITION_INSTRUCTIONS,
+        input: `Input:\n${nutritionInput}`,
         tools: [
           MEAL_NUTRITION_TOOL,
           {
@@ -289,11 +398,8 @@ export async function POST(req: NextRequest) {
             search_context_size: 'medium' as const,
           },
         ],
-        tool_choice: {
-          type: 'function',
-          name: 'get_meal_nutrition',
-        },
-        temperature: 0.3,
+        tool_choice: { type: 'function', name: 'get_meal_nutrition' },
+        temperature: 0.2,
         max_output_tokens: 4096,
       }),
     });
@@ -329,6 +435,7 @@ export async function POST(req: NextRequest) {
         role?: string;
         content?: Array<{ type?: string; text?: string }>;
       }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number };
       error?: { message?: string };
     };
 
@@ -347,20 +454,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsedArgs = extractJsonFromText(toolCall.arguments);
+    const nutritionArgs = extractJsonFromText(toolCall.arguments);
 
-    if (!parsedArgs) {
+    if (!nutritionArgs) {
       return errorResponse(
         'Could not parse nutrition data from AI response. Try describing the meal in more detail.',
         422
       );
     }
 
-    const rawItems = Array.isArray(parsedArgs.items) ? parsedArgs.items : [];
-    const items: NormalizedItem[] = rawItems
+    const rawItems = Array.isArray(nutritionArgs.items) ? nutritionArgs.items : [];
+    let items: NormalizedItem[] = rawItems
       .filter((x): x is Record<string, unknown> => x != null && typeof x === 'object')
       .map(normalizeItem)
       .filter((i) => (i.name && i.name !== 'Item') || i.calories > 0);
+
+    // Safeguard: preserve quantity and unit from Step-1; scale nutrition if model used different quantity
+    for (let i = 0; i < items.length && i < parsedItems.length; i++) {
+      const parsed = parsedItems[i];
+      const current = items[i];
+      const scale = current.quantity > 0 ? parsed.quantity / current.quantity : 1;
+      const protein = Number((current.protein * scale).toFixed(2));
+      const carbs = Number((current.carbs * scale).toFixed(2));
+      const fat = Number((current.fat * scale).toFixed(2));
+      items[i] = {
+        ...current,
+        quantity: parsed.quantity,
+        unit: parsed.unit,
+        protein,
+        carbs,
+        fat,
+        calories: Math.round(protein * 4 + carbs * 4 + fat * 9),
+        fiber: Number((current.fiber * scale).toFixed(2)),
+        sugar: Number((current.sugar * scale).toFixed(2)),
+        sodium: Math.round(current.sodium * scale),
+        saturatedFat: Number((current.saturatedFat * scale).toFixed(2)),
+        cholesterol: Math.round(current.cholesterol * scale),
+      };
+    }
 
     if (items.length === 0) {
       return errorResponse(
@@ -394,18 +525,43 @@ export async function POST(req: NextRequest) {
       total,
     };
     if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-      const usage = (data as { usage?: { prompt_tokens?: number; completion_tokens?: number } }).usage;
+      const step1Usage = parseData.usage;
+      const step2Usage = data.usage;
+      const pt = (u: typeof step1Usage) => (u?.prompt_tokens ?? u?.input_tokens ?? 0);
+      const ct = (u: typeof step1Usage) => (u?.completion_tokens ?? u?.output_tokens ?? 0);
+      const combinedUsage = step1Usage && step2Usage
+        ? {
+            prompt_tokens: pt(step1Usage) + pt(step2Usage),
+            completion_tokens: ct(step1Usage) + ct(step2Usage),
+          }
+        : step2Usage ?? step1Usage;
+
       payload.debugLog = {
-        userRequest: { text: text.trim(), requestedAt },
-        instructions: INSTRUCTIONS,
-        prompt: userMessage,
-        response: toolCall.arguments,
+        userRequest: { text: mealText, requestedAt },
+        step1: {
+          prompt: `User text: ${mealText}`,
+          instructions: PARSE_INSTRUCTIONS,
+          response: JSON.stringify({ items: parsedItems }, null, 2),
+          parsedItems,
+          usage: step1Usage,
+        },
+        step2: {
+          prompt: nutritionInput,
+          instructions: NUTRITION_INSTRUCTIONS,
+          response: toolCall.arguments,
+          finalItems: items,
+          total,
+          usage: step2Usage,
+        },
         metadata: {
           model: 'gpt-4o',
-          usage: usage ? { prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens } : undefined,
+          usage: combinedUsage,
+          step1Usage,
+          step2Usage,
           latencyMs,
           timestamp: new Date().toISOString(),
           status: 'success',
+          pipeline: 'two-step',
         },
       };
     }
