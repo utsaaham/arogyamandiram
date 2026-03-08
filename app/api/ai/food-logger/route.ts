@@ -45,19 +45,27 @@ async function getOpenAIKey(userId: string): Promise<string | null> {
 // Only extracts foods. No nutrition, no calories. Reduces hallucination.
 
 const PARSE_INSTRUCTIONS = `
-You are a food parsing engine for a global nutrition tracking app.
+You are a precision food parsing engine for a global nutrition tracking app.
 
-The user may describe meals from ANY cuisine (Indian, American, European, Asian, etc.).
-
-Your task is ONLY to identify the foods eaten.
+Parse the user's meal into distinct food items from any cuisine worldwide.
+Correct spelling errors silently (e.g. "pulov" → "veg pulao", "raitha" → "raita").
 
 Rules:
-- Break the meal into distinct food items.
-- Separate combined foods when possible (e.g., "idli with sambar" → idli + sambar).
-- Identify quantity if mentioned.
+- Split only clearly separate dishes/sides ("burger with fries" → 2 items).
+- Keep ingredients mentioned inside a dish as part of that item, not separate
+  ("pulao with cashews" → 1 item, "raita with onion" → 1 item).
+- Include key ingredients in the item name so Step 2 can estimate nutrition accurately
+  ("veg pulao with cashews and soya chunks" not just "veg pulao").
 - If quantity is missing, use quantity = 1 and unit = "serving".
-- Use standard units: piece, bowl, serving, cup, g, ml, tbsp, tsp.
-- Include all items mentioned, even small ones (sauces, oil, chutney, milk).
+- For piece-count items (chips, cookies, crackers, nuggets), always convert to grams
+  using standard per-piece weights:
+    tortilla chip   → 2.5 g/piece
+    potato chip     → 1.5 g/piece
+    cracker         → 3 g/piece
+    cookie          → 15 g/piece
+    nugget          → 18 g/piece
+  E.g. "25 tortilla chips" → quantity: 62, unit: "g"
+- Units: piece, bowl, serving, cup, g, ml, tbsp, tsp.
 
 Return JSON only using tool: parse_meal_foods
 `;
@@ -97,15 +105,49 @@ const PARSE_MEAL_TOOL = {
 // Quantity and unit must be preserved from input (no changing 200 g → 1 serving).
 
 const NUTRITION_INSTRUCTIONS = `
-You calculate nutrition for foods.
+You are a clinical-grade nutrition engine for a food tracking app.
 
-Input: structured items with name, quantity, unit.
+Input: structured items with name, quantity, unit (already scaled — do not re-scale).
 
-Rules:
-- Estimate nutrition per item; scale using the given quantity.
-- calories = (protein × 4) + (carbs × 4) + (fat × 9). Round macros to 2 decimals.
-- Never change the quantity or unit provided in the input. Return the same quantity and unit for each item.
-- If fiber, sugar, sodium, saturatedFat, or cholesterol are unknown, return 0.
+━━━ MACRO RULES ━━━
+1. Normalize the food name to its closest standard food.
+   Strip purely descriptive qualifiers that don't affect nutrition.
+   E.g. "veg pulao with veggies masala" → "veg pulao with soya chunks and cashews"
+        "raita with onion and tomato" → "raita"
+
+2. Estimate macros using USDA, IFCT (Indian Food Composition Tables),
+   or well-known brand data — whichever is most specific.
+
+3. Scale ALL nutrients to the given quantity and unit.
+   Never change the quantity or unit from the input.
+
+4. High-protein ingredients override generic estimates:
+   - Soya chunks / nuggets: ~330 kcal, ~52g protein, ~33g carbs, ~0.5g fat per 100g dry weight.
+     When part of a mixed dish, assume ~10–15g dry soya per serving unless a quantity is given.
+   - Paneer: ~265 kcal, ~18g protein per 100g.
+   - Tofu: ~76 kcal, ~8g protein per 100g.
+   - Chicken breast: ~165 kcal, ~31g protein per 100g.
+
+5. Calorie integrity check:
+   calories = (protein × 4) + (carbs × 4) + (fat × 9)
+   If your computed calories deviate from this formula by more than 3%,
+   adjust the macro with the most uncertainty until the equation holds.
+
+━━━ MICRONUTRIENT RULES ━━━
+6. NEVER return 0 for fiber, sugar, sodium, saturatedFat, or cholesterol
+   unless the nutrient is genuinely negligible (e.g. cholesterol in pure sugar).
+   Always estimate realistic typical values from food composition data.
+
+   Reference minimums for common items:
+   - Any rice dish (100g): fiber ≥ 0.4g, sodium ≥ 200mg
+   - Any fried/baked chips (100g): sodium ≥ 300mg, saturatedFat ≥ 1g, fiber ≥ 1g
+   - Any yogurt-based dish (1 serving): sugar ≥ 4g, sodium ≥ 150mg
+   - Any curry or spiced dish: sodium ≥ 300mg per serving
+
+━━━ OUTPUT RULES ━━━
+7. Return protein, carbs, fat rounded to 2 decimal places.
+8. Return sodium and cholesterol as whole numbers (mg).
+9. Return the same quantity and unit as the input — no exceptions.
 
 Return JSON only using tool: get_meal_nutrition
 `;
@@ -114,7 +156,7 @@ const MEAL_NUTRITION_TOOL = {
   type: 'function' as const,
   name: 'get_meal_nutrition',
   description:
-    'Estimate nutrition for each item. Use web_search if needed. Return same quantity and unit as input; scale nutrition by quantity.',
+    'Estimate nutrition for each item. Normalize names; use USDA or Indian food references. Return same quantity and unit as input; scale nutrition by quantity.',
   strict: true,
   parameters: {
     type: 'object',
@@ -129,7 +171,7 @@ const MEAL_NUTRITION_TOOL = {
             name: {
               type: 'string',
               description:
-                'Short human-readable item name (e.g. "idli", "sambar", "chicken sandwich", "fries").',
+                'Normalized standard food name (e.g. "veg pulao", "raita", "idli", "chicken sandwich").',
             },
             calories: {
               type: 'number',
@@ -149,23 +191,28 @@ const MEAL_NUTRITION_TOOL = {
             },
             fiber: {
               type: 'number',
-              description: 'Total dietary fiber in grams for this item. Use 0 if unknown.',
+              description:
+                'Total dietary fiber in grams. Estimate typical values when unknown; use 0 only if negligible.',
             },
             sugar: {
               type: 'number',
-              description: 'Total sugars in grams for this item. Use 0 if unknown.',
+              description:
+                'Total sugars in grams. Estimate typical values when unknown; use 0 only if negligible.',
             },
             sodium: {
               type: 'number',
-              description: 'Total sodium in milligrams for this item. Use 0 if unknown.',
+              description:
+                'Total sodium in mg. Estimate typical values when unknown; use 0 only if negligible.',
             },
             saturatedFat: {
               type: 'number',
-              description: 'Total saturated fat in grams for this item. Use 0 if unknown.',
+              description:
+                'Total saturated fat in grams. Estimate typical values when unknown; use 0 only if negligible.',
             },
             cholesterol: {
               type: 'number',
-              description: 'Total cholesterol in milligrams for this item. Use 0 if unknown.',
+              description:
+                'Total cholesterol in mg. Estimate typical values when unknown; use 0 only if negligible.',
             },
             quantity: {
               type: 'number',

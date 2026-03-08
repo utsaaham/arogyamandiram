@@ -25,21 +25,27 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(selectedMealTypes) || selectedMealTypes.length === 0) {
       return errorResponse('selectedMealTypes must be a non-empty array', 400);
     }
-    const valid = selectedMealTypes.filter((t: unknown) =>
-      typeof t === 'string' && ALLOWED_MEAL_TYPES.includes(t)
+    const invalid = selectedMealTypes.filter(
+      (t: unknown) => typeof t !== 'string' || !ALLOWED_MEAL_TYPES.includes(t)
     );
-    if (valid.length === 0) {
+    if (invalid.length > 0) {
+      const list = invalid.map((t) => JSON.stringify(t)).join(', ');
       return errorResponse(
-        'selectedMealTypes must contain at least one of: breakfast, lunch, dinner, snack',
+        `Invalid meal types: ${list}. Allowed: breakfast, lunch, dinner, snack`,
         400
       );
+    }
+    const valid = selectedMealTypes as string[];
+
+    if (preferences.length > 500) {
+      return errorResponse('preferences must be under 500 characters', 400);
     }
 
     await connectDB();
     const { suggestions, debugLog } = await getMealIdeas(userId, valid, preferences);
 
     const payload: { suggestions: typeof suggestions; debugLog?: typeof debugLog } = { suggestions };
-    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+    if (process.env.DEBUG_MODE === 'true') {
       payload.debugLog = debugLog;
     }
     return maskedResponse(payload);
@@ -49,6 +55,7 @@ export async function POST(req: NextRequest) {
       return errorResponse(message, 403);
     }
     console.error('[Meal Ideas API Error]:', err);
-    return errorResponse(message, 500);
+    const safeMessage = process.env.NODE_ENV !== 'production' ? message : 'Meal ideas request failed';
+    return errorResponse(safeMessage, 500);
   }
 }
