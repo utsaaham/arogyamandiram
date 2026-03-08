@@ -102,7 +102,7 @@ export default function FoodLogPage() {
   const [searching, setSearching] = useState(false);
   const [recentFoods, setRecentFoods] = useState<{ name: string; lastDate: string; count: number }[]>([]);
   const [recentLoading, setRecentLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState<string>('all');
+  const [selectedTab, setSelectedTab] = useState<string>('logged');
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [showCustom, setShowCustom] = useState(false);
   const [showMealIdeas, setShowMealIdeas] = useState(false);
@@ -251,10 +251,11 @@ export default function FoodLogPage() {
     }
   };
 
-  const handleRemoveMeal = async (mealId: string) => {
-    setDeletingId(mealId);
+  const handleRemoveMeal = async (mealId: string | undefined, index?: number) => {
+    const key = mealId ?? `index-${index}`;
+    setDeletingId(key);
     try {
-      const res = await api.removeMeal(today, mealId);
+      const res = await api.removeMeal(today, mealId, index);
       if (res.success) {
         showToast('Meal removed', 'info');
         refetch();
@@ -395,13 +396,15 @@ export default function FoodLogPage() {
               ) : (
                 <div className="space-y-2">
                   <p className="mb-3 text-xs text-text-muted">Today&apos;s logged ({meals.length})</p>
-                  {meals.map((meal, i) => (
-                    <div
-                      key={meal._id || i}
-                      className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
+                  {meals.map((meal, i) => {
+                    const mealId = meal._id ?? (meal as { id?: string }).id;
+                    const deleteKey = mealId ?? `index-${i}`;
+                    return (
+                      <div
+                        key={mealId || i}
+                        className="group flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+                      >
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-text-primary">{meal.name}</p>
                           <p className="text-[11px] text-text-muted">
                             {meal.quantity}{meal.unit} · {mealLabels[meal.mealType || 'snack']} · {formatTime(meal.time)}
@@ -410,9 +413,25 @@ export default function FoodLogPage() {
                         <span className="shrink-0 text-xs font-semibold text-text-secondary">
                           {Math.round(meal.calories)} kcal
                         </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveMeal(mealId, i);
+                          }}
+                          disabled={deletingId === deleteKey}
+                          title="Remove meal"
+                          className="shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                        >
+                          {deletingId === deleteKey ? (
+                            <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )
             ) : selectedTab === 'recent' ? (
@@ -589,45 +608,50 @@ export default function FoodLogPage() {
 
                       {isExpanded && (
                         <div className="space-y-1 border-t border-white/[0.04] px-3 py-2">
-                          {items.map((meal, i) => (
-                            <div
-                              key={meal._id || i}
-                              className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/[0.03]"
-                            >
-                              {meal.isCustom ? (
-                                <PlusCircle className="h-3 w-3 shrink-0 text-accent-amber" />
-                              ) : (
-                                <div className={cn(
-                                  'h-1.5 w-1.5 shrink-0 rounded-full',
-                                  // Approximate veg detection by name
-                                  'bg-accent-emerald'
-                                )} />
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs text-text-primary">{meal.name}</p>
-                                <p className="text-[10px] text-text-muted">
-                                  {meal.quantity}{meal.unit} · {formatTime(meal.time)}
-                                </p>
-                              </div>
-                              <span className="shrink-0 text-xs text-text-secondary">
-                                {Math.round(meal.calories)}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (meal._id) handleRemoveMeal(meal._id);
-                                }}
-                                disabled={deletingId === meal._id}
-                                className="ml-1 shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                          {items.map((meal, idxInGroup) => {
+                            const mealId = meal._id ?? (meal as { id?: string }).id;
+                            const globalIndex = meals.indexOf(meal);
+                            const deleteKey = mealId ?? `index-${globalIndex}`;
+                            return (
+                              <div
+                                key={mealId ?? `${type}-${idxInGroup}`}
+                                className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/[0.03]"
                               >
-                                {deletingId === meal._id ? (
-                                  <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                                {meal.isCustom ? (
+                                  <PlusCircle className="h-3 w-3 shrink-0 text-accent-amber" />
                                 ) : (
-                                  <Trash2 className="h-3 w-3" />
+                                  <div className={cn(
+                                    'h-1.5 w-1.5 shrink-0 rounded-full',
+                                    'bg-accent-emerald'
+                                  )} />
                                 )}
-                              </button>
-                            </div>
-                          ))}
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-xs text-text-primary">{meal.name}</p>
+                                  <p className="text-[10px] text-text-muted">
+                                    {meal.quantity}{meal.unit} · {formatTime(meal.time)}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-xs text-text-secondary">
+                                  {Math.round(meal.calories)}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveMeal(mealId, globalIndex);
+                                  }}
+                                  disabled={deletingId === deleteKey}
+                                  title="Remove meal"
+                                  className="ml-1 shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                                >
+                                  {deletingId === deleteKey ? (
+                                    <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
+                                  ) : (
+                                    <Trash2 className="h-3 w-3" />
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

@@ -171,11 +171,12 @@ export const api = {
       body: JSON.stringify({ date, meal }),
     }),
 
-  removeMeal: (date: string, mealId: string) =>
-    apiFetch('/daily-log/meal', {
-      method: 'DELETE',
-      body: JSON.stringify({ date, mealId }),
-    }),
+  removeMeal: (date: string, mealId?: string, index?: number) => {
+    const params: Record<string, string> = { date };
+    if (mealId) params.mealId = mealId;
+    else if (typeof index === 'number' && index >= 0) params.index = String(index);
+    return apiFetch(`/daily-log/meal?${new URLSearchParams(params).toString()}`, { method: 'DELETE' });
+  },
 
   aiFoodLogger: (text: string) =>
     apiFetch<{
