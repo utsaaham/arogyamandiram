@@ -131,8 +131,8 @@ export default function SettingsPage() {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
-        {/* Left: quick links */}
-        <div className="flex flex-col gap-6 lg:min-h-0">
+        {/* Left: quick links + why this matters — hidden on mobile; desktop only */}
+        <div className="hidden lg:flex flex-col gap-6 lg:min-h-0">
           <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">Quick links</p>
             <div className="mt-4 space-y-2">

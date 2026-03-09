@@ -24,8 +24,9 @@ export default function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-bg-surface/95 backdrop-blur-xl lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] lg:hidden"
       style={{
+        background: '#0D0D14',
         paddingBottom: 'var(--sab, env(safe-area-inset-bottom, 0px))',
       }}
     >

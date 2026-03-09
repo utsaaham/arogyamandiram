@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
-  LayoutDashboard,
+  LayoutGrid,
   Moon,
   Droplets,
   Utensils,
   Scale,
   Dumbbell,
-  Trophy,
+  Star,
+  Sparkles,
   Key,
   Target,
   Bell,
@@ -18,31 +19,33 @@ import {
   Code2,
   LogOut,
   ChevronLeft,
-  Sparkles,
   Bug,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-const baseNavItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+const mainNavItems = [
+  { href: '/dashboard', icon: LayoutGrid, label: 'Home' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/weight', icon: Scale, label: 'Weight' },
-  { href: '/achievements', icon: Trophy, label: 'Achievements' },
+  { href: '/achievements', icon: Star, label: 'Achievements' },
   { href: '/ai-insights', icon: Sparkles, label: 'Insights' },
+];
+
+const extraNavItems = [
   { href: '/api-keys', icon: Key, label: 'API Keys' },
   { href: '/targets', icon: Target, label: 'Targets' },
   { href: '/preferences', icon: Bell, label: 'Preferences' },
 ];
 
 const debugNavItem = { href: '/debug', icon: Bug, label: 'Debugger' };
-const navItems =
+const allExtraItems =
   process.env.NEXT_PUBLIC_DEBUG_MODE === 'true'
-    ? [...baseNavItems, debugNavItem]
-    : baseNavItems;
+    ? [...extraNavItems, debugNavItem]
+    : extraNavItems;
 
 type SidebarProps = {
   collapsed?: boolean;
@@ -54,78 +57,131 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const collapsed = onCollapsedChange ? (controlledCollapsed ?? internalCollapsed) : internalCollapsed;
   const setCollapsed = onCollapsedChange
-    ? (value: boolean) => {
-        onCollapsedChange(value);
-      }
+    ? (value: boolean) => onCollapsedChange(value)
     : setInternalCollapsed;
 
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 hidden h-screen-safe flex-col border-r border-white/[0.04] bg-bg-surface/80 backdrop-blur-xl transition-all duration-300 lg:flex',
-        collapsed ? 'w-[72px]' : 'w-[240px]'
+        'fixed left-0 top-0 z-40 hidden h-screen-safe flex-col bg-white/[0.015] backdrop-blur-xl transition-all duration-300 lg:flex',
+        collapsed ? 'w-[72px]' : 'w-[210px]'
       )}
       style={{ paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))' }}
     >
-      {/* Nav Items */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+      {/* Logo */}
+      <div className="shrink-0 px-[18px] pb-3 pt-5">
+        <div
+          className={cn(
+            'font-bold tracking-[0.08em] text-text-primary leading-tight',
+            collapsed ? 'text-center text-xs' : 'text-[15px]'
+          )}
+        >
+          {collapsed ? (
+            'AM'
+          ) : (
+            <>
+              AROGYA<span className="text-accent-emerald">MANDIRAM</span>
+              <small className="mt-0.5 block font-normal text-[9px] uppercase tracking-[0.12em] text-text-muted">
+                Health & Wellness
+              </small>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Main nav */}
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-0 py-0">
+        {mainNavItems.map((item) => {
+          const isActive =
+            pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'));
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-accent-violet/10 text-accent-violet'
+                  ? 'bg-accent-violet/15 text-accent-violet font-medium'
                   : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
               )}
               title={collapsed ? item.label : undefined}
             >
-              <item.icon className={cn('h-5 w-5 shrink-0', isActive && 'text-accent-violet')} />
+              <item.icon
+                className={cn('h-[15px] w-[15px] shrink-0', isActive && 'text-accent-violet')}
+                strokeWidth={1.8}
+              />
               {!collapsed && <span>{item.label}</span>}
             </Link>
           );
         })}
+
+        {allExtraItems.length > 0 && (
+          <>
+            {allExtraItems.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + '/');
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+                    isActive
+                      ? 'bg-accent-violet/15 text-accent-violet font-medium'
+                      : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <item.icon
+                    className={cn('h-[15px] w-[15px] shrink-0', isActive && 'text-accent-violet')}
+                    strokeWidth={1.8}
+                  />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
-      {/* Bottom: Project + Settings + Sign Out + Collapse */}
-      <div className="border-t border-white/[0.04] p-3">
-        <Link
-          href="/project"
-          className={cn(
-            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-            pathname === '/project' || pathname.startsWith('/project/')
-              ? 'bg-accent-violet/10 text-accent-violet'
-              : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
-          )}
-          title={collapsed ? 'Project' : undefined}
-        >
-          <Code2 className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Project</span>}
-        </Link>
-        <Link
-          href="/settings"
-          className={cn(
-            'mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-            pathname === '/settings' || pathname.startsWith('/settings/')
-              ? 'bg-accent-violet/10 text-accent-violet'
-              : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
-          )}
-          title={collapsed ? 'Settings' : undefined}
-        >
-          <Settings className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Settings</span>}
-        </Link>
-        <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-muted transition-all hover:bg-white/[0.04] hover:text-accent-rose"
-          title={collapsed ? 'Sign Out' : undefined}
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
+      {/* Bottom: Project, Settings, Sign Out, Collapse */}
+      <div className="shrink-0 px-0 py-2 pt-2">
+        <div className="mt-1.5 space-y-0.5">
+          <Link
+            href="/project"
+            className={cn(
+              'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+              pathname === '/project' || pathname.startsWith('/project/')
+                ? 'bg-accent-violet/15 text-accent-violet'
+                : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+            )}
+            title={collapsed ? 'Project' : undefined}
+          >
+            <Code2 className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />
+            {!collapsed && <span>Project</span>}
+          </Link>
+          <Link
+            href="/settings"
+            className={cn(
+              'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+              pathname === '/settings' || pathname.startsWith('/settings/')
+                ? 'bg-accent-violet/15 text-accent-violet'
+                : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+            )}
+            title={collapsed ? 'Settings' : undefined}
+          >
+            <Settings className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />
+            {!collapsed && <span>Settings</span>}
+          </Link>
+          <button
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            className="mx-2 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-text-muted transition-all hover:bg-white/[0.04] hover:text-accent-rose"
+            title={collapsed ? 'Sign Out' : undefined}
+          >
+            <LogOut className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />
+            {!collapsed && <span>Sign Out</span>}
+          </button>
+        </div>
         <button
           onClick={() => setCollapsed(!collapsed)}
           type="button"

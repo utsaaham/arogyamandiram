@@ -42,8 +42,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        heading: ['var(--font-satoshi)', 'system-ui', 'sans-serif'],
-        body: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-bebas)', 'Bebas Neue', 'sans-serif'],
+        body: ['var(--font-outfit)', 'Outfit', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       borderRadius: {

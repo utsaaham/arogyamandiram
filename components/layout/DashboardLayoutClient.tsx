@@ -94,8 +94,6 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
       className="app-viewport hide-scrollbar fixed inset-0 overflow-y-auto overscroll-behavior-y-contain"
       style={{
         paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))',
-        paddingLeft: 'var(--sal, env(safe-area-inset-left, 0px))',
-        paddingRight: 'var(--sar, env(safe-area-inset-right, 0px))',
       }}
     >
       <Sidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
@@ -103,10 +101,10 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
       <main
         className={cn(
           'min-h-full pb-[max(5.5rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+4rem))] lg:pb-0 lg:pt-0 transition-[padding-left] duration-300',
-          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[240px]'
+          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[210px]'
         )}
       >
-        <div className="mx-auto max-w-6xl w-full px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl w-full px-[4%] pt-6 pb-4 sm:px-6 sm:pt-8 lg:px-8 lg:pt-14">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
           <DebugLogsProvider>{children}</DebugLogsProvider>
         </div>

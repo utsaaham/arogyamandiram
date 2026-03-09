@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UserBadge } from '@/types';
@@ -40,7 +41,7 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
   const blurb = RARITY_BLURB[rarity] ?? '';
   const firstEarnedDate = badge.firstEarnedAt ?? badge.earnedAt;
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6 sm:py-10"
       role="dialog"
@@ -125,4 +126,7 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return modalContent;
+  return createPortal(modalContent, document.body);
 }
