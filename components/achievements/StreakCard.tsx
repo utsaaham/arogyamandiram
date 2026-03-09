@@ -16,13 +16,13 @@ export function StreakCard({ label, current, best }: StreakCardProps) {
     <div
       className={cn(
         'glass-card flex h-16 items-center gap-3 rounded-2xl p-3 text-left transition-all duration-200 sm:h-14 sm:gap-2 sm:p-2.5',
-        active && 'border border-accent-amber/40 bg-white/[0.02]'
+        active && 'border border-white/[0.08] bg-white/[0.03]'
       )}
     >
       <div
         className={cn(
           'flex h-9 w-9 flex-none items-center justify-center rounded-xl sm:h-8 sm:w-8 sm:rounded-lg',
-          active ? 'bg-accent-amber/15 text-accent-amber' : 'bg-white/[0.04] text-text-muted opacity-60'
+          active ? 'bg-white/[0.08] text-text-primary' : 'bg-white/[0.04] text-text-muted opacity-60'
         )}
       >
         <Flame className="h-4 w-4 sm:h-3.5 sm:w-3.5" />

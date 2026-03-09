@@ -8,7 +8,7 @@ import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
-import PageHeader from '@/components/ui/PageHeader';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 
 const activityLevels = [
   { value: 'sedentary', label: 'Sedentary', desc: 'Little or no exercise' },
@@ -123,14 +123,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
+    <div className="animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop settings-page">
+      <DashboardPageShell
         title="Settings"
         subtitle="Update your profile to keep targets accurate"
         icon={Settings}
+        iconClassName="text-emerald-400"
+        mobileVariant="card"
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4 lg:items-stretch">
         {/* Left: quick links + why this matters — hidden on mobile; desktop only */}
         <div className="hidden lg:flex flex-col gap-6 lg:min-h-0">
           <div className="glass-card rounded-2xl p-6 shrink-0">
@@ -139,7 +142,7 @@ export default function SettingsPage() {
               {[
                 { href: '/dashboard?tour=1', label: 'Platform tour', icon: Activity, iconClass: 'text-accent-emerald' },
                 { href: '/targets', label: 'Targets', icon: Target, iconClass: 'text-accent-amber' },
-                { href: '/preferences', label: 'Preferences', icon: Bell, iconClass: 'text-accent-violet' },
+                { href: '/preferences', label: 'Preferences', icon: Bell, iconClass: 'text-emerald-400' },
                 { href: '/api-keys', label: 'API Keys', icon: Key, iconClass: 'text-accent-cyan' },
               ].map((item) => (
                 <Link
@@ -173,11 +176,11 @@ export default function SettingsPage() {
         </div>
 
         {/* Right: form sections (align with left till Goal card) */}
-        <div className="flex h-full flex-col gap-6 lg:col-span-3 lg:min-h-0">
+        <div className="flex h-full flex-col gap-3 lg:col-span-3 lg:min-h-0">
           {/* Personal */}
           <div className="glass-card rounded-2xl p-6 shrink-0">
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-accent-violet" />
+              <User className="h-4 w-4 text-emerald-400" />
               <h2 className="text-base font-semibold text-text-primary">Personal</h2>
             </div>
 
@@ -188,7 +191,7 @@ export default function SettingsPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                 />
               </div>
               <div>
@@ -198,11 +201,11 @@ export default function SettingsPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g. john_doe"
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                   minLength={3}
                   maxLength={30}
                 />
-                <p className="mt-1 text-xs text-text-muted">Letters, numbers, underscores only. Unique across the platform.</p>
+                <p className="mt-1 text-xs text-zinc-400">Letters, numbers, underscores only. Unique across the platform.</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-text-muted">Date of birth</label>
@@ -210,11 +213,11 @@ export default function SettingsPage() {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2 text-left text-sm"
+                  className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2 text-left text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                   max={new Date().toISOString().split('T')[0]}
                 />
                 {dateOfBirth && (
-                  <p className="mt-1 text-xs text-text-muted">
+                  <p className="mt-1 text-xs text-zinc-400">
                     Age:{' '}
                     {(() => {
                       const birth = new Date(dateOfBirth);
@@ -235,7 +238,7 @@ export default function SettingsPage() {
                     type="number"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                    className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                     min={10}
                     max={120}
                     placeholder="25"
@@ -247,7 +250,7 @@ export default function SettingsPage() {
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -270,7 +273,7 @@ export default function SettingsPage() {
                   type="number"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                 />
               </div>
               <div>
@@ -279,7 +282,7 @@ export default function SettingsPage() {
                   type="number"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                   step={0.1}
                 />
               </div>
@@ -289,7 +292,7 @@ export default function SettingsPage() {
                   type="number"
                   value={targetWeight}
                   onChange={(e) => setTargetWeight(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                   step={0.1}
                 />
               </div>
@@ -311,12 +314,19 @@ export default function SettingsPage() {
                   className={cn(
                     'rounded-2xl border px-3 py-3 text-left text-xs transition-all',
                     activityLevel === al.value
-                      ? 'border-accent-violet/30 bg-accent-violet/10 text-accent-violet'
-                      : 'border-white/[0.06] bg-white/[0.03] text-text-muted hover:bg-white/[0.05] hover:text-text-primary'
+                      ? 'border-emerald-500 bg-emerald-500/10 text-zinc-100'
+                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700'
                   )}
                 >
-                  <p className="font-semibold">{al.label}</p>
-                  <p className="mt-0.5 text-[10px] opacity-70">{al.desc}</p>
+                  <p
+                    className={cn(
+                      'font-semibold',
+                      activityLevel === al.value ? 'text-emerald-400' : 'text-zinc-200'
+                    )}
+                  >
+                    {al.label}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-zinc-400">{al.desc}</p>
                 </button>
               ))}
             </div>
@@ -337,33 +347,39 @@ export default function SettingsPage() {
                   className={cn(
                     'rounded-2xl border px-4 py-3 text-left text-xs transition-all',
                     goal === g.value
-                      ? 'border-accent-emerald/30 bg-accent-emerald/10 text-accent-emerald'
-                      : 'border-white/[0.06] bg-white/[0.03] text-text-muted hover:bg-white/[0.05] hover:text-text-primary'
+                      ? 'border-emerald-500 bg-emerald-500/10 text-zinc-100'
+                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700'
                   )}
                 >
-                  <p className="font-semibold">{g.label}</p>
-                  <p className="mt-0.5 text-[10px] opacity-70">{g.desc}</p>
+                  <p
+                    className={cn(
+                      'font-semibold',
+                      goal === g.value ? 'text-emerald-400' : 'text-zinc-200'
+                    )}
+                  >
+                    {g.label}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-zinc-400">{g.desc}</p>
                 </button>
               ))}
             </div>
           </div>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={saveProfile}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Save below aligned grid (match till Goals card only) */}
-      <div className="flex justify-end pt-2">
-        <button
-          onClick={saveProfile}
-          disabled={saving}
-          className="glass-button-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
-        >
-          {saving ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          Save Changes
-        </button>
       </div>
     </div>
   );

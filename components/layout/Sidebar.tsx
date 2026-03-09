@@ -81,7 +81,7 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
           ) : (
             <>
               AROGYA<span className="text-accent-emerald">MANDIRAM</span>
-              <small className="mt-0.5 block font-normal text-[9px] uppercase tracking-[0.12em] text-text-muted">
+              <small className="mt-0.5 block font-normal text-[9px] uppercase tracking-[0.12em] text-zinc-400">
                 Health & Wellness
               </small>
             </>
@@ -101,13 +101,13 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
               className={cn(
                 'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-accent-violet/15 text-accent-violet font-medium'
-                  : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+                  ? 'bg-emerald-500/10 text-emerald-400 font-medium'
+                  : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
               )}
               title={collapsed ? item.label : undefined}
             >
               <item.icon
-                className={cn('h-[15px] w-[15px] shrink-0', isActive && 'text-accent-violet')}
+                className={cn('h-[15px] w-[15px] shrink-0', isActive && 'text-emerald-400')}
                 strokeWidth={1.8}
               />
               {!collapsed && <span>{item.label}</span>}
@@ -127,13 +127,13 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
                   className={cn(
                     'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
                     isActive
-                      ? 'bg-accent-violet/15 text-accent-violet font-medium'
-                      : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+                  ? 'bg-emerald-500/10 text-emerald-400 font-medium'
+                  : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
                   )}
                   title={collapsed ? item.label : undefined}
                 >
                   <item.icon
-                    className={cn('h-[15px] w-[15px] shrink-0', isActive && 'text-accent-violet')}
+                className={cn('h-[15px] w-[15px] shrink-0', isActive && 'text-emerald-400')}
                     strokeWidth={1.8}
                   />
                   {!collapsed && <span>{item.label}</span>}
@@ -152,12 +152,20 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
             className={cn(
               'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
               pathname === '/project' || pathname.startsWith('/project/')
-                ? 'bg-accent-violet/15 text-accent-violet'
-                : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
             )}
             title={collapsed ? 'Project' : undefined}
           >
-            <Code2 className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />
+            <Code2
+              className={cn(
+                'h-[15px] w-[15px] shrink-0',
+                pathname === '/project' || pathname.startsWith('/project/')
+                  ? 'text-emerald-400'
+                  : undefined
+              )}
+              strokeWidth={1.8}
+            />
             {!collapsed && <span>Project</span>}
           </Link>
           <Link
@@ -165,17 +173,25 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
             className={cn(
               'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
               pathname === '/settings' || pathname.startsWith('/settings/')
-                ? 'bg-accent-violet/15 text-accent-violet'
-                : 'text-text-muted hover:bg-white/[0.04] hover:text-text-primary'
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
             )}
             title={collapsed ? 'Settings' : undefined}
           >
-            <Settings className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />
+            <Settings
+              className={cn(
+                'h-[15px] w-[15px] shrink-0',
+                pathname === '/settings' || pathname.startsWith('/settings/')
+                  ? 'text-emerald-400'
+                  : undefined
+              )}
+              strokeWidth={1.8}
+            />
             {!collapsed && <span>Settings</span>}
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="mx-2 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-text-muted transition-all hover:bg-white/[0.04] hover:text-accent-rose"
+            className="mx-2 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-zinc-400 transition-all hover:bg-white/[0.04] hover:text-rose-400"
             title={collapsed ? 'Sign Out' : undefined}
           >
             <LogOut className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />

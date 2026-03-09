@@ -20,6 +20,7 @@ import { getLevelProgress, BASE_LEVEL_XP } from '@/lib/level';
 import { getTargetsForUser } from '@/lib/health';
 import { BadgeCard } from '@/components/achievements/BadgeCard';
 import { BadgeDetailModal } from '@/components/achievements/BadgeDetailModal';
+import StatMini from '@/components/ui/StatMini';
 import { Droplets, Flame, Moon, Utensils } from 'lucide-react';
 import type { UserBadge } from '@/types';
 
@@ -50,7 +51,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div className="h-10" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <CardSkeleton key={i} />
           ))}
@@ -87,7 +88,7 @@ export default function DashboardPage() {
   return (
     <div className="animate-fade-in">
       {/* ─── Desktop / iPad (lg+) ─── */}
-      <div className="hidden flex-col gap-8 lg:flex">
+      <div className="hidden flex-col gap-6 lg:flex">
         {/* Top row */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -119,7 +120,7 @@ export default function DashboardPage() {
           <div className="bento-ring-stats">
             {/* Calorie ring spans 2 rows */}
             <div className="bento-ring">
-              <div className="glass-card ring-card">
+              <div className="glass-card ring-card card-glow">
                 <div className="ring-wrap">
                 <ProgressRing
                   progress={calPercent}
@@ -160,44 +161,52 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Water, Burn, Meals, Sleep — stat cards */}
+          {/* Water, Burn, Meals, Sleep — stat cards (each with section shade) */}
           <div className="bento-stats-cards">
-            <StatMini
-              icon={<Droplets className="h-6 w-6" strokeWidth={1.8} />}
-              value={formatWater(log?.waterIntake || 0)}
-              label="Water"
-              sub="2.5 L target"
-              valueColor="text-accent-cyan"
-              iconBg="bg-accent-cyan/15"
-              compact
-            />
-            <StatMini
-              icon={<Flame className="h-6 w-6" strokeWidth={1.8} />}
-              value={formatNumber(Math.round(burned))}
-              label="Burned"
-              sub={`${log?.workouts?.length || 0} workouts`}
-              valueColor="text-accent-rose"
-              iconBg="bg-accent-rose/15"
-              compact
-            />
-            <StatMini
-              icon={<Utensils className="h-6 w-6" strokeWidth={1.8} />}
-              value={String(meals.length)}
-              label="Meals"
-              sub={`${formatNumber(Math.round(totalCal))} kcal`}
-              valueColor="text-accent-amber"
-              iconBg="bg-accent-amber/15"
-              compact
-            />
-            <StatMini
-              icon={<Moon className="h-6 w-6" strokeWidth={1.8} />}
-              value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
-              label="Sleep"
-              sub={log?.sleep ? `${log.sleep.quality}/5 quality` : '8h target'}
-              valueColor="text-accent-violet"
-              iconBg="bg-accent-violet/15"
-              compact
-            />
+            <div className="stat-card-water">
+              <StatMini
+                icon={<Droplets className="h-6 w-6" strokeWidth={1.8} />}
+                value={formatWater(log?.waterIntake || 0)}
+                label="Water"
+                sub="2.5 L target"
+                valueColor="text-accent-cyan"
+                iconBg="bg-accent-cyan/15"
+                compact
+              />
+            </div>
+            <div className="stat-card-burned">
+              <StatMini
+                icon={<Flame className="h-6 w-6" strokeWidth={1.8} />}
+                value={formatNumber(Math.round(burned))}
+                label="Burned"
+                sub={`${log?.workouts?.length || 0} workouts`}
+                valueColor="text-accent-rose"
+                iconBg="bg-accent-rose/15"
+                compact
+              />
+            </div>
+            <div className="stat-card-meals">
+              <StatMini
+                icon={<Utensils className="h-6 w-6" strokeWidth={1.8} />}
+                value={String(meals.length)}
+                label="Meals"
+                sub={`${formatNumber(Math.round(totalCal))} kcal`}
+                valueColor="text-accent-amber"
+                iconBg="bg-accent-amber/15"
+                compact
+              />
+            </div>
+            <div className="stat-card-sleep">
+              <StatMini
+                icon={<Moon className="h-6 w-6" strokeWidth={1.8} />}
+                value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+                label="Sleep"
+                sub={log?.sleep ? `${log.sleep.quality}/5 quality` : '8h target'}
+                valueColor="text-accent-violet"
+                iconBg="bg-accent-violet/15"
+                compact
+              />
+            </div>
           </div>
 
           {/* Streaks */}
@@ -212,15 +221,12 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Mobile (design layout) ─── */}
-      <div className="mobile-dash flex flex-col lg:hidden">
+      <div className="mobile-dash cards-stack-mobile lg:hidden">
         {/* Header — TopBar-style card */}
         <div className={cn('mobile-fade-up mobile-dash-px pt-0 pb-3')} style={{ animationDelay: '0ms' }}>
           <div
-            className="relative w-full overflow-hidden rounded-[22px] border border-white/[0.06] px-5 pt-5 pb-[18px]"
-            style={{
-              background: '#111520',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
-            }}
+            className="card-glow relative w-full overflow-hidden rounded-[22px] px-5 pt-5 pb-[18px]"
+            style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
           >
             {/* Row 1: Greeting + Avatar — T centered with left text block */}
             <div className="flex justify-between items-center">
@@ -283,8 +289,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Calorie ring card */}
-        <div className={cn('mobile-fade-up mobile-dash-px mb-3')} style={{ animationDelay: '80ms' }}>
-          <div className="m-calorie-card">
+        <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '80ms' }}>
+          <div className="m-calorie-card card-glow">
             <div className="m-calorie-inner">
               <div>
                 <div className="text-[11px] font-semibold tracking-[0.1em] uppercase text-text-muted mb-2">Today&apos;s Calories</div>
@@ -318,113 +324,69 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick stats 2x2 – two-line value + label on mobile */}
-        <div className={cn('mobile-fade-up mobile-dash-px mb-3')} style={{ animationDelay: '160ms' }}>
+        {/* Quick stats 2x2 – two-line value + label on mobile (each with section shade) */}
+        <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '160ms' }}>
           <div className="m-stats-grid">
-            <StatMini
-              icon={<Droplets className="h-8 w-8" strokeWidth={1.8} />}
-              value={formatWater(log?.waterIntake || 0)}
-              label="Water"
-              sub="of 2.5 L target"
-              valueColor="text-accent-cyan"
-              iconBg="bg-accent-cyan/15"
-              stackLabel
-            />
-            <StatMini
-              icon={<Flame className="h-8 w-8" strokeWidth={1.8} />}
-              value={formatNumber(Math.round(burned))}
-              label="Burned"
-              sub={`${log?.workouts?.length || 0} workouts`}
-              valueColor="text-accent-rose"
-              iconBg="bg-accent-rose/15"
-              stackLabel
-            />
-            <StatMini
-              icon={<Utensils className="h-8 w-8" strokeWidth={1.8} />}
-              value={String(meals.length)}
-              label="Meals"
-              sub={`${formatNumber(Math.round(totalCal))} kcal logged`}
-              valueColor="text-accent-amber"
-              iconBg="bg-accent-amber/15"
-              stackLabel
-            />
-            <StatMini
-              icon={<Moon className="h-8 w-8" strokeWidth={1.8} />}
-              value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
-              label="Sleep"
-              sub="of 8h target"
-              valueColor="text-accent-violet"
-              iconBg="bg-accent-violet/15"
-              stackLabel
-            />
+            <div className="stat-card-water">
+              <StatMini
+                icon={<Droplets className="h-8 w-8" strokeWidth={1.8} />}
+                value={formatWater(log?.waterIntake || 0)}
+                label="Water"
+                sub="of 2.5 L target"
+                valueColor="text-accent-cyan"
+                iconBg="bg-accent-cyan/15"
+                stackLabel
+              />
+            </div>
+            <div className="stat-card-burned">
+              <StatMini
+                icon={<Flame className="h-8 w-8" strokeWidth={1.8} />}
+                value={formatNumber(Math.round(burned))}
+                label="Burned"
+                sub={`${log?.workouts?.length || 0} workouts`}
+                valueColor="text-accent-rose"
+                iconBg="bg-accent-rose/15"
+                stackLabel
+              />
+            </div>
+            <div className="stat-card-meals">
+              <StatMini
+                icon={<Utensils className="h-8 w-8" strokeWidth={1.8} />}
+                value={String(meals.length)}
+                label="Meals"
+                sub={`${formatNumber(Math.round(totalCal))} kcal logged`}
+                valueColor="text-accent-amber"
+                iconBg="bg-accent-amber/15"
+                stackLabel
+              />
+            </div>
+            <div className="stat-card-sleep">
+              <StatMini
+                icon={<Moon className="h-8 w-8" strokeWidth={1.8} />}
+                value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+                label="Sleep"
+                sub="of 8h target"
+                valueColor="text-accent-violet"
+                iconBg="bg-accent-violet/15"
+                stackLabel
+              />
+            </div>
           </div>
         </div>
 
         {/* Recent Badges – same 5 BadgeCards as desktop/achievements */}
-        <div className={cn('mobile-fade-up mobile-dash-px mb-3')} style={{ animationDelay: '240ms' }}>
+        <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '240ms' }}>
           <RecentBadges earnedBadges={earnedBadges} />
         </div>
 
         {/* Active Streaks – same StreakCard as desktop */}
-        <div className={cn('mobile-fade-up mobile-dash-px mb-3')} style={{ animationDelay: '320ms' }}>
+        <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '320ms' }}>
           <StreakCard
             streaks={achievements?.streaks}
             displayDayIndex={displayDayIndex}
             loggingStreak={loggingStreak}
           />
         </div>
-
-        <div className="h-5" />
-      </div>
-
-    </div>
-  );
-}
-
-function StatMini({
-  icon,
-  value,
-  label,
-  sub,
-  valueColor,
-  iconBg,
-  compact,
-  tiny,
-  stackLabel,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-  sub: string;
-  valueColor: string;
-  iconBg: string;
-  compact?: boolean;
-  tiny?: boolean;
-  /** Mobile: value on first line, label on second line; smaller text, aligned */
-  stackLabel?: boolean;
-}) {
-  const iconBox = tiny ? 'h-9 w-9' : compact ? 'h-11 w-11' : 'h-12 w-12';
-  const valueSize = stackLabel ? 'text-lg' : tiny ? 'text-base' : compact ? 'text-xl' : 'text-2xl';
-  const labelSize = stackLabel ? 'text-[11px]' : tiny ? 'text-[10px]' : compact ? 'text-xs' : 'text-sm';
-  const subSize = stackLabel ? 'text-[10px]' : tiny ? 'text-[9px]' : compact ? 'text-[10px]' : 'text-xs';
-  return (
-    <div className={cn('stat-mini-card', tiny && 'stat-mini-card-tiny')}>
-      <div className={cn('stat-mini-icon', iconBg, iconBox)}>
-        {icon}
-      </div>
-      <div className="stat-mini-content min-w-0">
-        {stackLabel ? (
-          <div className="flex flex-col items-start gap-0.5 leading-tight">
-            <span className={cn('font-heading font-semibold', valueColor, valueSize)}>{value}</span>
-            <span className={cn('font-body font-medium text-text-primary', labelSize)}>{label}</span>
-          </div>
-        ) : (
-          <div className="leading-none tracking-tight">
-            <span className={cn('font-heading font-semibold', valueColor, valueSize)}>{value}</span>
-            <span className={cn('font-body font-medium text-text-primary ml-1.5', labelSize)}>{label}</span>
-          </div>
-        )}
-        <div className={cn('font-body text-text-muted/90 mt-0.5', subSize)}>{sub}</div>
       </div>
     </div>
   );
@@ -455,7 +417,7 @@ function MacroCard({
   const pctSod = 2300 > 0 ? Math.min(100, (sodium / 2300) * 100) : 0;
 
   return (
-    <div className="macro-card">
+    <div className="macro-card card-glow">
       <div className="mb-4 flex items-center justify-between">
         <span className="macro-title">
           Today&apos;s Macros
@@ -542,7 +504,7 @@ function RecentBadges({ earnedBadges }: { earnedBadges: UserBadge[] }) {
     .slice(0, 5);
 
   return (
-    <div className="glass-card recent-badges-card flex h-full min-h-0 flex-col">
+    <div className="glass-card recent-badges-card card-glow flex h-full min-h-0 flex-col">
       <div className="mb-2 flex shrink-0 items-center justify-between">
         <span className="font-body text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Recent Badges
@@ -580,7 +542,7 @@ function StreakCard({
   const active = loggingStreak > 0;
 
   return (
-    <div className="streak-card">
+    <div className="streak-card card-glow">
       <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-text-muted">
         Active Streaks
       </p>

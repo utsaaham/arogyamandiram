@@ -100,11 +100,11 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
       <MobileNav />
       <main
         className={cn(
-          'min-h-full pb-[max(5.5rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+4rem))] lg:pb-0 lg:pt-0 transition-[padding-left] duration-300',
+          'min-h-full pb-[max(3.25rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+2.5rem))] lg:pb-0 lg:pt-0 transition-[padding-left] duration-300',
           sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[210px]'
         )}
       >
-        <div className="mx-auto max-w-6xl w-full px-[4%] pt-6 pb-4 sm:px-6 sm:pt-8 lg:px-8 lg:pt-14">
+        <div className="mx-auto max-w-6xl w-full px-[4%] pt-6 pb-0 sm:px-6 sm:pt-8 sm:pb-4 lg:px-8 lg:pt-14">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
           <DebugLogsProvider>{children}</DebugLogsProvider>
         </div>

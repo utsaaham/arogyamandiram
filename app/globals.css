@@ -8,24 +8,34 @@
 
 /* ---------- CSS Custom Properties ---------- */
 :root {
-  --bg-primary: #08080d;
-  --bg-surface: #0f0f18;
-  --bg-elevated: #16162a;
-  --text-primary: #f0f0f5;
-  --text-secondary: #a1a1b5;
-  --accent-emerald: #10b981;
+  /* Neutral, premium dark-mode foundations */
+  --bg-primary: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-elevated: #171717;
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  /* Brand accents (kept for non-achievements pages) */
+  --accent-emerald: #34d399;
   --accent-violet: #8b5cf6;
   --accent-amber: #f59e0b;
   --accent-rose: #ef4444;
   --accent-cyan: #06b6d4;
   --border-subtle: rgba(255, 255, 255, 0.04);
   --border-default: rgba(255, 255, 255, 0.06);
+  /* Premium gold accent for achievements */
+  --gold-primary: #ffdf00;
+  --gold-secondary: #d4af37;
+  --gold-border-subtle: rgba(212, 175, 55, 0.12);
   /* Next.js font variables (--font-bebas, --font-outfit) are set on html in layout.tsx */
   --font-bebas: 'Bebas Neue', sans-serif;
   --font-outfit: 'Outfit', system-ui, sans-serif;
   --font-display: 'Bebas Neue', var(--font-bebas), sans-serif;
   --font-body: 'Outfit', var(--font-outfit), system-ui, sans-serif;
   --badge-color: #00e5a0;
+  /* Emerald Midnight palette */
+  --bg-deep: rgba(10, 18, 16, 0.96);
+  --accent-gold: rgba(212, 175, 125, 0.15);
+  --highlight-gold: #d4af7d;
 }
 
 /* ---------- Base Styles & Root Layout ---------- */
@@ -153,6 +163,7 @@ body::after {
   border-radius: 4px;
 }
 
+
 /* ---------- Selection ---------- */
 ::selection {
   background: rgba(139, 92, 246, 0.3);
@@ -168,17 +179,36 @@ body::after {
     -webkit-backdrop-filter: blur(12px);
   }
 
+  /* Shared card glow effect (green tint, gradient bg, corner orb) – use on any dashboard card */
+  .card-glow {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 229, 160, 0.06);
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+  }
+  .card-glow::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 160, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
   /* ---------- Dashboard Bento Grid ---------- */
   .bento-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 18px;
+    gap: 12px; /* X on all breakpoints */
   }
   .bento-ring-stats {
     display: grid;
     grid-template-columns: auto 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 14px;
+    gap: 12px; /* X between ring + stats */
     grid-column: 1 / -1;
   }
   .bento-ring {
@@ -203,6 +233,255 @@ body::after {
     @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
     border-color: rgba(30, 221, 139, 0.15);
+  }
+  /* When card-glow is applied, use same shade on glass/ring cards (desktop) */
+  .glass-card.card-glow,
+  .ring-card.card-glow {
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    border: 1px solid rgba(0, 229, 160, 0.06);
+  }
+  /* First card (calorie ring) on laptop: no corner highlight */
+  .ring-card.card-glow::after {
+    display: none;
+  }
+  /* Hero card tints for dashboard-style pages */
+  .glass-card-tint-emerald {
+    background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
+    border-color: rgba(30, 221, 139, 0.15);
+  }
+  .glass-card-tint-violet {
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.1) 0%, rgba(255, 255, 255, 0.02) 65%);
+    border-color: rgba(139, 92, 246, 0.2);
+  }
+  .glass-card-tint-cyan {
+    background: linear-gradient(145deg, rgba(6, 182, 212, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
+    border-color: rgba(6, 182, 212, 0.18);
+  }
+  .glass-card-tint-amber {
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
+    border-color: rgba(245, 158, 11, 0.18);
+  }
+  .glass-card-tint-rose {
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
+    border-color: rgba(239, 68, 68, 0.18);
+  }
+  /* Water page: header card matches water cards (neutral dark, no blue gradient) */
+  .water-page .dashboard-page-header-card {
+    background-color: #141B21;
+    border-color: #1E293B;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+  }
+
+  /* Water page: ensure gaps between buttons and between summary cards are visible */
+  .water-page .grid.grid-cols-4 {
+    gap: 1rem;
+  }
+  .water-page .grid.grid-cols-2.gap-4 {
+    gap: 1rem;
+  }
+  /* Food page: layered neutral cards with subtle amber accent (no strong highlight) */
+  .food-page .glass-card,
+  .food-page .glass-card-tint-emerald,
+  .food-page .glass-card-tint-amber {
+    background-color: rgba(10, 10, 10, 0.96);        /* deep neutral surface */
+    border-color: rgba(38, 38, 38, 1);               /* neutral-800 border */
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);     /* soft depth */
+  }
+  @media (max-width: 1023px) {
+    .food-page .dashboard-page-header-card {
+      background-color: rgba(10, 10, 10, 0.96);
+      border-color: rgba(38, 38, 38, 1);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+    }
+  }
+
+  /* Achievements page – strict neutral dark with gold accents only on data */
+  .achievements-page {
+    background-color: #000000;
+  }
+
+  .achievements-page .dashboard-page-header-card {
+    background:
+      linear-gradient(145deg, rgba(255, 223, 0, 0.10) 0%, #0a0a0a 32%, #000000 100%);
+    border-color: var(--gold-border-subtle);
+    box-shadow: none;
+  }
+
+  /* Foreground cards are flat, neutral dark with subtle border depth */
+  .achievements-page .glass-card,
+  .achievements-page .glass-card-elevated,
+  .achievements-page .achievements-gold-card {
+    background-color: #171717;
+    border: 1px solid var(--gold-border-subtle);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Achievements typography: ensure clear silver/off-white contrast */
+  .achievements-page .text-text-muted {
+    color: #a3a3a3;
+  }
+
+  .achievements-page .text-text-secondary {
+    color: #e0e0e0;
+  }
+
+  /* Gold gradient utility – used only for progress bars and key numerics */
+  .achievements-gold-gradient-bg {
+    background-image: linear-gradient(90deg, var(--gold-primary), var(--gold-secondary));
+  }
+
+  .achievements-gold-gradient-text {
+    background-image: linear-gradient(90deg, var(--gold-primary), var(--gold-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Project page: soft neutral charcoal cards */
+  .project-page .dashboard-page-header-card,
+  .project-page .glass-card {
+    background-color: #18181b; /* ~bg-zinc-900 */
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05); /* border-white/5 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+  }
+
+  /* Project page: clearer typography hierarchy */
+  .project-page h1,
+  .project-page h2,
+  .project-page h3 {
+    color: #ffffff;
+  }
+
+  .project-page p,
+  .project-page li {
+    color: #ffffff;
+  }
+
+  /* Workout page:
+     NOTE: All workout-related design tokens (deep red background, borders, accents)
+     are now defined in tailwind.config.ts under the workout-* colors.
+     Avoid adding workout-specific colors or overrides here to prevent conflicts
+     with component-level Tailwind classes (e.g. WorkoutCard, Button). */
+
+  /* Weight page: dark grey tint for every card (desktop + mobile), same shade for all (match More tile) */
+  .weight-page .glass-card,
+  .weight-page .glass-card-tint-violet {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.98) 65%);
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+  @media (max-width: 1023px) {
+    .weight-page .dashboard-page-header-card {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.98) 65%);
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  /* Settings page: charcoal + pale blush tint for cards and header, but keep default subtle border (no extra highlight) */
+  .settings-page .glass-card {
+    background: linear-gradient(145deg, rgba(15, 15, 23, 0.92) 0%, rgba(252, 228, 236, 0.06) 65%);
+  }
+  @media (max-width: 1023px) {
+    .settings-page .dashboard-page-header-card {
+      background: linear-gradient(145deg, rgba(15, 15, 23, 0.92) 0%, rgba(252, 228, 236, 0.06) 65%);
+    }
+  }
+
+  /* "More" page tiles – bring back soft per-feature color, no heavy glow */
+  .more-card {
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.7), rgba(8, 8, 13, 0.98));
+    border-color: rgba(15, 23, 42, 0.85);
+    box-shadow: none;
+  }
+  .more-card-workout {
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.16) 0%, rgba(32, 10, 14, 0.96) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-weight {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.98) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-sleep {
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.2) 0%, rgba(22, 18, 38, 0.95) 65%);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: none;
+  }
+  .more-card-achievements {
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.24) 0%, rgba(24, 18, 8, 0.94) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-insights {
+    background: linear-gradient(145deg, rgba(34, 211, 238, 0.26) 0%, rgba(15, 23, 42, 0.94) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-api {
+    background: linear-gradient(145deg, rgba(34, 211, 238, 0.22) 0%, rgba(8, 47, 73, 0.96) 65%);
+    border-color: rgba(34, 211, 238, 0.4);
+    box-shadow: none;
+  }
+  .more-card-targets {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.24) 0%, rgba(6, 78, 59, 0.96) 65%);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: none;
+  }
+  .more-card-preferences {
+    background: linear-gradient(145deg, rgba(236, 72, 153, 0.24) 0%, rgba(52, 10, 37, 0.96) 65%);
+    border-color: rgba(236, 72, 153, 0.4);
+    box-shadow: none;
+  }
+  .more-card-project {
+    background: linear-gradient(
+      165deg,
+      rgba(30, 30, 45, 0.9) 0%,
+      rgba(10, 10, 15, 1) 100%
+    );
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-settings {
+    background: linear-gradient(145deg, rgba(15, 15, 23, 0.92) 0%, rgba(252, 228, 236, 0.08) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+
+  /* Insights page: header card uses same ultra-dark card styling as content */
+  .insights-page .glass-card {
+    /* Legacy cyan gradient removed in component-level classes */
+  }
+  @media (max-width: 1023px) {
+    .insights-page .dashboard-page-header-card {
+      background-color: #09090b; /* bg-zinc-950 */
+      border-color: #27272a;     /* border-zinc-800 */
+      border-radius: 1rem;       /* rounded-2xl to match main cards */
+      box-shadow: none;          /* remove old glow */
+    }
+  }
+
+  /* Food page: secondary glass buttons use amber tint */
+  .food-page .glass-button-secondary {
+    background-color: rgba(10, 10, 10, 0.96);
+    border-color: rgba(38, 38, 38, 1);
+    color: #fed7aa;
+  }
+  .food-page .glass-button-secondary:hover {
+    background-color: rgba(23, 23, 23, 0.98);
+    border-color: rgba(64, 64, 64, 1);
+    color: #fffbeb;
+  }
+  /* Sleep Tracker: same darker blue/purple shade for all cards, no border highlight */
+  .sleep-tracker-cards .glass-card {
+    border-color: rgba(255, 255, 255, 0.02);
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.14) 0%, rgba(22, 18, 38, 0.92) 65%);
+  }
+  .sleep-tracker-cards .glass-card-tint-violet {
+    border-color: rgba(139, 92, 246, 0.06);
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.14) 0%, rgba(22, 18, 38, 0.92) 65%);
   }
   .ring-wrap {
     @apply relative flex items-center justify-center;
@@ -231,23 +510,131 @@ body::after {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: minmax(100px, 1fr) minmax(100px, 1fr);
-    gap: 14px;
+    gap: 12px; /* X between stat cards */
     grid-column: span 2;
     min-height: 0;
+  }
+  .bento-stats-cards .stat-mini-card {
+    border: 1px solid rgba(0, 229, 160, 0.06);
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .bento-stats-cards .stat-mini-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 160, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* Stat card wrappers: fill grid cell so height matches (laptop) */
+  .bento-stats-cards .stat-card-water,
+  .bento-stats-cards .stat-card-burned,
+  .bento-stats-cards .stat-card-meals,
+  .bento-stats-cards .stat-card-sleep {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .bento-stats-cards .stat-card-water .stat-mini-card,
+  .bento-stats-cards .stat-card-burned .stat-mini-card,
+  .bento-stats-cards .stat-card-meals .stat-mini-card,
+  .bento-stats-cards .stat-card-sleep .stat-mini-card {
+    flex: 1;
+    min-height: 0;
+  }
+  /* Water card: cyan shade (desktop + mobile) – matches Water page */
+  .bento-stats-cards .stat-card-water .stat-mini-card,
+  .m-stats-grid .stat-card-water .stat-mini-card {
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    background: linear-gradient(160deg, #0f1a1f 0%, #0d1820 100%);
+  }
+  .bento-stats-cards .stat-card-water .stat-mini-card::after,
+  .m-stats-grid .stat-card-water .stat-mini-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* Burned card: rose/red shade (desktop + mobile) – matches Workout page */
+  .bento-stats-cards .stat-card-burned .stat-mini-card,
+  .m-stats-grid .stat-card-burned .stat-mini-card {
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: linear-gradient(160deg, #1a0f12 0%, #180d10 100%);
+  }
+  .bento-stats-cards .stat-card-burned .stat-mini-card::after,
+  .m-stats-grid .stat-card-burned .stat-mini-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* Meals card: amber/orange shade (desktop + mobile) – matches Food page */
+  .bento-stats-cards .stat-card-meals .stat-mini-card,
+  .m-stats-grid .stat-card-meals .stat-mini-card {
+    border: 1px solid rgba(245, 158, 11, 0.22);
+    background: linear-gradient(160deg, #1a1608 0%, #181408 100%);
+  }
+  .bento-stats-cards .stat-card-meals .stat-mini-card::after,
+  .m-stats-grid .stat-card-meals .stat-mini-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* Sleep card: blue/purple shade (desktop + mobile) – matches Sleep page */
+  .bento-stats-cards .stat-card-sleep .stat-mini-card,
+  .m-stats-grid .stat-card-sleep .stat-mini-card {
+    border: 1px solid rgba(139, 92, 246, 0.08);
+    background: linear-gradient(160deg, #151a28 0%, #16142a 100%);
+  }
+  .bento-stats-cards .stat-card-sleep .stat-mini-card::after,
+  .m-stats-grid .stat-card-sleep .stat-mini-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.03) 40%, transparent 70%);
+    pointer-events: none;
   }
   .bento-stats-2x2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 14px;
+    gap: 12px; /* X between 2x2 stat cards */
     min-height: 0;
   }
   .bento-macro {
     grid-column: 1 / -1;
   }
   .macro-card {
-    @apply rounded-2xl border border-white/[0.06] px-6 py-5;
-    background: rgba(255, 255, 255, 0.03);
+    @apply rounded-2xl px-6 py-5;
+  }
+  .macro-card.card-glow {
+    border: 1px solid rgba(0, 229, 160, 0.06);
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
   }
   .macro-card .macro-title {
     @apply font-body text-base font-semibold uppercase tracking-wider text-text-muted;
@@ -331,8 +718,11 @@ body::after {
     grid-column: span 2;
   }
   .streak-card {
-    @apply rounded-2xl border border-white/[0.06] px-5 py-5;
-    background: rgba(255, 255, 255, 0.03);
+    @apply rounded-2xl px-5 py-5;
+  }
+  .streak-card.card-glow {
+    border: 1px solid rgba(0, 229, 160, 0.06);
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
   }
   .streak-card .streak-value {
     @apply font-heading text-2xl font-semibold tracking-tight text-text-primary;
@@ -368,11 +758,25 @@ body::after {
   .m-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    gap: 12px; /* X on mobile */
   }
   .m-stats-grid .stat-mini-card {
-    @apply rounded-2xl border border-white/[0.06] px-4 py-4;
-    background: rgba(255, 255, 255, 0.03);
+    @apply rounded-2xl px-4 py-4;
+    border: 1px solid rgba(0, 229, 160, 0.06);
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .m-stats-grid .stat-mini-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 160, 0.03) 0%, transparent 70%);
+    pointer-events: none;
   }
   .m-badges-card {
     @apply rounded-2xl p-4;
@@ -432,11 +836,12 @@ body::after {
   .mobile-fade-up {
     animation: fadeUp 0.5s ease both;
   }
+  /* Card spacing system: X = 12px, 2X = 24px */
   .mobile-dash {
     max-width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-bottom: 0;
+    padding-bottom: 1.5rem; /* 2X bottom space after last card on mobile */
     overflow-y: auto;
     min-height: 100%;
   }
@@ -444,24 +849,34 @@ body::after {
     padding-left: 0;
     padding-right: 0;
   }
+  /* Shared TopBar-style header card for dashboard pages (mobile) */
+  .dashboard-page-header-card {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 22px;
+    border: 1px solid transparent;
+    padding: 20px 20px 18px;
+    background: #111520;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  }
+  /* Sleep page (mobile): header card uses same Midnight Calm surface as other cards */
+  .sleep-page .dashboard-page-header-card {
+    border-color: #1f2937; /* border-slate-800 */
+    background: rgba(15, 23, 42, 0.4); /* bg-slate-900/40 */
+    backdrop-filter: blur(24px);
+  }
+  /* Sleep page (mobile): same distance as home page – mb-3 (12px) between every card */
+  .sleep-page > div.mobile-fade-up {
+    padding-bottom: 0;
+  }
+  /* All dashboard pages (mobile): header wrapper no extra bottom padding so gap = space-y only (12px when space-y-3) */
+  .mobile-dash > div.pb-3 {
+    padding-bottom: 0;
+  }
   .m-calorie-card {
     border-radius: 28px;
     padding: 28px 24px 22px;
-    border: 1px solid rgba(0, 229, 160, 0.12);
-    background: linear-gradient(160deg, #0f1620 0%, #0a1010 100%);
-    position: relative;
-    overflow: hidden;
-  }
-  .m-calorie-card::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    right: -60px;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 229, 160, 0.06) 0%, transparent 70%);
-    pointer-events: none;
   }
   .m-calorie-inner {
     display: flex;
@@ -584,7 +999,7 @@ body::after {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 12px; /* X between recent badge cards on mobile */
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
@@ -601,6 +1016,19 @@ body::after {
     flex-shrink: 0;
   }
 
+  /* Helper layout utilities for card spacing (X / 2X) */
+  .cards-stack-mobile {
+    @apply flex flex-col space-y-3;
+  }
+
+  .cards-stack-desktop {
+    @apply flex flex-col space-y-3;
+  }
+
+  .card-row {
+    @apply gap-3;
+  }
+
   .glass-card-elevated {
     @apply relative overflow-hidden rounded-2xl border border-white/[0.06];
     background: rgba(22, 22, 42, 0.7);
@@ -612,6 +1040,31 @@ body::after {
     @apply w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm
            text-white placeholder-white/30 transition-all duration-200
            focus:border-violet-500/40 focus:bg-white/[0.05] focus:outline-none focus:ring-1 focus:ring-violet-500/20;
+  }
+
+  /* Food page: search input uses amber focus + slightly warmer bg */
+  .food-page .glass-input {
+    border-color: rgba(245, 158, 11, 0.22);
+    background: rgba(24, 18, 8, 0.82);
+  }
+  .food-page .glass-input:focus {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(24, 18, 8, 0.88);
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.28);
+  }
+
+  /* Remove focus outline, ring and glow (e.g. sleep time inputs) */
+  .input-no-focus-ring:focus,
+  .input-no-focus-ring:focus-visible {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    text-shadow: none !important;
+    filter: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-color: transparent !important;
   }
 
   .glass-button {
@@ -819,7 +1272,7 @@ body::after {
     line-height: 1;
   }
 
-/* ----- Badge detail flip animation ----- */
+  /* ----- Badge detail flip animation ----- */
 
 .badge-flip-wrapper {
   perspective: 1400px;

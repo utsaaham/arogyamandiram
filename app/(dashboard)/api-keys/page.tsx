@@ -6,7 +6,7 @@ import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
-import PageHeader from '@/components/ui/PageHeader';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import StatCard from '@/components/ui/StatCard';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -63,25 +63,31 @@ export default function ApiKeysPage() {
   const openAiActive = !!user?.hasOpenAiKey;
   const edamamActive = !!user?.hasEdamamKey;
 
+  const actions = (
+    <Link
+      href="/ai-insights"
+      className="glass-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm"
+    >
+      <Sparkles className="h-4 w-4 text-accent-violet" />
+      Insights
+    </Link>
+  );
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
+    <div className="animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
+      <DashboardPageShell
         title="API Keys"
         subtitle="Connect AI and nutrition providers securely"
         icon={Key}
-        actions={(
-          <Link
-            href="/ai-insights"
-            className="glass-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm"
-          >
-            <Sparkles className="h-4 w-4 text-accent-violet" />
-            Insights
-          </Link>
-        )}
+        iconClassName="text-accent-violet"
+        rightDesktop={actions}
+        mobileVariant="minimal"
       />
 
-      {/* Status summary */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {/* Status summary + forms */}
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
+      <div className="space-y-3 lg:space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4">
         <StatCard
           icon={Sparkles}
           label="OpenAI"
@@ -100,9 +106,9 @@ export default function ApiKeysPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4 lg:items-stretch">
         {/* Left: security + usage */}
-        <div className="flex flex-col gap-6 lg:min-h-0">
+        <div className="flex flex-col gap-3 lg:min-h-0">
           <div className="glass-card rounded-2xl p-6 shrink-0">
             <div className="flex items-start gap-3">
               <Shield className="mt-0.5 h-5 w-5 shrink-0 text-accent-cyan" />
@@ -254,6 +260,8 @@ export default function ApiKeysPage() {
             </button>
           </div>
         </div>
+      </div>
+      </div>
       </div>
     </div>
   );

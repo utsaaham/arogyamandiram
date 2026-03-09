@@ -39,12 +39,12 @@ export default function MobileNav() {
               href={item.href}
               className={cn(
                 'flex flex-1 items-center justify-center py-2 transition-colors',
-                isActive ? 'text-accent-violet' : 'text-text-muted'
+                isActive ? 'text-emerald-400' : 'text-zinc-400'
               )}
             >
               <item.icon
                 aria-label={item.label}
-                className={cn('h-5 w-5', isActive && 'text-accent-violet')}
+                className={cn('h-5 w-5', isActive && 'text-emerald-400')}
               />
             </Link>
           );

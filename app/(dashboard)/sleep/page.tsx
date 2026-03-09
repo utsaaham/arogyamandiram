@@ -18,6 +18,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import ProgressRing from '@/components/ui/ProgressRing';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
@@ -149,7 +150,7 @@ export default function SleepPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 bg-slate-950">
         <div className="h-10" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <CardSkeleton className="h-80" />
@@ -160,126 +161,132 @@ export default function SleepPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-text-primary">
-          <Moon className="h-6 w-6 text-accent-violet" />
-          Sleep Tracker
-        </h1>
-        <p className="text-sm text-text-muted">Last night · {formatDate(todayDate)}</p>
-      </div>
+    <div className="sleep-page cards-stack-desktop flex flex-col animate-fade-in bg-slate-950 max-lg:mobile-dash">
+      <DashboardPageShell
+        title="Sleep Tracker"
+        subtitle={`Last night · ${formatDate(todayDate)}`}
+        icon={Moon}
+        iconClassName="text-emerald-400"
+        mobileVariant="card"
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
-        {/* Left: Progress + Logger */}
-        <div className="space-y-6">
-          {/* Progress Ring + Sleep Score */}
-          <div className="glass-card flex flex-col items-center rounded-2xl p-6 sm:flex-row sm:justify-around">
-            <ProgressRing
-              progress={percent}
-              size={140}
-              strokeWidth={10}
-              color={
-                percent >= 100
-                  ? 'stroke-accent-emerald'
-                  : percent >= 70
-                    ? 'stroke-accent-violet'
-                    : 'stroke-accent-amber'
-              }
-              value={currentSleep ? String(sleepScore ?? '—') : undefined}
-              label={currentSleep ? 'Sleep score' : 'Log sleep'}
-              sublabel={
-                currentSleep
-                  ? `${currentSleep.duration.toFixed(1)}h slept · ${targetHours}h goal`
-                  : 'to see score'
-              }
-            />
-            <div className="mt-4 flex flex-col items-center sm:mt-0">
-              {currentSleep && (
-                <p className="text-sm text-text-muted">
-                  {currentSleep.duration.toFixed(1)}h slept last night
-                </p>
+      <div className="sleep-tracker-cards mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-stretch">
+          {/* Left: Progress + Logger */}
+          <div className="space-y-3 lg:space-y-6">
+            {/* Progress Ring + Sleep Score */}
+            <div
+              className={cn(
+                'relative flex flex-col items-center justify-between rounded-3xl border border-slate-800 bg-slate-900/40',
+                'p-6 backdrop-blur-xl transition-colors hover:border-emerald-500/50 hover:shadow-[0_0_35px_rgba(16,185,129,0.2)] sm:flex-row sm:items-center sm:justify-between md:p-7'
               )}
-              {!currentSleep && (
-                <p className="text-sm text-text-muted">
-                  {remaining > 0 ? `${remaining.toFixed(1)}h to target` : 'Log last night to see score'}
-                </p>
-              )}
+            >
+              <ProgressRing
+                progress={percent}
+                size={140}
+                strokeWidth={10}
+                color={
+                  percent >= 100
+                    ? 'text-emerald-400 stroke-emerald-400'
+                    : percent >= 70
+                      ? 'text-emerald-300 stroke-emerald-300'
+                      : 'text-amber-300 stroke-amber-300'
+                }
+                value={currentSleep ? String(sleepScore ?? '—') : undefined}
+                label={currentSleep ? 'Sleep score' : 'Log sleep'}
+                sublabel={
+                  currentSleep
+                    ? `${currentSleep.duration.toFixed(1)}h slept · ${targetHours}h goal`
+                    : 'to see score'
+                }
+              />
+              <div className="mt-4 flex flex-col items-center sm:mt-0 sm:items-start">
+                {currentSleep && (
+                  <p className="text-sm font-medium text-slate-100">
+                    {currentSleep.duration.toFixed(1)}h slept last night
+                  </p>
+                )}
+                {!currentSleep && (
+                  <p className="text-sm text-emerald-300">
+                    {remaining > 0 ? `${remaining.toFixed(1)}h to target` : 'Log last night to see score'}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
           {/* Sleep Logger */}
-          <div className="glass-card rounded-2xl p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
-              <BedDouble className="h-4 w-4 text-accent-violet" />
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-xl transition-colors hover:border-emerald-500/50 hover:shadow-[0_0_35px_rgba(16,185,129,0.2)] md:p-7">
+            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-100">
+              <BedDouble className="h-4 w-4 text-emerald-400" />
               Log Sleep
             </h2>
             <div className="space-y-4">
               <div className="grid min-w-0 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2">
                 <div className="min-w-0 overflow-hidden">
-                  <label className="text-xs font-medium text-text-muted">Bedtime</label>
+                  <label className="text-xs font-medium text-emerald-300">Bedtime</label>
                   <input
                     type="time"
                     value={bedtime}
                     onChange={(e) => setBedtime(e.target.value)}
-                    className="glass-input mt-1 max-w-full rounded-xl px-3 py-2.5"
+                    className="mt-1 max-w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100 shadow-[0_0_25px_rgba(2,6,23,0.9)] outline-none ring-0 placeholder:text-slate-500 focus-visible:border-emerald-500/70 focus-visible:ring-2 focus-visible:ring-emerald-500/60"
                   />
                 </div>
                 <div className="min-w-0 overflow-hidden">
-                  <label className="text-xs font-medium text-text-muted">Wake time</label>
+                  <label className="text-xs font-medium text-emerald-300">Wake time</label>
                   <input
                     type="time"
                     value={wakeTime}
                     onChange={(e) => setWakeTime(e.target.value)}
-                    className="glass-input mt-1 max-w-full rounded-xl px-3 py-2.5"
+                    className="mt-1 max-w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100 shadow-[0_0_25px_rgba(2,6,23,0.9)] outline-none ring-0 placeholder:text-slate-500 focus-visible:border-emerald-500/70 focus-visible:ring-2 focus-visible:ring-emerald-500/60"
                   />
                 </div>
               </div>
               <div>
-                <p className="text-xs font-medium text-text-muted">
-                  Duration: <span className="font-semibold text-text-primary">{durationHours.toFixed(1)} hours</span>
+                <p className="text-xs font-medium text-emerald-300">
+                  Duration:{' '}
+                  <span className="font-semibold text-slate-100">{durationHours.toFixed(1)} hours</span>
                 </p>
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Quality (1–5)</label>
-                <div className="mt-2 flex gap-1">
+                <label className="text-xs font-medium text-emerald-300">Quality (1–5)</label>
+                <div className="mt-2 flex gap-1.5">
                   {([1, 2, 3, 4, 5] as const).map((q) => (
                     <button
                       key={q}
                       type="button"
                       onClick={() => setQuality(q)}
                       className={cn(
-                        'flex h-9 w-9 items-center justify-center rounded-lg transition-all',
+                        'flex h-9 w-9 items-center justify-center rounded-2xl border text-xs transition-all',
                         quality === q
-                          ? 'bg-accent-amber/20 text-accent-amber'
-                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                          ? 'border-amber-300/70 bg-slate-900/60 text-amber-300 shadow-[0_0_16px_rgba(252,211,77,0.5)]'
+                          : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:bg-slate-900/60'
                       )}
                     >
-                      <Star className="h-4 w-4 fill-current" />
+                      <Star className="h-4 w-4 fill-current drop-shadow-[0_0_8px_rgba(252,211,77,0.6)]" />
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Notes (optional)</label>
+                <label className="text-xs font-medium text-emerald-300">Notes (optional)</label>
                 <input
                   type="text"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Woke up once, had tea late"
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100 shadow-[0_0_25px_rgba(2,6,23,0.9)] outline-none ring-0 placeholder:text-slate-500 focus-visible:border-emerald-500/70 focus-visible:ring-2 focus-visible:ring-emerald-500/60"
                 />
               </div>
               <button
                 onClick={handleLogSleep}
                 disabled={saving}
-                className="glass-button-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_18px_45px_rgba(6,95,70,0.75)] transition hover:bg-emerald-400 disabled:opacity-50"
               >
                 {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-900" />
                 ) : (
                   <>
-                    <Moon className="h-4 w-4" />
+                    <Moon className="h-4 w-4 text-slate-950" />
                     {currentSleep ? 'Update Sleep' : 'Log Sleep'}
                   </>
                 )}
@@ -288,17 +295,17 @@ export default function SleepPage() {
           </div>
         </div>
 
-        {/* Right: Chart + Recent */}
-        <div className="flex flex-col gap-6">
-          {/* Weekly Sleep Chart */}
-          <div className="glass-card overflow-visible rounded-2xl p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
-              <Sunrise className="h-4 w-4 text-accent-amber" />
+        {/* Right: Chart + Recent (gap-3 on mobile to match grid, gap-6 on desktop) */}
+        <div className="flex flex-col gap-3">
+          {/* Weekly Sleep Chart – hidden on mobile */}
+          <div className="hidden overflow-visible rounded-3xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-xl transition-colors hover:border-emerald-500/50 hover:shadow-[0_0_35px_rgba(16,185,129,0.2)] lg:block">
+            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-100">
+              <Sunrise className="h-4 w-4 text-emerald-400" />
               Last 7 Days
             </h2>
             {historyLoading ? (
               <div className="flex min-h-[220px] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
+                <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
               </div>
             ) : chartData.length > 0 ? (
               <div className="min-h-[220px] w-full">
@@ -339,28 +346,28 @@ export default function SleepPage() {
                   />
                   <Bar
                     dataKey="value"
-                    fill="rgba(139, 92, 246, 0.5)"
-                    stroke="rgba(139, 92, 246, 0.9)"
+                    fill="rgba(16, 185, 129, 0.45)"
+                    stroke="rgba(16, 185, 129, 0.95)"
                     radius={[6, 6, 0, 0]}
                   />
                 </BarChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex min-h-[220px] items-center justify-center text-sm text-text-muted">
+              <div className="flex min-h-[220px] items-center justify-center text-sm text-slate-400">
                 Log sleep to see your weekly trend
               </div>
             )}
           </div>
 
           {/* Recent Sleep Log */}
-          <div className="glass-card flex min-h-0 flex-1 flex-col rounded-2xl p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
-              <Clock className="h-4 w-4 text-text-muted" />
+          <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-xl transition-colors hover:border-emerald-500/50 hover:shadow-[0_0_35px_rgba(16,185,129,0.2)]">
+            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-100">
+              <Clock className="h-4 w-4 text-slate-500" />
               Recent Sleep
             </h2>
             {history.filter((h) => h.sleep).length === 0 ? (
-              <p className="py-4 text-center text-xs text-text-muted">No sleep entries yet</p>
+              <p className="py-4 text-center text-xs text-slate-400">No sleep entries yet</p>
             ) : (
               <div className="hide-scrollbar min-h-0 flex-1 space-y-2 max-h-[200px] overflow-y-auto pr-1">
                 {history
@@ -370,13 +377,13 @@ export default function SleepPage() {
                   .map((h) => (
                     <div
                       key={h.date}
-                      className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2.5"
+                      className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-3 py-2.5 transition-colors hover:border-emerald-500/50"
                     >
                       <div>
-                        <p className="text-sm font-medium text-text-primary">
+                        <p className="text-sm font-semibold text-slate-100">
                           {h.sleep!.duration.toFixed(1)}h
                         </p>
-                        <p className="text-[11px] text-text-muted">
+                        <p className="text-[11px] text-slate-400">
                           {displayTime(h.sleep!.bedtime)} → {displayTime(h.sleep!.wakeTime)}
                         </p>
                       </div>
@@ -388,19 +395,20 @@ export default function SleepPage() {
                               className={cn(
                                 'h-3 w-3',
                                 q <= (h.sleep!.quality || 0)
-                                  ? 'fill-accent-amber text-accent-amber'
-                                  : 'text-white/20'
+                                  ? 'fill-amber-300 text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.6)]'
+                                  : 'text-slate-700'
                               )}
                             />
                           ))}
                         </span>
-                        <span className="text-[11px] text-text-muted">{formatDate(h.date)}</span>
+                        <span className="text-[11px] text-slate-500">{formatDate(h.date)}</span>
                       </div>
                     </div>
                   ))}
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>
