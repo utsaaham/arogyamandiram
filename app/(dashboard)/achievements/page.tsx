@@ -59,7 +59,7 @@ export default function AchievementsPage() {
           <div className="relative z-10 flex flex-col gap-4">
             <div className="grid grid-cols-3 gap-3 text-xs sm:text-[11px]">
               {/* Level */}
-              <div className="relative flex flex-col items-center rounded-xl border border-white/10 bg-black/40 px-4 py-3 overflow-hidden transition-all duration-200 hover:border-white/20 hover:bg-white/[0.04] hover:-translate-y-0.5">
+              <div className="relative flex flex-col items-center rounded-xl border border-white/[0.04] bg-black/40 px-4 py-3 overflow-hidden transition-all duration-200 hover:bg-white/[0.02]">
                 <span className="flex w-full items-center justify-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-text-muted text-center">
                   <Star className="h-3 w-3 text-[#f5d76e]" />
                   Level
@@ -71,7 +71,7 @@ export default function AchievementsPage() {
               </div>
 
               {/* Badges */}
-              <div className="relative flex flex-col items-center rounded-xl border border-white/10 bg-black/40 px-4 py-3 overflow-hidden transition-all duration-200 hover:border-white/20 hover:bg-white/[0.04] hover:-translate-y-0.5">
+              <div className="relative flex flex-col items-center rounded-xl border border-white/[0.04] bg-black/40 px-4 py-3 overflow-hidden transition-all duration-200 hover:bg-white/[0.02]">
                 <span className="flex w-full items-center justify-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-text-muted text-center">
                   <Trophy className="h-3 w-3 text-[#f5d76e]" />
                   Badges
@@ -88,7 +88,7 @@ export default function AchievementsPage() {
               </div>
 
               {/* Best active */}
-              <div className="relative flex flex-col items-center rounded-xl border border-white/10 bg-black/40 px-4 py-3 overflow-hidden transition-all duration-200 hover:border-white/20 hover:bg-white/[0.04] hover:-translate-y-0.5">
+              <div className="relative flex flex-col items-center rounded-xl border border-white/[0.04] bg-black/40 px-4 py-3 overflow-hidden transition-all duration-200 hover:bg-white/[0.02]">
                 <span className="flex w-full items-center justify-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-text-muted text-center">
                   <Flame className="h-3 w-3 text-[#f5d76e]" />
                   <span className="hidden sm:inline">Best active</span>
@@ -104,7 +104,7 @@ export default function AchievementsPage() {
             </div>
 
             {/* XP footer progress – matches reference: gold bar, gold text, full width */}
-            <div className="mt-2 border-t border-white/10 pt-3">
+            <div className="mt-2 border-t border-white/[0.04] pt-3">
               <div className="flex w-full items-center gap-3">
                 <span className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-text-muted whitespace-nowrap">
                   XP to Lv {level}

@@ -382,8 +382,8 @@ export default function FoodLogPage() {
                   className={cn(
                     'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                     selectedTab === tab.key
-                      ? 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/40'
-                      : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800'
+                      ? 'bg-orange-500/15 text-orange-400 border border-white/10'
+                      : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800 border border-transparent'
                   )}
                 >
                   {tab.label}
@@ -686,8 +686,8 @@ export default function FoodLogPage() {
                 className={cn(
                   'rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                   caloriePeriod === opt
-                    ? 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/40'
-                    : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800'
+                    ? 'bg-orange-500/15 text-orange-400 border border-white/10'
+                    : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800 border border-transparent'
                 )}
               >
                 {opt === 7 ? '7D' : '1M'}
