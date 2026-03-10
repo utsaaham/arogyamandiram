@@ -176,8 +176,8 @@ export default function SleepPage() {
             {/* Progress Ring + Sleep Score – match card shape */}
             <div
               className={cn(
-                'relative flex flex-col items-center justify-between rounded-2xl bg-gray-800/40',
-                'p-6 shadow-2xl backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between md:p-7'
+              'relative flex flex-col items-center justify-between rounded-2xl bg-[#0b1220] border border-white/10',
+              'p-6 sm:flex-row sm:items-center sm:justify-between md:p-7'
               )}
             >
               <ProgressRing
@@ -208,7 +208,7 @@ export default function SleepPage() {
             </div>
 
           {/* Sleep Logger – styled similar to weight log card */}
-          <div className="bg-gray-800/40 rounded-2xl p-5 shadow-2xl backdrop-blur-xl flex lg:min-h-[280px] flex-col gap-3 md:p-6">
+          <div className="bg-[#0b1220] rounded-2xl border border-white/10 p-5 flex lg:min-h-[280px] flex-col gap-3 md:p-6">
             <h2 className="flex items-center gap-2 text-base font-semibold text-text-primary">
               <BedDouble className="h-4 w-4 text-accent-violet" />
               Log Sleep
@@ -294,7 +294,7 @@ export default function SleepPage() {
         {/* Right: Chart + Recent (match vertical gaps with left) */}
         <div className="flex flex-col gap-2.5">
           {/* Weekly Sleep Chart – hidden on mobile, match card shape */}
-          <div className="hidden overflow-visible rounded-2xl bg-gray-800/40 p-6 shadow-2xl backdrop-blur-xl lg:block">
+          <div className="hidden overflow-visible rounded-2xl bg-[#0b1220] border border-white/10 p-6 lg:block">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
               <Sunrise className="h-4 w-4 text-accent-violet" />
               Last 7 Days
@@ -345,7 +345,7 @@ export default function SleepPage() {
           </div>
 
           {/* Recent Sleep Log – match card shape */}
-          <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-gray-800/40 p-6 shadow-2xl backdrop-blur-xl">
+          <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-[#0b1220] border border-white/10 p-6">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
               <Clock className="h-4 w-4 text-accent-violet" />
               Recent Sleep

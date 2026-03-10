@@ -842,11 +842,13 @@ body {
     background: #111520;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
   }
-  /* Sleep page (mobile): header card uses same Midnight Calm surface as other cards */
+  /* Sleep page (mobile): header card uses same flat Midnight surface as other cards */
   .sleep-page .dashboard-page-header-card {
-    border-color: #1f2937; /* border-slate-800 */
-    background: rgba(15, 23, 42, 0.4); /* bg-slate-900/40 */
-    backdrop-filter: blur(24px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0b1220;
+    box-shadow: none;
+    backdrop-filter: none;
   }
   /* Sleep page (mobile): same distance as home page – mb-3 (12px) between every card */
   .sleep-page > div.mobile-fade-up {
