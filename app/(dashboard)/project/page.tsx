@@ -108,9 +108,9 @@ export default function ProjectPage() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-center text-xs font-medium text-zinc-200 shadow-sm transition-colors hover:border-zinc-700 hover:bg-emerald-500/5 hover:text-zinc-50"
+                    className="flex min-h-[2.25rem] items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 shadow-sm outline-none transition-colors hover:border-zinc-700 hover:bg-emerald-500/5 hover:text-zinc-50 focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:ring-inset"
                   >
-                    {item.label}
+                    <span className="whitespace-nowrap">{item.label}</span>
                   </Link>
                 ))}
               </div>

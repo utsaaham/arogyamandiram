@@ -80,25 +80,6 @@ body {
 
 /* Notch/status bar: content extends edge-to-edge and scrolls under it (no blocking overlay) */
 
-/* ---------- Noise Texture Overlay ---------- */
-body::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  /* Keep the film grain behind all app content and modals
-     so overlays (like badge detail blur) can fully cover
-     the viewport without visible unblurred pixels. */
-  z-index: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
 /* ---------- Auth / landing viewport (center in visible area; mobile bar aware) ---------- */
 .auth-viewport-min-height {
   min-height: 100vh;
@@ -223,11 +204,23 @@ body::after {
     @apply px-3 py-3;
   }
   .recent-badges-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: 10px;
-    align-content: start;
+    overflow-x: auto;
+    overflow-y: hidden;
     min-height: 0;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .recent-badges-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .recent-badges-grid > * {
+    flex-shrink: 0;
+    min-width: 120px;
   }
   .ring-card {
     @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;

@@ -153,9 +153,9 @@ export default function WeightPage() {
         mobileVariant="card"
       />
 
-      {/* Log Weight Card */}
+      {/* Log Weight Card – same surface as Weight History / Range / BMI (bg-gray-900/50 + backdrop-blur) */}
       <div className={cn('mobile-fade-up mobile-dash-px lg:px-0')} style={{ animationDelay: '80ms' }}>
-      <div className="bg-gray-800/40 rounded-2xl p-6 shadow-2xl flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
+      <div className="rounded-2xl bg-gray-900/50 p-6 backdrop-blur-sm flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
         <div className="flex-1">
           <label className="text-xs font-medium text-text-muted">
             Today&apos;s Weight ({units === 'metric' ? 'kg' : 'lbs'})

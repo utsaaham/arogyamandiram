@@ -107,10 +107,10 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/[0.06] bg-bg-surface p-6 shadow-2xl animate-slide-up">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-workout-bg p-6 shadow-lg animate-slide-up">
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-accent-violet" />
+            <Sparkles className="h-5 w-5 text-accent-rose" />
             AI Workout Logger
           </h3>
           <button
@@ -130,7 +130,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder='e.g., 20 min brisk walking and 3 sets of 12 push-ups with 10kg'
-              className="glass-input mt-2 min-h-[100px] w-full rounded-xl px-3 py-2.5 text-sm resize-y"
+              className="mt-2 min-h-[100px] w-full resize-y rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2.5 text-sm text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
               disabled={fetching}
               rows={3}
             />
@@ -138,7 +138,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
             <button
               onClick={handleLookup}
               disabled={fetching || !text.trim()}
-              className="glass-button-primary mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-accent-rose px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-rose/90 disabled:opacity-50"
             >
               {fetching ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -155,7 +155,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
             <button
               type="button"
               onClick={handleBack}
-              className="mt-2 text-xs text-accent-violet hover:underline"
+              className="mt-2 text-xs text-accent-rose hover:underline"
             >
               ← Change description
             </button>
@@ -168,7 +168,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
                   return (
                     <div
                       key={`${w.exercise}-${idx}`}
-                      className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                      className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-3"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -209,7 +209,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
             <button
               onClick={handleAdd}
               disabled={loading || !workouts.length}
-              className="glass-button-primary mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-accent-rose px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-rose/90 disabled:opacity-50"
             >
               {loading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

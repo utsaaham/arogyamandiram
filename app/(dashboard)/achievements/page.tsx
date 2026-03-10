@@ -103,20 +103,20 @@ export default function AchievementsPage() {
               </div>
             </div>
 
-            {/* XP footer progress */}
+            {/* XP footer progress – matches reference: gold bar, gold text, full width */}
             <div className="mt-2 border-t border-white/10 pt-3">
-              <div className="mx-auto flex w-full max-w-[220px] items-center gap-1.5 rounded-full bg-white/[0.03] px-3 py-1">
-                <span className="text-xl font-medium text-text-muted/80">
-                  LV {level}
+              <div className="flex w-full items-center gap-3">
+                <span className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-text-muted whitespace-nowrap">
+                  XP to Lv {level}
                 </span>
-                <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-[2px] flex-1 min-w-0 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full achievements-gold-gradient-bg transition-all duration-500"
                     style={{ width: `${xpPercent}%` }}
                   />
                 </div>
-                <span className="whitespace-nowrap text-[9px] font-medium text-text-secondary">
-                  {xpIntoLevel}/{xpTarget} XP
+                <span className="whitespace-nowrap text-[11px] font-medium text-[#d4a550]">
+                  {xpIntoLevel} / {xpTarget}
                 </span>
               </div>
             </div>

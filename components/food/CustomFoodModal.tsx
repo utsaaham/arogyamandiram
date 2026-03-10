@@ -79,7 +79,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/[0.06] bg-bg-surface p-6 shadow-2xl animate-slide-up">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up">
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-semibold text-text-primary">Add Custom Food</h3>
           <button
@@ -98,7 +98,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+              className="flex-1 mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
               placeholder="e.g., Homemade Upma"
             />
           </div>
@@ -111,7 +111,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
               />
             </div>
             <div className="w-28">
@@ -119,7 +119,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
               >
                 <option value="g">g</option>
                 <option value="ml">ml</option>
@@ -140,7 +140,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -150,7 +150,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -160,7 +160,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -170,7 +170,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -180,7 +180,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={fiber}
                 onChange={(e) => setFiber(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -190,7 +190,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={sugar}
                 onChange={(e) => setSugar(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -200,7 +200,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                 type="number"
                 value={sodium}
                 onChange={(e) => setSodium(e.target.value)}
-                className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -217,7 +217,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
                   className={cn(
                     'flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all',
                     mealType === mt.key
-                      ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                      ? 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/40'
                       : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
                   )}
                 >
@@ -235,7 +235,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
             />
           </div>
         </div>
@@ -243,7 +243,7 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
         <button
           onClick={handleSubmit}
           disabled={loading || !name.trim() || !calories}
-          className="glass-button-primary mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-400 disabled:opacity-50"
         >
           {loading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
