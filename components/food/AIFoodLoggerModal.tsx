@@ -259,10 +259,10 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/[0.06] bg-bg-surface p-6 shadow-2xl animate-slide-up">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up">
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-accent-violet" />
+            <Sparkles className="h-5 w-5 text-orange-400" />
             AI Food Logger
           </h3>
           <button
@@ -280,7 +280,7 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="e.g., 60 ml tomato pappu, 150g rice, 10g chutney, 5 potato chips"
-              className="glass-input mt-2 min-h-[100px] w-full rounded-xl px-3 py-2.5 text-sm resize-y"
+              className="mt-2 min-h-[100px] w-full resize-y rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2.5 text-sm text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
               disabled={fetching}
               rows={3}
             />
@@ -288,7 +288,7 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
             <button
               onClick={handleLookup}
               disabled={fetching || !text.trim()}
-              className="glass-button-primary mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-400 disabled:opacity-50"
             >
               {fetching ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -305,7 +305,7 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
             <button
               type="button"
               onClick={handleBack}
-              className="mt-2 text-xs text-accent-violet hover:underline"
+              className="mt-2 text-xs text-orange-400 hover:underline"
             >
               ← Change description
             </button>
@@ -351,7 +351,7 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
                       className={cn(
                         'flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all',
                         mealType === mt.key
-                          ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                          ? 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/40'
                           : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
                       )}
                     >
@@ -367,14 +367,14 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
                 />
               </div>
             </div>
             <button
               onClick={handleAdd}
               disabled={loading}
-              className="glass-button-primary mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-400 disabled:opacity-50"
             >
               {loading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

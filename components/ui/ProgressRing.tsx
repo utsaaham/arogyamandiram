@@ -16,6 +16,8 @@ interface ProgressRingProps {
   label?: string;
   value?: string;
   sublabel?: string;
+  valueClassName?: string;
+  labelClassName?: string;
 }
 
 export default function ProgressRing({
@@ -28,6 +30,8 @@ export default function ProgressRing({
   label,
   value,
   sublabel,
+  valueClassName,
+  labelClassName,
 }: ProgressRingProps) {
   const center = size / 2;
   const radius = (size - strokeWidth) / 2;
@@ -88,8 +92,8 @@ export default function ProgressRing({
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        {value && <span className="text-lg font-bold text-text-primary">{value}</span>}
-        {label && <span className="text-[10px] font-medium text-text-muted">{label}</span>}
+        {value && <span className={valueClassName ?? 'text-lg font-bold text-text-primary'}>{value}</span>}
+        {label && <span className={labelClassName ?? 'text-[10px] font-medium text-text-muted'}>{label}</span>}
         {sublabel && <span className="text-[9px] text-text-muted">{sublabel}</span>}
       </div>
     </div>

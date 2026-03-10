@@ -8,6 +8,21 @@ const config: Config = {
   ],
   darkMode: 'class',
   theme: {
+    fontSize: {
+      xs: ['0.75rem', { lineHeight: '1rem' }],
+      sm: ['0.875rem', { lineHeight: '1.25rem' }],
+      base: ['1rem', { lineHeight: '1.5rem' }],
+      lg: ['1.125rem', { lineHeight: '1.75rem' }],
+      xl: ['1.05rem', { lineHeight: '1.75rem' }],
+      '2xl': ['1.5rem', { lineHeight: '2rem' }],
+      '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+      '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+      '5xl': ['3rem', { lineHeight: '1' }],
+      '6xl': ['3.75rem', { lineHeight: '1' }],
+      '7xl': ['4.5rem', { lineHeight: '1' }],
+      '8xl': ['6rem', { lineHeight: '1' }],
+      '9xl': ['8rem', { lineHeight: '1' }],
+    },
     extend: {
       colors: {
         bg: {
@@ -40,10 +55,15 @@ const config: Config = {
           pink: '#ec4899',
           'pink-dim': '#831843',
         },
+        // Workout page design tokens (used via bg-workout-bg, border-workout-border, text-workout-accent, etc.)
+        'workout-bg': '#1A1212',
+        'workout-border': '#3D2424',
+        'workout-accent': '#FF4D4D',
+        'workout-label': '#A38F8F',
       },
       fontFamily: {
-        heading: ['var(--font-satoshi)', 'system-ui', 'sans-serif'],
-        body: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-bebas)', 'Bebas Neue', 'sans-serif'],
+        body: ['var(--font-outfit)', 'Outfit', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       borderRadius: {

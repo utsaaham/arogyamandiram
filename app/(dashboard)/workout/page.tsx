@@ -27,10 +27,14 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import ProgressRing from '@/components/ui/ProgressRing';
 import StatCard from '@/components/ui/StatCard';
+import WorkoutCard from '@/components/ui/workout-card';
+import { Button } from '@/components/ui/button';
 import AddWorkoutModal from '@/components/workout/AddWorkoutModal';
 import AIWorkoutLoggerModal from '@/components/workout/AIWorkoutLoggerModal';
+import AIWorkoutPlanModal from '../../../components/workout/AIWorkoutPlanModal';
 import EditWorkoutModal, { type WorkoutEntryForEdit } from '@/components/workout/EditWorkoutModal';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
@@ -83,6 +87,7 @@ export default function WorkoutPage() {
   const { log, loading, refetch } = useDailyLog();
   const [showAdd, setShowAdd] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
   const [showAiLogger, setShowAiLogger] = useState(false);
   const [addingFromAi, setAddingFromAi] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutEntryForEdit | null>(null);
@@ -291,68 +296,94 @@ export default function WorkoutPage() {
     return result;
   })();
 
+  const actionButtons = (
+    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:pb-0 sm:overflow-visible sm:justify-end">
+      <Button
+        onClick={() => setShowAdd(true)}
+        variant="secondary"
+        className="flex shrink-0 items-center gap-2"
+      >
+        <Plus className="h-4 w-4" />
+        Add Workout
+      </Button>
+      <Button
+        onClick={() => setShowPlan(true)}
+        variant="secondary"
+        className="flex shrink-0 items-center gap-2"
+      >
+        <Dumbbell className="h-4 w-4 text-accent-rose" />
+        Workout Plan
+      </Button>
+      <Button
+        onClick={() => setShowAiLogger(true)}
+        variant="secondary"
+        className="flex shrink-0 items-center gap-2"
+      >
+        <Sparkles className="h-4 w-4 text-accent-violet" />
+        AI Logger
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Workouts</h1>
-          <p className="text-sm text-text-muted">{formatDate(today)}</p>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:justify-end">
-          <button
-            onClick={() => setShowAdd(true)}
-            className="glass-button-primary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-          >
-            <Plus className="h-4 w-4" />
-            Add Workout
-          </button>
-          <button
-            onClick={() => setShowAiLogger(true)}
-            className="glass-button-secondary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-          >
-            <Sparkles className="h-4 w-4 text-accent-violet" />
-            AI Logger
-          </button>
-        </div>
+    <div className="workout-page animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
+      <DashboardPageShell
+        title="Workouts"
+        subtitle={formatDate(today)}
+        icon={Dumbbell}
+        iconClassName="text-accent-rose"
+        rightDesktop={actionButtons}
+        mobileVariant="card"
+        mobileCardClassName="border border-transparent bg-workout-bg text-text-primary shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+      />
+
+      <div className="mobile-fade-up mobile-dash-px lg:hidden">
+        {actionButtons}
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard
-          icon={Flame}
-          label="Workout Burn"
-          value={formatNumber(Math.round(totalBurned))}
-          subtitle={`of ${formatNumber(burnGoal)} goal`}
-          iconColor="text-accent-rose"
-        />
-        <StatCard
-          icon={Timer}
-          label="Duration"
-          value={`${totalDuration}`}
-          subtitle={`of ${recommendedMinutes} min goal`}
-          iconColor="text-accent-amber"
-        />
-        <StatCard
-          icon={Dumbbell}
-          label="Workouts"
-          value={`${workouts.length}`}
-          subtitle="sessions today"
-          iconColor="text-accent-violet"
-        />
-        <StatCard
-          icon={Zap}
-          label="Total Sets"
-          value={`${totalSets}`}
-          subtitle="across all exercises"
-          iconColor="text-accent-emerald"
-        />
+      <div className="mobile-fade-up mobile-dash-px lg:px-0">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard
+            icon={Flame}
+            label="Workout Burn"
+            value={formatNumber(Math.round(totalBurned))}
+            subtitle={`of ${formatNumber(burnGoal)} goal`}
+            iconColor="text-accent-rose"
+            variant="workout"
+          />
+          <StatCard
+            icon={Timer}
+            label="Duration"
+            value={`${totalDuration}`}
+            subtitle={`of ${recommendedMinutes} min goal`}
+            iconColor="text-accent-amber"
+            variant="workout"
+          />
+          <StatCard
+            icon={Dumbbell}
+            label="Workouts"
+            value={`${workouts.length}`}
+            subtitle="sessions today"
+            iconColor="text-accent-violet"
+            variant="workout"
+          />
+          <StatCard
+            icon={Zap}
+            label="Total Sets"
+            value={`${totalSets}`}
+            subtitle="across all exercises"
+            iconColor="text-accent-emerald"
+            variant="workout"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mobile-fade-up mobile-dash-px lg:px-0">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
         {/* Workout List */}
         <div className="flex flex-col lg:col-span-2">
-          <div className="glass-card flex flex-1 flex-col rounded-2xl p-6">
+          <WorkoutCard className="flex flex-1 flex-col p-6">
             <h2 className="mb-4 text-base font-semibold text-text-primary">Today&apos;s Sessions</h2>
 
             {workouts.length === 0 ? (
@@ -362,12 +393,13 @@ export default function WorkoutPage() {
                 </div>
                 <p className="text-sm text-text-muted">No workouts logged today</p>
                 <p className="text-xs text-text-muted">Track your exercises to see calories burned</p>
-                <button
+                <Button
                   onClick={() => setShowAdd(true)}
-                  className="glass-button-primary mt-2 rounded-xl px-4 py-2 text-sm font-medium"
+                  variant="primary"
+                  className="mt-2"
                 >
                   Add your first workout
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex-1 space-y-3 overflow-y-auto hide-scrollbar">
@@ -465,13 +497,13 @@ export default function WorkoutPage() {
                 })}
               </div>
             )}
-          </div>
+          </WorkoutCard>
         </div>
 
         {/* Right Sidebar */}
         <div className="space-y-4">
           {/* Burn Goal Ring */}
-          <div className="glass-card flex flex-col items-center rounded-2xl p-6">
+          <WorkoutCard className="flex flex-col items-center p-6">
             <ProgressRing
               progress={burnPercent}
               size={130}
@@ -489,11 +521,11 @@ export default function WorkoutPage() {
             <p className="mt-1 text-center text-xs text-text-muted">
               {recommendedMinutes} min target · {totalDuration} min done
             </p>
-          </div>
+          </WorkoutCard>
 
           {/* Burn Rate */}
           {totalDuration > 0 && (
-            <div className="glass-card rounded-2xl p-5">
+            <WorkoutCard className="p-5">
               <h3 className="mb-3 text-sm font-semibold text-text-primary">Burn Rate</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
@@ -512,12 +544,12 @@ export default function WorkoutPage() {
               <p className="mt-2 text-[10px] text-text-muted">
                 Average rate across {workouts.length} session{workouts.length !== 1 ? 's' : ''} ({totalDuration} min)
               </p>
-            </div>
+            </WorkoutCard>
           )}
 
           {/* Category Breakdown */}
           {Object.keys(categoryBreakdown).length > 0 && (
-            <div className="glass-card rounded-2xl p-5">
+            <WorkoutCard className="p-5">
               <h3 className="mb-3 text-sm font-semibold text-text-primary">Category Breakdown</h3>
               <div className="space-y-3">
                 {Object.entries(categoryBreakdown).map(([cat, data]) => {
@@ -552,12 +584,12 @@ export default function WorkoutPage() {
                   );
                 })}
               </div>
-            </div>
+            </WorkoutCard>
           )}
 
-          {/* Baseline calorie burn */}
+          {/* Baseline calorie burn – hidden on mobile, visible on laptop/desktop */}
           {baselineBurn && (
-            <div className="glass-card rounded-2xl p-5">
+            <WorkoutCard className="hidden lg:block p-5">
               <h3 className="mb-3 text-sm font-semibold text-text-primary">Baseline Burn</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
@@ -582,13 +614,13 @@ export default function WorkoutPage() {
               <p className="mt-2 text-[10px] text-text-muted">
                 Baseline so far ({formatNumber(baselineSoFar)}) + workout ({formatNumber(Math.round(totalBurned))})
               </p>
-            </div>
+            </WorkoutCard>
           )}
         </div>
       </div>
 
-      {/* Workout History Chart */}
-      <div className="glass-card rounded-2xl p-6">
+      {/* Workout History Chart – hidden on mobile, visible on laptop/desktop */}
+      <WorkoutCard className="hidden lg:block p-6 lg:mt-4">
         <h2 className="mb-4 text-base font-semibold text-text-primary">Last 7 Days</h2>
         {historyLoading ? (
           <div className="flex h-[200px] items-center justify-center">
@@ -683,6 +715,7 @@ export default function WorkoutPage() {
             </div>
           </div>
         )}
+      </WorkoutCard>
       </div>
 
       {/* Modals */}
@@ -698,6 +731,11 @@ export default function WorkoutPage() {
           onClose={() => setShowAiLogger(false)}
           onAdd={handleAddFromAi}
           loading={addingFromAi}
+        />
+      )}
+      {showPlan && (
+        <AIWorkoutPlanModal
+          onClose={() => setShowPlan(false)}
         />
       )}
       {editingWorkout && (

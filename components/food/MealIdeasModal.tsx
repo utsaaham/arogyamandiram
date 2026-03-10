@@ -82,7 +82,7 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl border border-white/[0.06] bg-bg-surface shadow-2xl animate-slide-up">
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 shadow-lg animate-slide-up">
         {/* Fixed header + form — does not scroll */}
         <div className="shrink-0 space-y-4 p-6 pb-4">
           <div className="flex items-start justify-between">
@@ -114,13 +114,13 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
                 {MEAL_TYPE_OPTIONS.map(({ value, label }) => (
                   <label
                     key={value}
-                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-xs transition-colors has-[:checked]:border-accent-violet/40 has-[:checked]:bg-accent-violet/10"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-xs transition-colors has-[:checked]:border-orange-400/40 has-[:checked]:bg-orange-500/10 has-[:checked]:text-orange-400"
                   >
                     <input
                       type="checkbox"
                       checked={selectedMealTypes.includes(value)}
                       onChange={() => toggleMealType(value)}
-                      className="h-3.5 w-3.5 rounded border-white/30 text-accent-violet"
+                      className="h-3.5 w-3.5 rounded border-white/30 text-orange-400"
                     />
                     {label}
                   </label>
@@ -133,12 +133,12 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
                 value={mealPrefs}
                 onChange={(e) => setMealPrefs(e.target.value)}
                 placeholder="Preferences (e.g., vegetarian, high protein)"
-                className="glass-input flex-1 min-w-0 rounded-xl px-3 py-2 text-xs"
+                className="flex-1 min-w-0 rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-xs text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
               />
               <button
                 onClick={fetchMeals}
                 disabled={loading || !hasApiKey || selectedMealTypes.length === 0}
-                className="glass-button-primary flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-orange-400 disabled:opacity-50"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChefHat className="h-4 w-4" />}
                 {meals ? 'Regenerate' : 'Get Suggestions'}
@@ -158,17 +158,17 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 pb-6 hide-scrollbar">
         {loading && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-accent-violet" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
             <p className="text-sm text-text-muted">Generating meal ideas…</p>
           </div>
         )}
 
         {!loading && meals && meals.length > 0 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {meals.map((meal, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all hover:border-white/[0.1]"
+                className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 shadow-lg"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -184,9 +184,9 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
                   )}
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-text-secondary">{meal.description}</p>
-                <div className="mt-3 grid grid-cols-4 gap-1 rounded-lg bg-white/[0.03] p-2">
+                <div className="mt-4 grid grid-cols-4 gap-1 rounded-lg border border-neutral-800 bg-black/40 p-2">
                   <div className="text-center">
-                    <p className="text-xs font-bold text-accent-emerald">{meal.calories}</p>
+                    <p className="text-xs font-bold text-orange-400">{meal.calories}</p>
                     <p className="text-[9px] text-text-muted">kcal</p>
                   </div>
                   <div className="text-center">

@@ -1,14 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import { DM_Sans, JetBrains_Mono } from 'next/font/google';
+import { Bebas_Neue, Outfit, JetBrains_Mono } from 'next/font/google';
 import AuthProvider from '@/components/AuthProvider';
 import { SafeAreaProvider } from '@/components/SafeAreaProvider';
 import ToastContainer from '@/components/ui/Toast';
 import './globals.css';
 
 // ---------- Fonts ----------
-const dmSans = DM_Sans({
+const bebasNeue = Bebas_Neue({
   subsets: ['latin'],
-  variable: '--font-dm-sans',
+  weight: '400',
+  variable: '--font-bebas',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-outfit',
   display: 'swap',
 });
 
@@ -52,7 +60,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: 'Arogyamandiram',
+    title: 'ArogyaM',
     statusBarStyle: 'black-translucent',
   },
 };
@@ -70,8 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`dark ${dmSans.variable} ${jetbrainsMono.variable}`}
-      style={{ ['--font-satoshi' as string]: "'DM Sans', system-ui, sans-serif" }}
+      className={`dark ${bebasNeue.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="font-body bg-bg-primary text-text-primary antialiased">

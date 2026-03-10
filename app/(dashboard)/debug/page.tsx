@@ -15,6 +15,7 @@ import { getPageLabel, getAgentLabel, getAgentDescription } from '@/lib/debugLog
 import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 
 type SectionId = (typeof SECTION_IDS)[number];
 
@@ -273,14 +274,18 @@ export default function DebugPage() {
     agentLogs.length > 0 ? getLogTimestamp(agentLogs[0]) : '';
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] max-h-[calc(100vh-8rem)] flex-col overflow-hidden bg-[#0a0a0a]">
+    <div className="animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
+      <DashboardPageShell
+        title="AI Request Inspector"
+        subtitle="Logs stored in .debug-logs/"
+        mobileVariant="minimal"
+      />
+      <div className="mobile-fade-up mobile-dash-px lg:px-0 flex-1 min-h-0 flex flex-col" style={{ animationDelay: '80ms' }}>
+    <div className="flex h-[calc(100vh-12rem)] lg:h-[calc(100vh-8rem)] max-h-[calc(100vh-12rem)] lg:max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a0a]">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#1e1e1e] px-4 py-3">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-zinc-100">
-            AI Request Inspector
-          </h1>
-          <p className="mt-0.5 text-[11px] text-zinc-500">
-            Logs stored in .debug-logs/
+          <p className="text-[11px] text-zinc-500">
+            Pages using AI · Select an agent to view logs
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -516,6 +521,8 @@ export default function DebugPage() {
             </div>
           )}
         </div>
+      </div>
+    </div>
       </div>
     </div>
   );
