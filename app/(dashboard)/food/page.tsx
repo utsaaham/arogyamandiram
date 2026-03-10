@@ -302,25 +302,25 @@ export default function FoodLogPage() {
     <div className="flex min-h-[44px] flex-nowrap items-center gap-2 overflow-x-auto">
       <button
         onClick={() => setShowCustom(true)}
-        className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
+      className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-neutral-800 bg-neutral-900/50 px-3 py-2.5 text-sm font-medium text-neutral-400 shadow-lg sm:px-4"
       >
-        <PlusCircle className="h-4 w-4" />
+        <PlusCircle className="h-4 w-4 text-neutral-400" />
         Custom Food
       </button>
       {user?.hasOpenAiKey && (
         <>
           <button
             onClick={() => setShowMealIdeas(true)}
-            className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-neutral-800 bg-neutral-900/50 px-3 py-2.5 text-sm font-medium text-neutral-400 shadow-lg sm:px-4"
           >
-            <ChefHat className="h-4 w-4" />
+            <ChefHat className="h-4 w-4 text-neutral-400" />
             Meal Ideas
           </button>
           <button
             onClick={() => setShowAILogger(true)}
-            className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-neutral-800 bg-neutral-900/50 px-3 py-2.5 text-sm font-medium text-neutral-400 shadow-lg sm:px-4"
           >
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4 text-neutral-400" />
             AI Logger
           </button>
         </>
@@ -334,7 +334,9 @@ export default function FoodLogPage() {
         title="Food Log"
         subtitle={formatDate(today)}
         icon={Utensils}
-        iconClassName="text-accent-amber"
+        iconClassName="text-neutral-400"
+        titleClassName="text-neutral-400"
+        subtitleClassName="text-neutral-400"
         rightDesktop={actionButtons}
         mobileVariant="card"
       />
@@ -382,7 +384,7 @@ export default function FoodLogPage() {
                   className={cn(
                     'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                     selectedTab === tab.key
-                      ? 'bg-orange-500/15 text-orange-400 border border-white/10'
+                      ? 'bg-orange-500/15 text-neutral-400 border border-white/10'
                       : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800 border border-transparent'
                   )}
                 >
@@ -398,7 +400,7 @@ export default function FoodLogPage() {
             {selectedTab === 'logged' ? (
               meals.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <Utensils className="h-8 w-8 text-neutral-600" />
+                  <Utensils className="h-8 w-8 text-neutral-400" />
                   <p className="text-sm text-neutral-400">Nothing logged today yet</p>
                   <p className="text-xs text-neutral-500">Use search or AI Logger to add meals.</p>
                 </div>
@@ -414,12 +416,12 @@ export default function FoodLogPage() {
                         className="group flex items-center gap-2 rounded-2xl border border-neutral-800 bg-neutral-900/60 px-3 py-2.5"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-orange-400">{meal.name}</p>
+                          <p className="truncate text-sm font-medium text-neutral-400">{meal.name}</p>
                           <p className="text-[11px] text-neutral-400">
                             {meal.quantity}{meal.unit} · {mealLabels[meal.mealType || 'snack']} · {formatTime(meal.time)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-xs font-semibold text-orange-400">
+                        <span className="shrink-0 text-xs font-semibold text-neutral-400">
                           {Math.round(meal.calories)} kcal
                         </span>
                         <button
@@ -522,52 +524,54 @@ export default function FoodLogPage() {
               value={formatNumber(Math.round(totalCal))}
               label="kcal consumed"
               sublabel={`of ${formatNumber(targets.dailyCalories)}`}
+              valueClassName="text-lg font-bold text-neutral-400"
+              labelClassName="text-[10px] font-medium text-neutral-400"
             />
             <div className="w-full space-y-3">
               <MacroBar
                 label="Protein"
                 current={log?.totalProtein || 0}
                 target={targets.protein}
-                color="bg-accent-violet"
-                bgColor="bg-accent-violet/10"
+                color="bg-accent-violet/70"
+                bgColor="bg-accent-violet/20"
               />
               <MacroBar
                 label="Carbs"
                 current={log?.totalCarbs || 0}
                 target={targets.carbs}
-                color="bg-accent-amber"
-                bgColor="bg-accent-amber/10"
+                color="bg-accent-amber/70"
+                bgColor="bg-accent-amber/20"
               />
               <MacroBar
                 label="Fat"
                 current={log?.totalFat || 0}
                 target={targets.fat}
-                color="bg-accent-rose"
-                bgColor="bg-accent-rose/10"
+                color="bg-accent-rose/70"
+                bgColor="bg-accent-rose/20"
               />
               <MacroBar
                 label="Fiber"
                 current={log?.totalFiber || 0}
                 target={25}
                 unit="g"
-                color="bg-accent-emerald"
-                bgColor="bg-accent-emerald/10"
+                color="bg-accent-emerald/70"
+                bgColor="bg-accent-emerald/20"
               />
               <MacroBar
                 label="Sugar"
                 current={log?.totalSugar || 0}
                 target={50}
                 unit="g"
-                color="bg-amber-400"
-                bgColor="bg-amber-400/10"
+                color="bg-amber-400/70"
+                bgColor="bg-amber-400/20"
               />
               <MacroBar
                 label="Sodium"
                 current={log?.totalSodium || 0}
                 target={2300}
                 unit=" mg"
-                color="bg-sky-500"
-                bgColor="bg-sky-500/10"
+                color="bg-sky-500/70"
+                bgColor="bg-sky-500/20"
               />
             </div>
           </div>
@@ -575,14 +579,14 @@ export default function FoodLogPage() {
           {/* Logged Meals */}
           <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 shadow-lg sm:p-5">
             <div className="mb-3 flex shrink-0 items-center justify-between">
-              <h3 className="text-sm font-semibold text-orange-400">Logged Meals</h3>
+              <h3 className="text-sm font-semibold text-neutral-400">Logged Meals</h3>
               <span className="text-xs text-neutral-400">{meals.length} items</span>
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-1 hide-scrollbar">
             {meals.length === 0 ? (
             <div className="py-6 text-center">
-                <Utensils className="mx-auto h-6 w-6 text-neutral-600" />
+                <Utensils className="mx-auto h-6 w-6 text-neutral-400" />
                 <p className="mt-2 text-xs text-neutral-400">No meals logged yet</p>
               </div>
             ) : (
@@ -600,12 +604,12 @@ export default function FoodLogPage() {
                         onClick={() => setExpandedMealType(isExpanded ? null : type)}
                         className="flex w-full items-center gap-3 px-3 py-2.5"
                       >
-                        <MealIcon className="h-4 w-4 text-orange-400" />
-                        <span className="flex-1 text-left text-xs font-medium text-neutral-200">
+                        <MealIcon className="h-4 w-4 text-neutral-400" />
+                        <span className="flex-1 text-left text-xs font-medium text-neutral-400">
                           {mealLabels[type]}
-                          <span className="ml-1 text-neutral-500">({items.length})</span>
+                          <span className="ml-1 text-neutral-400">({items.length})</span>
                         </span>
-                        <span className="text-xs font-semibold text-orange-400">
+                        <span className="text-xs font-semibold text-neutral-400">
                           {Math.round(groupCals)} kcal
                         </span>
                         {isExpanded ? (
@@ -627,20 +631,22 @@ export default function FoodLogPage() {
                                 className="group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-neutral-800/80"
                               >
                                 {meal.isCustom ? (
-                                  <PlusCircle className="h-3 w-3 shrink-0 text-orange-400" />
+                                  <PlusCircle className="h-3 w-3 shrink-0 text-neutral-400" />
                                 ) : (
-                                  <div className={cn(
-                                    'h-1.5 w-1.5 shrink-0 rounded-full',
-                                    'bg-orange-400'
-                                  )} />
+                                  <div
+                                    className={cn(
+                                      'h-1.5 w-1.5 shrink-0 rounded-full',
+                                      'bg-neutral-400'
+                                    )}
+                                  />
                                 )}
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs text-neutral-200">{meal.name}</p>
+                                  <p className="truncate text-xs text-neutral-400">{meal.name}</p>
                                   <p className="text-[10px] text-neutral-500">
                                     {meal.quantity}{meal.unit} · {formatTime(meal.time)}
                                   </p>
                                 </div>
-                                <span className="shrink-0 text-xs text-orange-400">
+                                <span className="shrink-0 text-xs text-neutral-400">
                                   {Math.round(meal.calories)}
                                 </span>
                                 <button
@@ -675,8 +681,8 @@ export default function FoodLogPage() {
 
       {/* Daily calories history – hidden on mobile */}
       <div className="hidden lg:block rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 shadow-lg sm:p-6 lg:mt-4">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold text-orange-400">Daily Calories</h2>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-neutral-400">Daily Calories</h2>
           <div className="flex gap-1.5">
             {[7, 30].map((opt) => (
               <button
@@ -686,7 +692,7 @@ export default function FoodLogPage() {
                 className={cn(
                   'rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                   caloriePeriod === opt
-                    ? 'bg-orange-500/15 text-orange-400 border border-white/10'
+                    ? 'bg-orange-500/15 text-neutral-400 border border-white/10'
                     : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800 border border-transparent'
                 )}
               >

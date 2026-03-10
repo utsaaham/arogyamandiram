@@ -23,6 +23,10 @@ interface DashboardPageShellProps {
   mobileCardClassName?: string;
   /** Additional class for the desktop header row */
   className?: string;
+  /** Optional class override for the title text (desktop + mobile) */
+  titleClassName?: string;
+  /** Optional class override for the subtitle text (desktop + mobile) */
+  subtitleClassName?: string;
   /** Children: desktop and mobile content. Use same children for both; shell only renders header. */
   children?: React.ReactNode;
 }
@@ -41,6 +45,8 @@ export default function DashboardPageShell({
   mobileVariant = 'card',
   mobileExtra,
   mobileCardClassName,
+  titleClassName,
+  subtitleClassName,
   className,
   children,
 }: DashboardPageShellProps) {
@@ -49,12 +55,24 @@ export default function DashboardPageShell({
       {/* Desktop header (lg+) */}
       <div className={cn('hidden lg:flex flex-wrap items-start justify-between gap-4', className)}>
         <div>
-          <h1 className="font-heading text-[32px] font-normal tracking-[0.03em] leading-none text-text-primary flex items-center gap-2">
+          <h1
+            className={cn(
+              'font-heading text-[32px] font-normal tracking-[0.03em] leading-none text-text-primary flex items-center gap-2',
+              titleClassName
+            )}
+          >
             {Icon && <Icon className={cn('h-7 w-7 shrink-0', iconClassName)} />}
             <span>{title}</span>
           </h1>
           {subtitle != null && (
-            <p className="font-body mt-1.5 text-[13px] text-text-muted">{subtitle}</p>
+            <p
+              className={cn(
+                'font-body mt-1.5 text-[13px] text-text-muted',
+                subtitleClassName
+              )}
+            >
+              {subtitle}
+            </p>
           )}
         </div>
         {rightDesktop != null && (
@@ -70,13 +88,21 @@ export default function DashboardPageShell({
               {Icon && <Icon className={cn('h-10 w-10 shrink-0', iconClassName)} />}
               <div className="flex flex-col">
                 <p
-                  className="m-0 text-white text-[22px] font-extrabold leading-tight"
+                  className={cn(
+                    'm-0 text-white text-[22px] font-extrabold leading-tight',
+                    titleClassName
+                  )}
                   style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}
                 >
                   {title}
                 </p>
                 {subtitle != null && (
-                  <p className="mt-1 text-[11px] text-white">
+                  <p
+                    className={cn(
+                      'mt-1 text-[11px] text-white',
+                      subtitleClassName
+                    )}
+                  >
                     {subtitle}
                   </p>
                 )}
@@ -91,12 +117,24 @@ export default function DashboardPageShell({
           </div>
         ) : (
           <div>
-            <h1 className="font-heading text-2xl font-normal tracking-tight text-text-primary flex items-center gap-3">
+            <h1
+              className={cn(
+                'font-heading text-2xl font-normal tracking-tight text-text-primary flex items-center gap-3',
+                titleClassName
+              )}
+            >
               {Icon && <Icon className={cn('h-8 w-8 shrink-0', iconClassName)} />}
               <span>{title}</span>
             </h1>
             {subtitle != null && (
-              <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
+              <p
+                className={cn(
+                  'mt-1 text-sm text-text-muted',
+                  subtitleClassName
+                )}
+              >
+                {subtitle}
+              </p>
             )}
           </div>
         )}

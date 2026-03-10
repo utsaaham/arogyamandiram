@@ -19,17 +19,17 @@ interface MealSuggestion {
 }
 
 const mealTypeLabels: Record<string, string> = {
-  breakfast: '🌅 Breakfast',
-  lunch: '☀️ Lunch',
-  dinner: '🌙 Dinner',
-  snack: '🍪 Snack',
+  breakfast: 'Breakfast',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+  snack: 'Snack',
 };
 
 const MEAL_TYPE_OPTIONS = [
-  { value: 'breakfast', label: '🌅 Breakfast' },
-  { value: 'lunch', label: '☀️ Lunch' },
-  { value: 'dinner', label: '🌙 Dinner' },
-  { value: 'snack', label: '🍪 Snack' },
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'dinner', label: 'Dinner' },
+  { value: 'snack', label: 'Snack' },
 ] as const;
 
 interface MealIdeasModalProps {
@@ -86,7 +86,7 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
         {/* Fixed header + form — does not scroll */}
         <div className="shrink-0 space-y-4 p-6 pb-4">
           <div className="flex items-start justify-between">
-            <h3 className="text-lg font-semibold text-text-primary">Meal Ideas</h3>
+          <h3 className="text-lg font-semibold text-neutral-400">Meal Ideas</h3>
             <button
               onClick={onClose}
               className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-white/[0.06]"
@@ -99,8 +99,8 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
             <div className="flex items-start gap-3 rounded-xl border border-accent-amber/20 bg-accent-amber/5 p-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent-amber" />
               <div>
-                <p className="text-xs font-medium text-text-primary">Connect your OpenAI API key</p>
-                <p className="mt-0.5 text-[11px] text-text-muted">
+                <p className="text-xs font-medium text-neutral-400">Connect your OpenAI API key</p>
+                <p className="mt-0.5 text-[11px] text-neutral-400">
                   Add a key in <Link href="/settings" className="text-accent-violet hover:underline">Settings → API Keys</Link> to get AI meal suggestions.
                 </p>
               </div>
@@ -109,18 +109,18 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
 
           <div className="space-y-3">
             <div>
-              <p className="mb-2 text-xs font-medium text-text-muted">Meal types</p>
+              <p className="mb-2 text-xs font-medium text-neutral-400">Meal types</p>
               <div className="flex flex-wrap gap-2">
                 {MEAL_TYPE_OPTIONS.map(({ value, label }) => (
                   <label
                     key={value}
-                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-xs transition-colors has-[:checked]:border-orange-400/40 has-[:checked]:bg-orange-500/10 has-[:checked]:text-orange-400"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-xs text-neutral-400 transition-colors has-[:checked]:border-white/30 has-[:checked]:bg-white/[0.06]"
                   >
                     <input
                       type="checkbox"
                       checked={selectedMealTypes.includes(value)}
                       onChange={() => toggleMealType(value)}
-                      className="h-3.5 w-3.5 rounded border-white/30 text-orange-400"
+                      className="h-3.5 w-3.5 rounded border-white/30 text-neutral-400"
                     />
                     {label}
                   </label>
@@ -133,7 +133,7 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
                 value={mealPrefs}
                 onChange={(e) => setMealPrefs(e.target.value)}
                 placeholder="Preferences (e.g., vegetarian, high protein)"
-                className="flex-1 min-w-0 rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-xs text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
+                className="flex-1 min-w-0 rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-xs text-neutral-400 placeholder:text-neutral-500 input-no-focus-ring"
               />
               <button
                 onClick={fetchMeals}
@@ -159,7 +159,7 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
         {loading && (
           <div className="flex flex-col items-center gap-3 py-8">
             <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
-            <p className="text-sm text-text-muted">Generating meal ideas…</p>
+                <p className="text-sm text-neutral-400">Generating meal ideas…</p>
           </div>
         )}
 
@@ -172,18 +172,18 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-text-primary">{meal.name}</p>
-                    <p className="text-[11px] text-text-muted">
+                    <p className="text-sm font-semibold text-neutral-400">{meal.name}</p>
+                    <p className="text-[11px] text-neutral-400">
                       {mealTypeLabels[meal.mealType] || meal.mealType}
                     </p>
                   </div>
                   {meal.isVegetarian ? (
-                    <Leaf className="h-4 w-4 shrink-0 text-accent-emerald" />
+                    <Leaf className="h-4 w-4 shrink-0 text-neutral-400" />
                   ) : (
-                    <Drumstick className="h-4 w-4 shrink-0 text-accent-rose" />
+                    <Drumstick className="h-4 w-4 shrink-0 text-neutral-400" />
                   )}
                 </div>
-                <p className="mt-2 text-xs leading-relaxed text-text-secondary">{meal.description}</p>
+                <p className="mt-2 text-xs leading-relaxed text-neutral-400">{meal.description}</p>
                 <div className="mt-4 grid grid-cols-4 gap-1 rounded-lg border border-neutral-800 bg-black/40 p-2">
                   <div className="text-center">
                     <p className="text-xs font-bold text-orange-400">{meal.calories}</p>
@@ -204,8 +204,8 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
                 </div>
                 {meal.ingredients?.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-[10px] font-medium text-text-muted">Ingredients:</p>
-                    <p className="text-[11px] text-text-secondary">
+                    <p className="text-[10px] font-medium text-neutral-400">Ingredients:</p>
+                    <p className="text-[11px] text-neutral-400">
                       {meal.ingredients.join(', ')}
                     </p>
                   </div>
@@ -217,9 +217,9 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
 
         {!loading && !meals && hasApiKey && (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <ChefHat className="h-10 w-10 text-text-muted" />
-            <p className="text-sm text-text-muted">Get personalized Indian meal suggestions</p>
-            <p className="text-xs text-text-muted">Based on your goals and nutritional needs</p>
+          <ChefHat className="h-10 w-10 text-neutral-400" />
+            <p className="text-sm text-neutral-400">Get personalized Indian meal suggestions</p>
+            <p className="text-xs text-neutral-400">Based on your goals and nutritional needs</p>
           </div>
         )}
         </div>

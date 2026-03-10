@@ -270,9 +270,13 @@ body {
   }
   @media (max-width: 1023px) {
     .food-page .dashboard-page-header-card {
-      background-color: rgba(10, 10, 10, 0.96);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      /* Match Logged Meals card surface: rounded-2xl, neutral border, neutral-900/50 bg, no extra glow */
+      border-radius: 1rem; /* rounded-2xl */
+      background-color: rgba(23, 23, 23, 0.5); /* approx Tailwind bg-neutral-900/50 */
+      border: 1px solid rgba(255, 255, 255, 0.04); /* same as .food-page .border-neutral-800 override */
       box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
   }
   /* Food page: all bordered cards – normal border, no glow */

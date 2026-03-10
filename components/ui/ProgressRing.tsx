@@ -92,9 +92,9 @@ export default function ProgressRing({
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        {value && <span className={valueClassName ?? 'text-lg font-bold text-text-primary'}>{value}</span>}
-        {label && <span className={labelClassName ?? 'text-[10px] font-medium text-text-muted'}>{label}</span>}
-        {sublabel && <span className="text-[9px] text-text-muted">{sublabel}</span>}
+        {value && <span className={valueClassName ?? 'text-lg font-bold text-neutral-400'}>{value}</span>}
+        {label && <span className={labelClassName ?? 'text-[10px] font-medium text-neutral-400'}>{label}</span>}
+        {sublabel && <span className="text-[9px] text-neutral-400">{sublabel}</span>}
       </div>
     </div>
   );
