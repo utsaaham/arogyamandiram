@@ -17,6 +17,7 @@ interface BadgeIconProps {
   category: BadgeCategory;
   emoji: string;
   className?: string;
+  size?: number;
 }
 
 function getThemeForBadge(badgeId: string, category: BadgeCategory) {
@@ -81,4 +82,3 @@ export function BadgeIcon({ badgeId, category, emoji, className }: BadgeIconProp
       );
   }
 }
-

@@ -16,6 +16,7 @@ import {
   Sparkles,
   ChefHat,
 } from 'lucide-react';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import ProgressRing from '@/components/ui/ProgressRing';
 import MacroBar from '@/components/ui/MacroBar';
 import MetricChart from '@/components/ui/MetricChart';
@@ -297,55 +298,65 @@ export default function FoodLogPage() {
     return acc;
   }, {});
 
-  return (
-    <div className="animate-fade-in">
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Food Log</h1>
-          <p className="text-sm text-text-muted">{formatDate(today)}</p>
-        </div>
-        <div className="flex min-h-[44px] flex-nowrap items-center gap-2 overflow-x-auto sm:mt-0">
+  const actionButtons = (
+    <div className="flex min-h-[44px] flex-nowrap items-center gap-2 overflow-x-auto">
+      <button
+        onClick={() => setShowCustom(true)}
+        className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
+      >
+        <PlusCircle className="h-4 w-4" />
+        Custom Food
+      </button>
+      {user?.hasOpenAiKey && (
+        <>
           <button
-            onClick={() => setShowCustom(true)}
+            onClick={() => setShowMealIdeas(true)}
             className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
           >
-            <PlusCircle className="h-4 w-4" />
-            Custom Food
+            <ChefHat className="h-4 w-4" />
+            Meal Ideas
           </button>
-          {user?.hasOpenAiKey && (
-            <>
-              <button
-                onClick={() => setShowMealIdeas(true)}
-                className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
-              >
-                <ChefHat className="h-4 w-4" />
-                Meal Ideas
-              </button>
-              <button
-                onClick={() => setShowAILogger(true)}
-                className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
-              >
-                <Sparkles className="h-4 w-4" />
-                AI Logger
-              </button>
-            </>
-          )}
-        </div>
+          <button
+            onClick={() => setShowAILogger(true)}
+            className="glass-button-secondary flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium sm:px-4"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI Logger
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="food-page animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop min-h-screen bg-neutral-950">
+      <DashboardPageShell
+        title="Food Log"
+        subtitle={formatDate(today)}
+        icon={Utensils}
+        iconClassName="text-accent-amber"
+        rightDesktop={actionButtons}
+        mobileVariant="card"
+      />
+
+      {/* Mobile: action buttons below header */}
+      <div className="mobile-fade-up mobile-dash-px flex flex-nowrap gap-2 overflow-x-auto lg:hidden" style={{ animationDelay: '80ms' }}>
+        {actionButtons}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '160ms' }}>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
         {/* Left Column: Search + Results */}
         <div className="flex flex-col gap-4 lg:col-span-2 lg:h-[760px]">
           {/* Search bar + Tabs (search bar always visible; only content in box changes by tab) */}
           <div className="shrink-0 space-y-3">
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="glass-input w-full rounded-xl py-3 pl-10 pr-10 text-base sm:text-sm"
+                className="w-full rounded-xl border border-neutral-800 bg-neutral-900/70 py-3 pl-10 pr-10 text-base text-neutral-100 shadow-none outline-none ring-0 placeholder:text-neutral-500 sm:text-sm"
                 placeholder="Search foods... try 'paneer', 'dosa', 'biryani'"
               />
               {query && (
@@ -354,7 +365,7 @@ export default function FoodLogPage() {
                     setQuery('');
                     doSearch('', selectedTab === 'recent' ? 'all' : selectedTab);
                   }}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-orange-400"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -369,12 +380,10 @@ export default function FoodLogPage() {
                   type="button"
                   onClick={() => handleTabChange(tab.key)}
                   className={cn(
-                    'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                    'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                     selectedTab === tab.key
-                      ? tab.key === 'recent' || tab.key === 'logged'
-                        ? 'bg-accent-emerald/15 text-accent-emerald ring-1 ring-accent-emerald/30'
-                        : 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
-                      : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                      ? 'bg-orange-500/15 text-orange-400 border border-white/10'
+                      : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800 border border-transparent'
                   )}
                 >
                   {tab.label}
@@ -384,33 +393,33 @@ export default function FoodLogPage() {
           </div>
 
           {/* Single content area: recent items or search results */}
-          <div className="glass-card flex min-h-0 flex-col rounded-2xl p-4 sm:p-5 lg:min-h-0 lg:flex-1">
+          <div className="flex min-h-0 flex-col rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 shadow-lg sm:p-5 lg:min-h-0 lg:flex-1">
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 hide-scrollbar lg:min-h-0">
             {selectedTab === 'logged' ? (
               meals.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <Utensils className="h-8 w-8 text-text-muted" />
-                  <p className="text-sm text-text-muted">Nothing logged today yet</p>
-                  <p className="text-xs text-text-muted">Use search or AI Logger to add meals.</p>
+              <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Utensils className="h-8 w-8 text-neutral-600" />
+                  <p className="text-sm text-neutral-400">Nothing logged today yet</p>
+                  <p className="text-xs text-neutral-500">Use search or AI Logger to add meals.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="mb-3 text-xs text-text-muted">Today&apos;s logged ({meals.length})</p>
+                  <p className="mb-3 text-xs text-neutral-400">Today&apos;s logged ({meals.length})</p>
                   {meals.map((meal, i) => {
                     const mealId = meal._id ?? (meal as { id?: string }).id;
                     const deleteKey = mealId ?? `index-${i}`;
                     return (
                       <div
                         key={mealId || i}
-                        className="group flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+                        className="group flex items-center gap-2 rounded-2xl border border-neutral-800 bg-neutral-900/60 px-3 py-2.5"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-text-primary">{meal.name}</p>
-                          <p className="text-[11px] text-text-muted">
+                          <p className="truncate text-sm font-medium text-orange-400">{meal.name}</p>
+                          <p className="text-[11px] text-neutral-400">
                             {meal.quantity}{meal.unit} · {mealLabels[meal.mealType || 'snack']} · {formatTime(meal.time)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-xs font-semibold text-text-secondary">
+                        <span className="shrink-0 text-xs font-semibold text-orange-400">
                           {Math.round(meal.calories)} kcal
                         </span>
                         <button
@@ -421,7 +430,7 @@ export default function FoodLogPage() {
                           }}
                           disabled={deletingId === deleteKey}
                           title="Remove meal"
-                          className="shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                          className="shrink-0 rounded p-1 text-neutral-500 opacity-100 transition-all hover:bg-red-500/10 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
                         >
                           {deletingId === deleteKey ? (
                             <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
@@ -436,18 +445,18 @@ export default function FoodLogPage() {
               )
             ) : selectedTab === 'recent' ? (
               recentLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-emerald border-t-transparent" />
+              <div className="flex items-center justify-center py-12">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
                 </div>
               ) : recentFoods.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <Utensils className="h-8 w-8 text-text-muted" />
-                  <p className="text-sm text-text-muted">We will remember foods you log here.</p>
-                  <p className="text-xs text-text-muted">Pick a category and log a meal to see recent items.</p>
+              <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Utensils className="h-8 w-8 text-neutral-600" />
+                  <p className="text-sm text-neutral-400">We will remember foods you log here.</p>
+                  <p className="text-xs text-neutral-500">Pick a category and log a meal to see recent items.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="mb-3 text-xs text-text-muted">
+                  <p className="mb-3 text-xs text-neutral-400">
                     Your recent foods ({recentFoods.length})
                   </p>
                   {recentFoods.map((item) => (
@@ -466,11 +475,11 @@ export default function FoodLogPage() {
               )
             ) : searching ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
               </div>
             ) : results.length > 0 ? (
               <div className="space-y-2">
-                <p className="mb-3 text-xs text-text-muted">{results.length} results</p>
+                <p className="mb-3 text-xs text-neutral-400">{results.length} results</p>
                 {results.map((food) => (
                   <FoodResultCard
                     key={food.id}
@@ -481,20 +490,20 @@ export default function FoodLogPage() {
               </div>
             ) : query || selectedTab !== 'all' ? (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <Utensils className="h-8 w-8 text-text-muted" />
-                <p className="text-sm text-text-muted">No foods found</p>
+                <Utensils className="h-8 w-8 text-neutral-600" />
+                <p className="text-sm text-neutral-400">No foods found</p>
                 <button
                   onClick={() => setShowCustom(true)}
-                  className="text-xs font-medium text-accent-violet hover:underline"
+                  className="text-xs font-medium text-orange-400 hover:underline"
                 >
                   Add custom food instead
                 </button>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <Search className="h-8 w-8 text-text-muted" />
-                <p className="text-sm text-text-muted">Search for Indian foods to add</p>
-                <p className="text-xs text-text-muted">150+ items: curries, dals, breads, sweets & more</p>
+                <Search className="h-8 w-8 text-neutral-600" />
+                <p className="text-sm text-neutral-400">Search for Indian foods to add</p>
+                <p className="text-xs text-neutral-500">150+ items: curries, dals, breads, sweets & more</p>
               </div>
             )}
             </div>
@@ -504,7 +513,7 @@ export default function FoodLogPage() {
         {/* Right Column: Today's Log */}
         <div className="flex flex-col gap-4 lg:h-[760px]">
           {/* Calorie Summary */}
-          <div className="glass-card flex flex-col items-center gap-4 rounded-2xl p-4 sm:p-6">
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 shadow-lg sm:p-6">
             <ProgressRing
               progress={calPercent}
               size={120}
@@ -564,17 +573,17 @@ export default function FoodLogPage() {
           </div>
 
           {/* Logged Meals */}
-          <div className="glass-card flex-1 min-h-0 flex flex-col rounded-2xl p-4 sm:p-5">
+          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 shadow-lg sm:p-5">
             <div className="mb-3 flex shrink-0 items-center justify-between">
-              <h3 className="text-sm font-semibold text-text-primary">Logged Meals</h3>
-              <span className="text-xs text-text-muted">{meals.length} items</span>
+              <h3 className="text-sm font-semibold text-orange-400">Logged Meals</h3>
+              <span className="text-xs text-neutral-400">{meals.length} items</span>
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-1 hide-scrollbar">
             {meals.length === 0 ? (
-              <div className="py-6 text-center">
-                <Utensils className="mx-auto h-6 w-6 text-text-muted" />
-                <p className="mt-2 text-xs text-text-muted">No meals logged yet</p>
+            <div className="py-6 text-center">
+                <Utensils className="mx-auto h-6 w-6 text-neutral-600" />
+                <p className="mt-2 text-xs text-neutral-400">No meals logged yet</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -586,28 +595,28 @@ export default function FoodLogPage() {
                   const isExpanded = expandedMealType === type;
 
                   return (
-                    <div key={type} className="rounded-xl bg-white/[0.03]">
+                    <div key={type} className="rounded-2xl border border-neutral-800 bg-neutral-900/60">
                       <button
                         onClick={() => setExpandedMealType(isExpanded ? null : type)}
                         className="flex w-full items-center gap-3 px-3 py-2.5"
                       >
-                        <MealIcon className="h-4 w-4 text-text-secondary" />
-                        <span className="flex-1 text-left text-xs font-medium text-text-primary">
+                        <MealIcon className="h-4 w-4 text-orange-400" />
+                        <span className="flex-1 text-left text-xs font-medium text-neutral-200">
                           {mealLabels[type]}
-                          <span className="ml-1 text-text-muted">({items.length})</span>
+                          <span className="ml-1 text-neutral-500">({items.length})</span>
                         </span>
-                        <span className="text-xs font-semibold text-text-secondary">
+                        <span className="text-xs font-semibold text-orange-400">
                           {Math.round(groupCals)} kcal
                         </span>
                         {isExpanded ? (
-                          <ChevronUp className="h-3.5 w-3.5 text-text-muted" />
+                          <ChevronUp className="h-3.5 w-3.5 text-neutral-500" />
                         ) : (
-                          <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
+                          <ChevronDown className="h-3.5 w-3.5 text-neutral-500" />
                         )}
                       </button>
 
                       {isExpanded && (
-                        <div className="space-y-1 border-t border-white/[0.04] px-3 py-2">
+                        <div className="space-y-1 border-t border-neutral-800 px-3 py-2">
                           {items.map((meal, idxInGroup) => {
                             const mealId = meal._id ?? (meal as { id?: string }).id;
                             const globalIndex = meals.indexOf(meal);
@@ -615,23 +624,23 @@ export default function FoodLogPage() {
                             return (
                               <div
                                 key={mealId ?? `${type}-${idxInGroup}`}
-                                className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/[0.03]"
+                                className="group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-neutral-800/80"
                               >
                                 {meal.isCustom ? (
-                                  <PlusCircle className="h-3 w-3 shrink-0 text-accent-amber" />
+                                  <PlusCircle className="h-3 w-3 shrink-0 text-orange-400" />
                                 ) : (
                                   <div className={cn(
                                     'h-1.5 w-1.5 shrink-0 rounded-full',
-                                    'bg-accent-emerald'
+                                    'bg-orange-400'
                                   )} />
                                 )}
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs text-text-primary">{meal.name}</p>
-                                  <p className="text-[10px] text-text-muted">
+                                  <p className="truncate text-xs text-neutral-200">{meal.name}</p>
+                                  <p className="text-[10px] text-neutral-500">
                                     {meal.quantity}{meal.unit} · {formatTime(meal.time)}
                                   </p>
                                 </div>
-                                <span className="shrink-0 text-xs text-text-secondary">
+                                <span className="shrink-0 text-xs text-orange-400">
                                   {Math.round(meal.calories)}
                                 </span>
                                 <button
@@ -641,7 +650,7 @@ export default function FoodLogPage() {
                                   }}
                                   disabled={deletingId === deleteKey}
                                   title="Remove meal"
-                                  className="ml-1 shrink-0 rounded p-1 text-text-muted opacity-100 transition-all hover:bg-accent-rose/10 hover:text-accent-rose sm:opacity-0 sm:group-hover:opacity-100"
+                                  className="ml-1 shrink-0 rounded p-1 text-neutral-500 opacity-100 transition-all hover:bg-red-500/10 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
                                 >
                                   {deletingId === deleteKey ? (
                                     <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
@@ -664,10 +673,10 @@ export default function FoodLogPage() {
         </div>
       </div>
 
-      {/* Daily calories history */}
-      <div className="glass-card mt-2 rounded-2xl p-4 sm:p-6">
+      {/* Daily calories history – hidden on mobile */}
+      <div className="hidden lg:block rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 shadow-lg sm:p-6 lg:mt-4">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold text-text-primary">Daily Calories</h2>
+          <h2 className="text-base font-semibold text-orange-400">Daily Calories</h2>
           <div className="flex gap-1.5">
             {[7, 30].map((opt) => (
               <button
@@ -675,10 +684,10 @@ export default function FoodLogPage() {
                 type="button"
                 onClick={() => setCaloriePeriod(opt)}
                 className={cn(
-                  'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                  'rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                   caloriePeriod === opt
-                    ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
-                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                    ? 'bg-orange-500/15 text-orange-400 border border-white/10'
+                    : 'bg-neutral-900/70 text-neutral-400 hover:bg-neutral-800 border border-transparent'
                 )}
               >
                 {opt === 7 ? '7D' : '1M'}
@@ -689,7 +698,7 @@ export default function FoodLogPage() {
 
         {calorieHistoryLoading ? (
           <div className="flex h-56 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
           </div>
         ) : (
           <MetricChart
@@ -705,6 +714,7 @@ export default function FoodLogPage() {
             height={200}
           />
         )}
+      </div>
       </div>
 
       {/* Modals */}

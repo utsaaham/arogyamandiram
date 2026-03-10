@@ -7,7 +7,7 @@ import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import { getTargetsForUser } from '@/lib/health';
-import PageHeader from '@/components/ui/PageHeader';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import StatCard from '@/components/ui/StatCard';
 
 export default function TargetsPage() {
@@ -116,15 +116,19 @@ export default function TargetsPage() {
   const formulaTargets = user ? getTargetsForUser(user) : null;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
+    <div className="animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
+      <DashboardPageShell
         title="Targets"
         subtitle="Fine-tune daily goals for calories, water, and macros"
         icon={Target}
+        iconClassName="text-accent-amber"
+        mobileVariant="minimal"
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      {/* Summary + content */}
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
+      <div className="space-y-3 lg:space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 lg:gap-4">
         <StatCard
           icon={Flame}
           label="Calories"
@@ -162,9 +166,10 @@ export default function TargetsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '160ms' }}>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4 lg:items-stretch">
         {/* Left: actions + context */}
-        <div className="flex flex-col gap-6 lg:min-h-0">
+        <div className="flex flex-col gap-3 lg:min-h-0">
           <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">How targets work</p>
             <p className="mt-2 text-xs leading-relaxed text-text-muted">
@@ -364,6 +369,9 @@ export default function TargetsPage() {
             </button>
           </div>
         </div>
+      </div>
+      </div>
+      </div>
       </div>
     </div>
   );

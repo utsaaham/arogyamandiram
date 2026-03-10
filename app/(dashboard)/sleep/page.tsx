@@ -15,9 +15,9 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import ProgressRing from '@/components/ui/ProgressRing';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
@@ -160,99 +160,102 @@ export default function SleepPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-text-primary">
-          <Moon className="h-6 w-6 text-accent-violet" />
-          Sleep Tracker
-        </h1>
-        <p className="text-sm text-text-muted">Last night · {formatDate(todayDate)}</p>
-      </div>
+    <div className="sleep-page cards-stack-desktop flex flex-col animate-fade-in max-lg:mobile-dash">
+      <DashboardPageShell
+        title="Sleep Tracker"
+        subtitle={`Last night · ${formatDate(todayDate)}`}
+        icon={Moon}
+        iconClassName="text-accent-violet"
+        mobileVariant="card"
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
-        {/* Left: Progress + Logger */}
-        <div className="space-y-6">
-          {/* Progress Ring + Sleep Score */}
-          <div className="glass-card flex flex-col items-center rounded-2xl p-6 sm:flex-row sm:justify-around">
-            <ProgressRing
-              progress={percent}
-              size={140}
-              strokeWidth={10}
-              color={
-                percent >= 100
-                  ? 'stroke-accent-emerald'
-                  : percent >= 70
-                    ? 'stroke-accent-violet'
-                    : 'stroke-accent-amber'
-              }
-              value={currentSleep ? String(sleepScore ?? '—') : undefined}
-              label={currentSleep ? 'Sleep score' : 'Log sleep'}
-              sublabel={
-                currentSleep
-                  ? `${currentSleep.duration.toFixed(1)}h slept · ${targetHours}h goal`
-                  : 'to see score'
-              }
-            />
-            <div className="mt-4 flex flex-col items-center sm:mt-0">
-              {currentSleep && (
-                <p className="text-sm text-text-muted">
-                  {currentSleep.duration.toFixed(1)}h slept last night
-                </p>
+      <div className="sleep-tracker-cards mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:items-stretch">
+          {/* Left: Progress + Logger */}
+          <div className="space-y-2.5 lg:space-y-3">
+            {/* Progress Ring + Sleep Score – match card shape */}
+            <div
+              className={cn(
+                'relative flex flex-col items-center justify-between rounded-2xl bg-gray-800/40',
+                'p-6 shadow-2xl backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between md:p-7'
               )}
-              {!currentSleep && (
-                <p className="text-sm text-text-muted">
-                  {remaining > 0 ? `${remaining.toFixed(1)}h to target` : 'Log last night to see score'}
-                </p>
-              )}
+            >
+              <ProgressRing
+                progress={percent}
+                size={140}
+                strokeWidth={10}
+                color="text-accent-violet stroke-accent-violet"
+                value={currentSleep ? String(sleepScore ?? '—') : undefined}
+                label={currentSleep ? 'Sleep score' : 'Log sleep'}
+                sublabel={
+                  currentSleep
+                    ? `${currentSleep.duration.toFixed(1)}h slept · ${targetHours}h goal`
+                    : 'to see score'
+                }
+              />
+              <div className="mt-4 flex flex-col items-center sm:mt-0 sm:items-start">
+                {currentSleep && (
+                  <p className="text-sm font-medium text-text-primary">
+                    {currentSleep.duration.toFixed(1)}h slept last night
+                  </p>
+                )}
+                {!currentSleep && (
+                  <p className="text-sm text-text-muted">
+                    {remaining > 0 ? `${remaining.toFixed(1)}h to target` : 'Log last night to see score'}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Sleep Logger */}
-          <div className="glass-card rounded-2xl p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
+          {/* Sleep Logger – styled similar to weight log card */}
+          <div className="bg-gray-800/40 rounded-2xl p-5 shadow-2xl backdrop-blur-xl flex lg:min-h-[280px] flex-col gap-3 md:p-6">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-text-primary">
               <BedDouble className="h-4 w-4 text-accent-violet" />
               Log Sleep
             </h2>
-            <div className="space-y-4">
+            <p className="mt-1 text-xs text-text-muted">
+              Track last night&apos;s sleep so we can calculate your recovery and trends.
+            </p>
+            <div className="mt-3 space-y-3">
               <div className="grid min-w-0 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2">
                 <div className="min-w-0 overflow-hidden">
-                  <label className="text-xs font-medium text-text-muted">Bedtime</label>
+                  <label className="block text-xs font-medium text-text-muted">Bedtime</label>
                   <input
                     type="time"
                     value={bedtime}
                     onChange={(e) => setBedtime(e.target.value)}
-                    className="glass-input mt-1 max-w-full rounded-xl px-3 py-2.5"
+                    className="mt-2 max-w-full rounded-xl bg-black/40 px-3 py-2.5 text-sm text-white outline-none ring-0 placeholder:text-gray-500 focus:outline-none focus:ring-0"
                   />
                 </div>
                 <div className="min-w-0 overflow-hidden">
-                  <label className="text-xs font-medium text-text-muted">Wake time</label>
+                  <label className="block text-xs font-medium text-text-muted">Wake time</label>
                   <input
                     type="time"
                     value={wakeTime}
                     onChange={(e) => setWakeTime(e.target.value)}
-                    className="glass-input mt-1 max-w-full rounded-xl px-3 py-2.5"
+                    className="mt-2 max-w-full rounded-xl bg-black/40 px-3 py-2.5 text-sm text-white outline-none ring-0 placeholder:text-gray-500 focus:outline-none focus:ring-0"
                   />
                 </div>
               </div>
               <div>
                 <p className="text-xs font-medium text-text-muted">
-                  Duration: <span className="font-semibold text-text-primary">{durationHours.toFixed(1)} hours</span>
+                  Duration:{' '}
+                  <span className="font-semibold text-text-primary">{durationHours.toFixed(1)} hours</span>
                 </p>
               </div>
               <div>
                 <label className="text-xs font-medium text-text-muted">Quality (1–5)</label>
-                <div className="mt-2 flex gap-1">
+                <div className="mt-2 flex gap-1.5">
                   {([1, 2, 3, 4, 5] as const).map((q) => (
                     <button
                       key={q}
                       type="button"
                       onClick={() => setQuality(q)}
                       className={cn(
-                        'flex h-9 w-9 items-center justify-center rounded-lg transition-all',
+                        'flex h-9 w-9 items-center justify-center rounded-xl border text-xs transition-all',
                         quality === q
-                          ? 'bg-accent-amber/20 text-accent-amber'
-                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                          ? 'border-amber-300/70 bg-white/[0.06] text-amber-300'
+                          : 'border-white/[0.06] bg-black/40 text-text-muted hover:bg-white/[0.06]'
                       )}
                     >
                       <Star className="h-4 w-4 fill-current" />
@@ -267,16 +270,16 @@ export default function SleepPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Woke up once, had tea late"
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="mt-1 w-full rounded-xl bg-black/40 px-3 py-2.5 text-sm text-white outline-none ring-0 placeholder:text-gray-500 focus:outline-none focus:ring-0"
                 />
               </div>
               <button
                 onClick={handleLogSleep}
                 disabled={saving}
-                className="glass-button-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-500 px-6 py-2.5 text-sm font-semibold text-white shadow-none transition-colors duration-200 hover:bg-purple-400 hover:shadow-none active:scale-95 disabled:opacity-50"
               >
                 {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
                   <>
                     <Moon className="h-4 w-4" />
@@ -288,17 +291,17 @@ export default function SleepPage() {
           </div>
         </div>
 
-        {/* Right: Chart + Recent */}
-        <div className="flex flex-col gap-6">
-          {/* Weekly Sleep Chart */}
-          <div className="glass-card overflow-visible rounded-2xl p-6">
+        {/* Right: Chart + Recent (match vertical gaps with left) */}
+        <div className="flex flex-col gap-2.5">
+          {/* Weekly Sleep Chart – hidden on mobile, match card shape */}
+          <div className="hidden overflow-visible rounded-2xl bg-gray-800/40 p-6 shadow-2xl backdrop-blur-xl lg:block">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
-              <Sunrise className="h-4 w-4 text-accent-amber" />
+              <Sunrise className="h-4 w-4 text-accent-violet" />
               Last 7 Days
             </h2>
             {historyLoading ? (
               <div className="flex min-h-[220px] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
+                <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
               </div>
             ) : chartData.length > 0 ? (
               <div className="min-h-[220px] w-full">
@@ -326,21 +329,9 @@ export default function SleepPage() {
                     width={36}
                     tickMargin={8}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'rgba(15, 15, 24, 0.95)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '12px',
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                    }}
-                    labelFormatter={(label) => formatDate(label)}
-                    formatter={(value: number) => [`${value.toFixed(1)} hours`, 'Sleep']}
-                  />
                   <Bar
                     dataKey="value"
-                    fill="rgba(139, 92, 246, 0.5)"
-                    stroke="rgba(139, 92, 246, 0.9)"
+                    fill="rgba(139, 92, 246, 0.7)"
                     radius={[6, 6, 0, 0]}
                   />
                 </BarChart>
@@ -353,10 +344,10 @@ export default function SleepPage() {
             )}
           </div>
 
-          {/* Recent Sleep Log */}
-          <div className="glass-card flex min-h-0 flex-1 flex-col rounded-2xl p-6">
+          {/* Recent Sleep Log – match card shape */}
+          <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-gray-800/40 p-6 shadow-2xl backdrop-blur-xl">
             <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text-primary">
-              <Clock className="h-4 w-4 text-text-muted" />
+              <Clock className="h-4 w-4 text-accent-violet" />
               Recent Sleep
             </h2>
             {history.filter((h) => h.sleep).length === 0 ? (
@@ -370,10 +361,10 @@ export default function SleepPage() {
                   .map((h) => (
                     <div
                       key={h.date}
-                      className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2.5"
+                      className="flex items-center justify-between rounded-xl bg-black/40 px-3 py-2.5"
                     >
                       <div>
-                        <p className="text-sm font-medium text-text-primary">
+                        <p className="text-sm font-semibold text-text-primary">
                           {h.sleep!.duration.toFixed(1)}h
                         </p>
                         <p className="text-[11px] text-text-muted">
@@ -388,8 +379,8 @@ export default function SleepPage() {
                               className={cn(
                                 'h-3 w-3',
                                 q <= (h.sleep!.quality || 0)
-                                  ? 'fill-accent-amber text-accent-amber'
-                                  : 'text-white/20'
+                                  ? 'fill-amber-300 text-amber-300'
+                                  : 'text-text-muted/40'
                               )}
                             />
                           ))}
@@ -401,6 +392,7 @@ export default function SleepPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>

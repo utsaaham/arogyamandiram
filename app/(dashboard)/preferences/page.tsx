@@ -7,7 +7,7 @@ import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
-import PageHeader from '@/components/ui/PageHeader';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import StatCard from '@/components/ui/StatCard';
 
 export default function PreferencesPage() {
@@ -66,14 +66,17 @@ export default function PreferencesPage() {
   const enabledCount = [waterNotif, mealNotif, weighInNotif, workoutNotif].filter(Boolean).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
+    <div className="animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
+      <DashboardPageShell
         title="Preferences"
         subtitle="Units and reminders across your trackers"
         icon={Bell}
+        iconClassName="text-accent-violet"
+        mobileVariant="minimal"
       />
 
       {/* Summary */}
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <StatCard
           icon={Scale}
@@ -90,10 +93,12 @@ export default function PreferencesPage() {
           iconColor={enabledCount > 0 ? 'text-accent-emerald' : 'text-text-muted'}
         />
       </div>
+      </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '160ms' }}>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-stretch">
         {/* Left: units */}
-        <div className="flex flex-col gap-6 lg:min-h-0">
+        <div className="flex flex-col gap-3 lg:min-h-0">
           <div className="glass-card rounded-2xl p-6 shrink-0">
             <p className="text-sm font-semibold text-text-primary">Units</p>
             <p className="mt-2 text-xs text-text-muted">
@@ -192,6 +197,7 @@ export default function PreferencesPage() {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

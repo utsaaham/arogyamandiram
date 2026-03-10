@@ -10,6 +10,7 @@ import {
   Minus,
   BarChart3,
 } from 'lucide-react';
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import WaterGlass from '@/components/water/WaterGlass';
 import ProgressRing from '@/components/ui/ProgressRing';
 import MetricChart from '@/components/ui/MetricChart';
@@ -26,6 +27,7 @@ import {
   getToday,
   formatDate,
 } from '@/lib/utils';
+import WaterCard from '@/components/ui/water-card';
 
 const quickAmounts = [
   { label: '100 ml', value: 100, icon: '💧' },
@@ -133,163 +135,168 @@ export default function WaterPage() {
   const targetGlasses = Math.ceil(target / glassSize);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Water Tracker</h1>
-        <p className="text-sm text-text-muted">{formatDate(today)}</p>
-      </div>
+    <div className="water-page animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
+      <DashboardPageShell
+        title="Water Tracker"
+        subtitle={formatDate(today)}
+        icon={Droplets}
+        iconClassName="text-[#4FC3F7]"
+        mobileVariant="card"
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
-        {/* Left: Water Visualization */}
-        <div className="glass-card flex h-full min-h-[420px] flex-col items-center justify-center rounded-2xl p-6">
-          <div className="mb-6">
-            <WaterGlass
-              percent={percent}
-              isPouring={animateWave}
-              amount={remaining > 0 ? Math.min(250, remaining) : 250}
-            />
-          </div>
+      <div className="water-page-cards mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-stretch">
+          {/* Left half: Beaker / Water Visualization */}
+          <WaterCard className="flex h-full min-h-[420px] flex-col items-center justify-center p-6">
+            <div className="mb-6">
+              <WaterGlass
+                percent={percent}
+                isPouring={animateWave}
+                amount={remaining > 0 ? Math.min(250, remaining) : 250}
+              />
+            </div>
 
-          {/* Amount Display */}
-          <div className="text-center">
-            <p className="text-2xl font-bold text-accent-cyan">{formatWater(current)}</p>
-            <p className="text-sm text-text-muted">of {formatWater(target)} goal</p>
-            {remaining > 0 && (
-              <p className="mt-1 text-xs text-text-muted">
-                {formatWater(remaining)} remaining
-              </p>
-            )}
-            {percent >= 100 && (
-              <div className="mt-2 inline-flex items-center gap-1 rounded-lg bg-accent-emerald/10 px-3 py-1 text-xs font-medium text-accent-emerald">
-                🎉 Daily goal reached!
-              </div>
-            )}
-          </div>
-
-          {/* Quick Add Buttons */}
-          <div className="mt-6 grid w-full grid-cols-4 gap-2">
-            {quickAmounts.map((amt) => (
-              <button
-                key={amt.value}
-                onClick={() => addWater(amt.value)}
-                disabled={adding}
-                className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.04] px-2 py-3 text-xs font-medium text-text-secondary transition-all hover:bg-accent-cyan/10 hover:text-accent-cyan active:scale-95 disabled:opacity-50"
-              >
-                <span className="text-lg">{amt.icon}</span>
-                <span>{amt.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Custom Amount */}
-          <div className="mt-4 w-full">
-            <button
-              onClick={() => setShowCustom(!showCustom)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.03] py-2 text-xs font-medium text-text-muted hover:bg-white/[0.06]"
-            >
-              {showCustom ? 'Hide Custom' : 'Custom Amount'}
-            </button>
-
-            {showCustom && (
-              <div className="mt-3 space-y-3 animate-fade-in">
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={() => setCustomAmount((prev) => Math.max(50, prev - 50))}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-text-secondary hover:bg-white/[0.1]"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <div className="glass-input flex items-center gap-1 rounded-xl px-3 py-2">
-                    <input
-                      type="number"
-                      value={customAmount}
-                      onChange={(e) => setCustomAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="w-16 bg-transparent text-center text-lg font-bold text-text-primary outline-none"
-                      min={1}
-                      step={50}
-                    />
-                    <span className="text-xs text-text-muted">ml</span>
-                  </div>
-                  <button
-                    onClick={() => setCustomAmount((prev) => prev + 50)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-text-secondary hover:bg-white/[0.1]"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+            {/* Amount Display */}
+            <div className="text-center">
+              <p className="text-3xl font-semibold text-white">{formatWater(current)}</p>
+              <p className="text-sm text-[#94A3B8]">of {formatWater(target)} goal</p>
+              {remaining > 0 && (
+                <p className="mt-1 text-xs text-[#94A3B8]">
+                  {formatWater(remaining)} remaining
+                </p>
+              )}
+              {percent >= 100 && (
+                <div className="mt-2 inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+                  🎉 Daily goal reached!
                 </div>
+              )}
+            </div>
 
-                {/* Preset pills */}
-                <div className="flex flex-wrap justify-center gap-1.5">
-                  {customAmounts.map((amt) => (
-                    <button
-                      key={amt}
-                      onClick={() => setCustomAmount(amt)}
-                      className={cn(
-                        'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all',
-                        customAmount === amt
-                          ? 'bg-accent-cyan/15 text-accent-cyan'
-                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
-                      )}
-                    >
-                      {amt}ml
-                    </button>
-                  ))}
-                </div>
-
+            {/* Quick Add Buttons – visible gap between each button */}
+            <div className="mt-6 grid w-full grid-cols-4 gap-3">
+              {quickAmounts.map((amt) => (
                 <button
-                  onClick={() => addWater(customAmount)}
+                  key={amt.value}
+                  onClick={() => addWater(amt.value)}
                   disabled={adding}
-                  className="glass-button-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
+                  className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.04] px-2 py-3 text-xs font-medium text-[#94A3B8] transition-all hover:bg-[#4FC3F7]/10 hover:text-[#4FC3F7] active:scale-95 disabled:opacity-50"
                 >
-                  {adding ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <>
-                      <Droplets className="h-4 w-4" />
-                      Add {formatWater(customAmount)}
-                    </>
-                  )}
+                  <span className="text-lg">{amt.icon}</span>
+                  <span>{amt.label}</span>
                 </button>
-              </div>
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
 
-        {/* Right: Stats + History */}
-        <div className="flex min-h-[420px] flex-col justify-center space-y-4 lg:h-full lg:min-h-0">
-          {/* Stats Grid */}
+            {/* Custom Amount */}
+            <div className="mt-5 w-full">
+              <button
+                onClick={() => setShowCustom(!showCustom)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.03] py-2 text-xs font-medium text-[#94A3B8] hover:bg-white/[0.06]"
+              >
+                {showCustom ? 'Hide Custom' : 'Custom Amount'}
+              </button>
+
+              {showCustom && (
+                <div className="mt-3 space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => setCustomAmount((prev) => Math.max(50, prev - 50))}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[#94A3B8] hover:bg-white/[0.1]"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <div className="glass-input flex items-center gap-1 rounded-xl px-3 py-2">
+                      <input
+                        type="number"
+                        value={customAmount}
+                        onChange={(e) => setCustomAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                        className="w-16 bg-transparent text-center text-lg font-bold text-white outline-none"
+                        min={1}
+                        step={50}
+                      />
+                      <span className="text-xs text-[#94A3B8]">ml</span>
+                    </div>
+                    <button
+                      onClick={() => setCustomAmount((prev) => prev + 50)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[#94A3B8] hover:bg-white/[0.1]"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Preset pills */}
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {customAmounts.map((amt) => (
+                      <button
+                        key={amt}
+                        onClick={() => setCustomAmount(amt)}
+                        className={cn(
+                          'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all',
+                          customAmount === amt
+                            ? 'bg-[#4FC3F7]/15 text-[#4FC3F7]'
+                            : 'bg-white/[0.04] text-[#94A3B8] hover:bg-white/[0.08]'
+                        )}
+                      >
+                        {amt}ml
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => addWater(customAmount)}
+                    disabled={adding}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#4FC3F7,#2979FF)] py-2.5 text-sm font-medium text-white shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {adding ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <>
+                        <Droplets className="h-4 w-4" />
+                        Add {formatWater(customAmount)}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </WaterCard>
+
+        {/* Right half: Stats (15 glasses, 100% goal, 2.5L, 0ml), Glass Tracker, Recent Water */}
+        <div className="flex min-h-[420px] flex-col justify-center space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto">
+          {/* Stats Grid – on mobile show simpler stats, full set on larger screens */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-4">
+            <WaterCard className="flex flex-col items-center justify-center p-4">
+              <GlassWater className="h-5 w-5 text-[#4FC3F7]" />
+              <p className="mt-1 text-2xl font-semibold text-white">{glasses}</p>
+              <p className="text-xs text-[#94A3B8]">of {targetGlasses} glasses</p>
+            </WaterCard>
+            {/* Hide percent ring on mobile; keep on larger screens */}
+            <WaterCard className="hidden flex-col items-center justify-center p-4 lg:flex">
               <ProgressRing
                 progress={percent}
                 size={80}
                 strokeWidth={6}
-                color="stroke-accent-cyan"
+                color="stroke-[#4FC3F7]"
                 value={`${Math.round(percent)}%`}
                 label="of goal"
               />
-            </div>
-            <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-4">
-              <GlassWater className="h-5 w-5 text-accent-cyan" />
-              <p className="mt-1 text-2xl font-bold text-text-primary">{glasses}</p>
-              <p className="text-xs text-text-muted">of {targetGlasses} glasses</p>
-            </div>
-            <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-4">
-              <Target className="h-5 w-5 text-accent-amber" />
-              <p className="mt-1 text-lg font-bold text-text-primary">{formatWater(target)}</p>
-              <p className="text-xs text-text-muted">daily goal</p>
-            </div>
-            <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-4">
-              <TrendingUp className="h-5 w-5 text-accent-emerald" />
-              <p className="mt-1 text-lg font-bold text-text-primary">{formatWater(remaining)}</p>
-              <p className="text-xs text-text-muted">{percent >= 100 ? 'exceeded by' : 'remaining'}</p>
-            </div>
+            </WaterCard>
+            <WaterCard className="flex flex-col items-center justify-center p-4">
+              <Target className="h-5 w-5 text-[#4FC3F7]" />
+              <p className="mt-1 text-lg font-semibold text-white">{formatWater(target)}</p>
+              <p className="text-xs text-[#94A3B8]">daily goal</p>
+            </WaterCard>
+            {/* Hide remaining / exceeded card on mobile; keep on larger screens */}
+            <WaterCard className="hidden flex-col items-center justify-center p-4 lg:flex">
+              <TrendingUp className="h-5 w-5 text-emerald-400" />
+              <p className="mt-1 text-lg font-semibold text-white">{formatWater(remaining)}</p>
+              <p className="text-xs text-[#94A3B8]">{percent >= 100 ? 'exceeded by' : 'remaining'}</p>
+            </WaterCard>
           </div>
 
-          {/* Glass Indicators */}
-          <div className="glass-card rounded-2xl p-4">
-            <h3 className="mb-3 text-sm font-semibold text-text-primary">Glass Tracker</h3>
+          {/* Glass Indicators – hide on mobile, keep on larger screens */}
+          <WaterCard className="hidden p-4 lg:block">
+            <h3 className="mb-3 text-sm font-semibold text-white">Glass Tracker</h3>
             <div className="flex flex-wrap justify-center gap-2">
               {Array.from({ length: targetGlasses }, (_, i) => (
                 <div
@@ -297,29 +304,29 @@ export default function WaterPage() {
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-all duration-300',
                     i < glasses
-                      ? 'bg-accent-cyan/20 text-accent-cyan'
-                      : 'bg-white/[0.04] text-text-muted'
+                      ? 'bg-[#4FC3F7]/20 text-[#4FC3F7]'
+                      : 'bg-white/[0.04] text-[#94A3B8]'
                   )}
                   style={{ transitionDelay: `${i * 30}ms` }}
                 >
-                  {i < glasses ? '💧' : (i + 1)}
+                  {i < glasses ? '💧' : i + 1}
                 </div>
               ))}
             </div>
-          </div>
+          </WaterCard>
 
           {/* Recent Water */}
-          <div className="glass-card flex min-h-0 flex-1 flex-col rounded-2xl p-6">
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <GlassWater className="h-4 w-4 text-accent-cyan" />
+          <WaterCard className="flex min-h-0 flex-1 flex-col p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
+              <GlassWater className="h-4 w-4 text-[#4FC3F7]" />
               Recent Water
             </h3>
             {historyLoading ? (
-              <div className="flex flex-1 items-center justify-center text-xs text-text-muted">
+              <div className="flex flex-1 items-center justify-center text-xs text-[#94A3B8]">
                 Loading history...
               </div>
             ) : waterHistory.length === 0 ? (
-              <p className="py-4 text-xs text-text-muted">No water entries yet</p>
+              <p className="py-4 text-xs text-[#94A3B8]">No water entries yet</p>
             ) : (
               <div className="hide-scrollbar w-full min-h-0 flex-1 space-y-2 max-h-[200px] overflow-y-auto pr-1">
                 {waterHistory
@@ -330,17 +337,17 @@ export default function WaterPage() {
                     return (
                       <div
                         key={entry.date}
-                        className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2.5"
+                        className="flex items-center justify-between rounded-xl bg-[#0B1015] px-3 py-2.5"
                       >
                         <div>
-                          <p className="text-sm font-medium text-text-primary">
+                          <p className="text-sm font-semibold text-white">
                             {formatWater(entry.waterIntake)}
                           </p>
-                          <p className="text-[11px] text-text-muted">
+                          <p className="text-[11px] text-[#94A3B8]">
                             {dayGlasses} glass{dayGlasses === 1 ? '' : 'es'}
                           </p>
                         </div>
-                        <span className="text-[11px] text-text-muted">
+                        <span className="text-[11px] text-[#94A3B8]">
                           {formatDate(entry.date)}
                         </span>
                       </div>
@@ -348,16 +355,18 @@ export default function WaterPage() {
                   })}
               </div>
             )}
-          </div>
+          </WaterCard>
+        </div>
         </div>
       </div>
 
-      {/* Water Intake History Chart */}
-      <div className="glass-card rounded-2xl p-6">
+      {/* Water Intake History Chart – hide on mobile, show on larger screens */}
+      <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '160ms' }}>
+      <WaterCard className="hidden p-6 lg:block">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-accent-cyan" />
-            <h2 className="text-base font-semibold text-text-primary">Daily Water Intake</h2>
+            <BarChart3 className="h-5 w-5 text-[#4FC3F7]" />
+            <h2 className="text-base font-semibold text-white">Daily Water Intake</h2>
           </div>
           <div className="flex gap-1.5">
             {periodOptions.map((opt) => (
@@ -367,8 +376,8 @@ export default function WaterPage() {
                 className={cn(
                   'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                   period === opt.key
-                    ? 'bg-accent-cyan/15 text-accent-cyan ring-1 ring-accent-cyan/30'
-                    : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
+                    ? 'bg-[#4FC3F7]/15 text-[#4FC3F7] ring-1 ring-[#4FC3F7]/30'
+                    : 'bg-white/[0.04] text-[#94A3B8] hover:bg-white/[0.08]'
                 )}
               >
                 {opt.label}
@@ -379,7 +388,7 @@ export default function WaterPage() {
 
         {historyLoading ? (
           <div className="flex h-56 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#4FC3F7] border-t-transparent" />
           </div>
         ) : (
           <>
@@ -388,37 +397,42 @@ export default function WaterPage() {
                 date: e.date,
                 value: e.waterIntake,
               }))}
-              color="#22d3ee"
+              color="#4FC3F7"
               gradientId="waterGrad"
+              gradientFrom="#4FC3F7"
+              gradientTo="#2979FF"
               unit=" ml"
               height={240}
               targetValue={target}
               targetLabel={`Goal: ${formatWater(target)}`}
-              formatY={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}L` : `${v}ml`}
+              formatY={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}L` : `${v}ml`)}
             />
             {waterHistory.length > 0 && (() => {
-              const avg = Math.round(waterHistory.reduce((s, e) => s + e.waterIntake, 0) / waterHistory.length);
+              const avg = Math.round(
+                waterHistory.reduce((s, e) => s + e.waterIntake, 0) / waterHistory.length
+              );
               const daysMetGoal = waterHistory.filter((e) => e.waterIntake >= target).length;
               const best = Math.max(...waterHistory.map((e) => e.waterIntake));
               return (
                 <div className="mt-4 grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-white/[0.03] p-3 text-center">
-                    <p className="text-lg font-bold text-accent-cyan">{formatWater(avg)}</p>
-                    <p className="text-[11px] text-text-muted">Daily Average</p>
+                  <div className="rounded-xl bg-[#0B1015] p-3 text-center shadow-lg">
+                    <p className="text-lg font-semibold text-[#4FC3F7]">{formatWater(avg)}</p>
+                    <p className="text-[11px] text-[#94A3B8]">Daily Average</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.03] p-3 text-center">
-                    <p className="text-lg font-bold text-accent-emerald">{daysMetGoal}/{waterHistory.length}</p>
-                    <p className="text-[11px] text-text-muted">Days Goal Met</p>
+                  <div className="rounded-xl bg-[#0B1015] p-3 text-center shadow-lg">
+                    <p className="text-lg font-semibold text-emerald-400">{`${daysMetGoal}/${waterHistory.length}`}</p>
+                    <p className="text-[11px] text-[#94A3B8]">Days Goal Met</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.03] p-3 text-center">
-                    <p className="text-lg font-bold text-accent-amber">{formatWater(best)}</p>
-                    <p className="text-[11px] text-text-muted">Best Day</p>
+                  <div className="rounded-xl bg-[#0B1015] p-3 text-center shadow-lg">
+                    <p className="text-lg font-semibold text-amber-300">{formatWater(best)}</p>
+                    <p className="text-[11px] text-[#94A3B8]">Best Day</p>
                   </div>
                 </div>
               );
             })()}
           </>
         )}
+      </WaterCard>
       </div>
     </div>
   );

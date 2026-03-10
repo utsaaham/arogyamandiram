@@ -304,7 +304,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/[0.06] bg-bg-surface p-6 shadow-2xl animate-slide-up">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-workout-bg p-6 shadow-lg animate-slide-up">
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-semibold text-text-primary">Add Workout</h3>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-white/[0.06]">

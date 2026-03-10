@@ -19,6 +19,8 @@ interface MetricChartProps {
   data: DataPoint[];
   color?: string;
   gradientId?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
   unit?: string;
   tooltipUnit?: string;
   height?: number;
@@ -44,6 +46,8 @@ export default function MetricChart({
   targetLabel,
   formatX = defaultFormatX,
   formatY,
+  gradientFrom,
+  gradientTo,
 }: MetricChartProps) {
   if (data.length === 0) {
     return (
@@ -63,9 +67,23 @@ export default function MetricChart({
       <AreaChart data={data} margin={{ top: 10, right: 14, left: 10, bottom: 18 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={color} stopOpacity={0.25} />
-            <stop offset="95%" stopColor={color} stopOpacity={0} />
+            <stop
+              offset="5%"
+              stopColor={gradientFrom || color}
+              stopOpacity={0.25}
+            />
+            <stop
+              offset="95%"
+              stopColor={gradientTo || gradientFrom || color}
+              stopOpacity={0}
+            />
           </linearGradient>
+          {gradientFrom && gradientTo && (
+            <linearGradient id={`${gradientId}-stroke`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={gradientFrom} />
+              <stop offset="100%" stopColor={gradientTo} />
+            </linearGradient>
+          )}
         </defs>
 
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -133,7 +151,7 @@ export default function MetricChart({
         <Area
           type="monotone"
           dataKey="value"
-          stroke={color}
+            stroke={gradientFrom && gradientTo ? `url(#${gradientId}-stroke)` : color}
           strokeWidth={2.5}
           fill={`url(#${gradientId})`}
           dot={data.length <= 14 ? { r: 3, fill: color, strokeWidth: 0 } : false}
