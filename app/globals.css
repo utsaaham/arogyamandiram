@@ -246,10 +246,10 @@ body {
     background: linear-gradient(145deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
     border-color: rgba(239, 68, 68, 0.18);
   }
-  /* Water page: header card matches water cards (neutral dark, normal border) */
+  /* Water page: header card matches water cards (soft desaturated water-blue, subtle border, no glow) */
   .water-page .dashboard-page-header-card {
-    background-color: #141B21;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background-color: #030910;
+    border: 1px solid rgba(255, 255, 255, 0.02);
     box-shadow: none;
   }
 

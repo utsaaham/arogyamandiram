@@ -95,7 +95,7 @@ export default function WaterGlass({
       {/* Glass outline: bump scale when pouring */}
       <div
         className={cn(
-          'absolute inset-0 rounded-b-3xl rounded-t-lg border-2 border-white/[0.08] bg-white/[0.02] overflow-hidden',
+          'absolute inset-0 rounded-b-3xl rounded-t-lg border-2 border-white/[0.05] bg-white/[0.015] overflow-hidden',
           isPouring && 'water-glass-bump'
         )}
       >
@@ -153,7 +153,7 @@ export default function WaterGlass({
             height: `${fillPercent}%`,
             background:
               fillPercent > 0
-                ? 'linear-gradient(180deg, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0.42) 70%, rgba(34,211,238,0.38) 100%)'
+                ? 'linear-gradient(180deg, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0.28) 70%, rgba(34,211,238,0.24) 100%)'
                 : 'transparent',
             ['--fill-height' as string]: `${fillPercent}%`,
           }}
@@ -213,23 +213,23 @@ export default function WaterGlass({
           {/* Surface glow line: idle bob when not pouring, intense glow when pouring */}
           {fillPercent > 0 && (
             <div
-              className={cn(
-                'absolute left-0 right-0 h-1 rounded-full pointer-events-none',
-                isPouring ? 'water-surface-glow-intense' : 'water-surface-glow water-wave'
-              )}
-              style={{
-                top: -2,
-                background: 'linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.6) 50%, transparent 100%)',
-                boxShadow: '0 0 12px rgba(34,211,238,0.4)',
-              }}
+                className={cn(
+                  'absolute left-0 right-0 h-1 rounded-full pointer-events-none',
+                  isPouring ? 'water-surface-glow-intense' : 'water-surface-glow water-wave'
+                )}
+                style={{
+                  top: -2,
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.4) 50%, transparent 100%)',
+                  boxShadow: '0 0 10px rgba(34,211,238,0.25)',
+                }}
             />
           )}
 
           {/* Ripple on add (double ring when pouring) */}
           {isPouring && (
             <>
-              <div className="water-ripple pointer-events-none absolute inset-x-0 -top-1 h-3 rounded-full bg-cyan-400/25 blur-[3px]" />
-              <div className="water-ripple water-ripple-delayed pointer-events-none absolute inset-x-0 -top-1 h-4 rounded-full bg-cyan-400/20 blur-[4px]" />
+              <div className="water-ripple pointer-events-none absolute inset-x-0 -top-1 h-3 rounded-full bg-cyan-400/15 blur-[3px]" />
+              <div className="water-ripple water-ripple-delayed pointer-events-none absolute inset-x-0 -top-1 h-4 rounded-full bg-cyan-400/10 blur-[4px]" />
             </>
           )}
 
@@ -295,7 +295,7 @@ export default function WaterGlass({
                 return (
                 <motion.div
                   key={`burst-${b.id}`}
-                  className="absolute rounded-full bg-white/30 pointer-events-none"
+                  className="absolute rounded-full bg-white/20 pointer-events-none"
                   style={{
                     left: `${b.left}%`,
                     bottom: `${b.bottom}%`,
@@ -317,15 +317,15 @@ export default function WaterGlass({
         </div>
 
         {/* Target line (above glass) */}
-        <div
-          className="absolute left-0 right-0 border-t border-dashed border-cyan-500/30"
-          style={{ bottom: '100%', transform: 'translateY(0)' }}
-        />
+          <div
+            className="absolute left-0 right-0 border-t border-dashed border-cyan-500/20"
+            style={{ bottom: '100%', transform: 'translateY(0)' }}
+          />
 
         {/* Percentage text in center of glass */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-3xl font-bold text-text-primary">{Math.round(percent)}%</span>
-          <span className="text-xs text-text-muted">hydrated</span>
+          <span className="text-3xl font-bold text-[#A3A3A3]">{Math.round(percent)}%</span>
+          <span className="text-xs text-[#A3A3A3]">hydrated</span>
         </div>
       </div>
     </div>

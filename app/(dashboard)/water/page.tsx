@@ -140,8 +140,11 @@ export default function WaterPage() {
         title="Water Tracker"
         subtitle={formatDate(today)}
         icon={Droplets}
-        iconClassName="text-[#4FC3F7]"
+        iconClassName="text-[#A3A3A3]"
+        titleClassName="text-[#A3A3A3]"
+        subtitleClassName="text-[#94A3B8]"
         mobileVariant="card"
+        mobileCardClassName="bg-[#050B12]"
       />
 
       <div className="water-page-cards mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
@@ -158,7 +161,7 @@ export default function WaterPage() {
 
             {/* Amount Display */}
             <div className="text-center">
-              <p className="text-3xl font-semibold text-white">{formatWater(current)}</p>
+              <p className="text-3xl font-semibold text-[#A3A3A3]">{formatWater(current)}</p>
               <p className="text-sm text-[#94A3B8]">of {formatWater(target)} goal</p>
               {remaining > 0 && (
                 <p className="mt-1 text-xs text-[#94A3B8]">
@@ -166,7 +169,7 @@ export default function WaterPage() {
                 </p>
               )}
               {percent >= 100 && (
-                <div className="mt-2 inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+                <div className="mt-2 inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-medium text-[#A3A3A3]">
                   🎉 Daily goal reached!
                 </div>
               )}
@@ -179,7 +182,7 @@ export default function WaterPage() {
                   key={amt.value}
                   onClick={() => addWater(amt.value)}
                   disabled={adding}
-                  className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.04] px-2 py-3 text-xs font-medium text-[#94A3B8] transition-all hover:bg-[#4FC3F7]/10 hover:text-[#4FC3F7] active:scale-95 disabled:opacity-50"
+                  className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.03] px-2 py-3 text-xs font-medium text-[#94A3B8] transition-all hover:bg-white/[0.08] hover:text-[#A3A3A3] active:scale-95 disabled:opacity-50"
                 >
                   <span className="text-lg">{amt.icon}</span>
                   <span>{amt.label}</span>
@@ -210,7 +213,7 @@ export default function WaterPage() {
                         type="number"
                         value={customAmount}
                         onChange={(e) => setCustomAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                        className="w-16 bg-transparent text-center text-lg font-bold text-white outline-none"
+                        className="w-16 bg-transparent text-center text-lg font-bold text-[#A3A3A3] outline-none"
                         min={1}
                         step={50}
                       />
@@ -233,8 +236,8 @@ export default function WaterPage() {
                         className={cn(
                           'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all',
                           customAmount === amt
-                            ? 'bg-[#4FC3F7]/15 text-[#4FC3F7]'
-                            : 'bg-white/[0.04] text-[#94A3B8] hover:bg-white/[0.08]'
+                            ? 'bg-[#4FC3F7]/10 text-[#A3A3A3]'
+                            : 'bg-white/[0.03] text-[#94A3B8] hover:bg-white/[0.08]'
                         )}
                       >
                         {amt}ml
@@ -245,7 +248,7 @@ export default function WaterPage() {
                   <button
                     onClick={() => addWater(customAmount)}
                     disabled={adding}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#4FC3F7,#2979FF)] py-2.5 text-sm font-medium text-white shadow-lg transition-all disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#1E293B,#020617)] py-2.5 text-sm font-medium text-white shadow-lg transition-all disabled:opacity-50"
                   >
                     {adding ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -266,8 +269,8 @@ export default function WaterPage() {
           {/* Stats Grid – on mobile show simpler stats, full set on larger screens */}
           <div className="grid grid-cols-2 gap-3">
             <WaterCard className="flex flex-col items-center justify-center p-4">
-              <GlassWater className="h-5 w-5 text-[#4FC3F7]" />
-              <p className="mt-1 text-2xl font-semibold text-white">{glasses}</p>
+              <GlassWater className="h-5 w-5 text-[#A3A3A3]" />
+              <p className="mt-1 text-2xl font-semibold text-[#A3A3A3]">{glasses}</p>
               <p className="text-xs text-[#94A3B8]">of {targetGlasses} glasses</p>
             </WaterCard>
             {/* Hide percent ring on mobile; keep on larger screens */}
@@ -278,25 +281,27 @@ export default function WaterPage() {
                 strokeWidth={6}
                 color="stroke-[#4FC3F7]"
                 value={`${Math.round(percent)}%`}
-                label="of goal"
+                label="hydrated"
+                valueClassName="text-lg font-bold text-[#A3A3A3]"
+                labelClassName="text-[10px] font-medium text-[#A3A3A3]"
               />
             </WaterCard>
             <WaterCard className="flex flex-col items-center justify-center p-4">
-              <Target className="h-5 w-5 text-[#4FC3F7]" />
-              <p className="mt-1 text-lg font-semibold text-white">{formatWater(target)}</p>
+              <Target className="h-5 w-5 text-[#A3A3A3]" />
+              <p className="mt-1 text-lg font-semibold text-[#A3A3A3]">{formatWater(target)}</p>
               <p className="text-xs text-[#94A3B8]">daily goal</p>
             </WaterCard>
             {/* Hide remaining / exceeded card on mobile; keep on larger screens */}
             <WaterCard className="hidden flex-col items-center justify-center p-4 lg:flex">
-              <TrendingUp className="h-5 w-5 text-emerald-400" />
-              <p className="mt-1 text-lg font-semibold text-white">{formatWater(remaining)}</p>
-              <p className="text-xs text-[#94A3B8]">{percent >= 100 ? 'exceeded by' : 'remaining'}</p>
+              <TrendingUp className="h-5 w-5 text-[#A3A3A3]" />
+              <p className="mt-1 text-lg font-semibold text-[#A3A3A3]">{formatWater(remaining)}</p>
+              <p className="text-xs text-[#A3A3A3]">{percent >= 100 ? 'exceeded by' : 'remaining'}</p>
             </WaterCard>
           </div>
 
           {/* Glass Indicators – hide on mobile, keep on larger screens */}
           <WaterCard className="hidden p-4 lg:block">
-            <h3 className="mb-3 text-sm font-semibold text-white">Glass Tracker</h3>
+            <h3 className="mb-3 text-sm font-semibold text-[#A3A3A3]">Glass Tracker</h3>
             <div className="flex flex-wrap justify-center gap-2">
               {Array.from({ length: targetGlasses }, (_, i) => (
                 <div
@@ -317,8 +322,8 @@ export default function WaterPage() {
 
           {/* Recent Water */}
           <WaterCard className="flex min-h-0 flex-1 flex-col p-6">
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <GlassWater className="h-4 w-4 text-[#4FC3F7]" />
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#A3A3A3]">
+              <GlassWater className="h-4 w-4 text-[#A3A3A3]" />
               Recent Water
             </h3>
             {historyLoading ? (
@@ -340,7 +345,7 @@ export default function WaterPage() {
                         className="flex items-center justify-between rounded-xl bg-[#0B1015] px-3 py-2.5"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-[#A3A3A3]">
                             {formatWater(entry.waterIntake)}
                           </p>
                           <p className="text-[11px] text-[#94A3B8]">
@@ -365,8 +370,8 @@ export default function WaterPage() {
       <WaterCard className="hidden p-6 lg:block">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-[#4FC3F7]" />
-            <h2 className="text-base font-semibold text-white">Daily Water Intake</h2>
+            <BarChart3 className="h-5 w-5 text-[#A3A3A3]" />
+            <h2 className="text-base font-semibold text-[#A3A3A3]">Daily Water Intake</h2>
           </div>
           <div className="flex gap-1.5">
             {periodOptions.map((opt) => (
@@ -376,8 +381,8 @@ export default function WaterPage() {
                 className={cn(
                   'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                   period === opt.key
-                    ? 'bg-[#4FC3F7]/15 text-[#4FC3F7] ring-1 ring-[#4FC3F7]/30'
-                    : 'bg-white/[0.04] text-[#94A3B8] hover:bg-white/[0.08]'
+                    ? 'bg-white/[0.08] text-[#A3A3A3] ring-1 ring-white/20'
+                    : 'bg-white/[0.02] text-[#94A3B8] hover:bg-white/[0.06]'
                 )}
               >
                 {opt.label}
@@ -397,10 +402,10 @@ export default function WaterPage() {
                 date: e.date,
                 value: e.waterIntake,
               }))}
-              color="#4FC3F7"
+              color="#38bdf8"
               gradientId="waterGrad"
-              gradientFrom="#4FC3F7"
-              gradientTo="#2979FF"
+              gradientFrom="#1e293b"
+              gradientTo="#020617"
               unit=" ml"
               height={240}
               targetValue={target}
@@ -416,15 +421,15 @@ export default function WaterPage() {
               return (
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   <div className="rounded-xl bg-[#0B1015] p-3 text-center shadow-lg">
-                    <p className="text-lg font-semibold text-[#4FC3F7]">{formatWater(avg)}</p>
+                    <p className="text-lg font-semibold text-[#A3A3A3]">{formatWater(avg)}</p>
                     <p className="text-[11px] text-[#94A3B8]">Daily Average</p>
                   </div>
                   <div className="rounded-xl bg-[#0B1015] p-3 text-center shadow-lg">
-                    <p className="text-lg font-semibold text-emerald-400">{`${daysMetGoal}/${waterHistory.length}`}</p>
+                    <p className="text-lg font-semibold text-[#A3A3A3]">{`${daysMetGoal}/${waterHistory.length}`}</p>
                     <p className="text-[11px] text-[#94A3B8]">Days Goal Met</p>
                   </div>
                   <div className="rounded-xl bg-[#0B1015] p-3 text-center shadow-lg">
-                    <p className="text-lg font-semibold text-amber-300">{formatWater(best)}</p>
+                    <p className="text-lg font-semibold text-[#A3A3A3]">{formatWater(best)}</p>
                     <p className="text-[11px] text-[#94A3B8]">Best Day</p>
                   </div>
                 </div>

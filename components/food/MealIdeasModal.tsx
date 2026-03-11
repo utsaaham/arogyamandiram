@@ -79,10 +79,22 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 shadow-lg animate-slide-up">
+      <div
+        className="relative z-10 mx-4 flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900/95 shadow-lg animate-slide-up sm:rounded-2xl"
+        style={{
+          maxHeight:
+            'min(70dvh, calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 16px) - 32px))',
+        }}
+      >
         {/* Fixed header + form — does not scroll */}
         <div className="shrink-0 space-y-4 p-6 pb-4">
           <div className="flex items-start justify-between">

@@ -256,10 +256,22 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up">
+      <div
+        className="relative z-10 mx-4 w-full max-w-md overflow-y-auto rounded-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up"
+        style={{
+          maxHeight:
+            'min(70dvh, calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 16px) - 32px))',
+        }}
+      >
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-semibold text-neutral-400 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-neutral-400" />
