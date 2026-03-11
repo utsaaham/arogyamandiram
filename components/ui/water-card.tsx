@@ -9,7 +9,7 @@ export default function WaterCard({ className, ...props }: WaterCardProps) {
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-white/5 bg-[#050B12] text-white',
+        'relative overflow-hidden rounded-2xl border border-white/5 bg-[#0d161c] text-white',
         className,
       )}
       {...props}

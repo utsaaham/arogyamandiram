@@ -144,7 +144,7 @@ export default function WaterPage() {
         titleClassName="text-[#A3A3A3]"
         subtitleClassName="text-[#94A3B8]"
         mobileVariant="card"
-        mobileCardClassName="bg-[#050B12]"
+        mobileCardClassName="bg-[#0d161c]"
       />
 
       <div className="water-page-cards mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>

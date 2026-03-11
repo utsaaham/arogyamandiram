@@ -246,9 +246,9 @@ body {
     background: linear-gradient(145deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
     border-color: rgba(239, 68, 68, 0.18);
   }
-  /* Water page: header card matches water cards (dark, low-blue tint, subtle border, no glow) */
+  /* Water page: header card matches water cards (water blue tint, subtle border, no glow) */
   .water-page .dashboard-page-header-card {
-    background-color: #050B12;
+    background-color: #0d161c;
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: none;
   }
