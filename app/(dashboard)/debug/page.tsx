@@ -11,6 +11,10 @@ import {
   type MealIdeasDebugLog,
   type AILoggerDebugLog,
 } from '@/components/debug/DebuggerPanel';
+import InsightsLogView from '@/components/debug/InsightsLogView';
+import WorkoutLoggerLogView from '@/components/debug/WorkoutLoggerLogView';
+import WorkoutPlannerLogView from '@/components/debug/WorkoutPlannerLogView';
+import HealthPlanLogView from '@/components/debug/HealthPlanLogView';
 import { getPageLabel, getAgentLabel, getAgentDescription } from '@/lib/debugLogsConfig';
 import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -24,6 +28,7 @@ const DEBUG_TREE: { page: string; agents: string[] }[] = [
   { page: 'food', agents: ['meal-ideas', 'ai-logger'] },
   { page: 'insights', agents: ['yesterday', 'weekly', 'monthly', 'yearly'] },
   { page: 'workout', agents: ['ai-logger', 'workout-planner'] },
+  { page: 'targets', agents: ['health-plan'] },
 ];
 
 function getLogTimestamp(log: Record<string, unknown>): string {
@@ -53,7 +58,7 @@ function getLogTokens(log: Record<string, unknown>, page: string, agent: string)
   if (page === 'food' && agent === 'meal-ideas') {
     return totalTokens(log as unknown as MealIdeasDebugLog);
   }
-  if ((page === 'food' || page === 'workout') && agent === 'ai-logger') {
+  if (page === 'food' && agent === 'ai-logger') {
     return totalTokensAILogger(log as unknown as AILoggerDebugLog);
   }
   const meta = log.metadata as { usage?: { prompt_tokens?: number; completion_tokens?: number } } | undefined;
@@ -123,9 +128,49 @@ function LogViewRenderer({
     );
   }
   if ((page === 'food' || page === 'workout') && agent === 'ai-logger') {
+    if (page === 'workout') {
+      return (
+        <WorkoutLoggerLogView
+          log={log as unknown as Record<string, unknown>}
+          openSections={openSections}
+          onToggleSection={onToggleSection}
+          allExpanded={allExpanded}
+        />
+      );
+    }
     return (
       <AILoggerLogView
         log={log as unknown as AILoggerDebugLog}
+        openSections={openSections}
+        onToggleSection={onToggleSection}
+        allExpanded={allExpanded}
+      />
+    );
+  }
+  if (page === 'insights') {
+    return (
+      <InsightsLogView
+        log={log as unknown as Record<string, unknown>}
+        openSections={openSections}
+        onToggleSection={onToggleSection}
+        allExpanded={allExpanded}
+      />
+    );
+  }
+  if (page === 'workout' && agent === 'workout-planner') {
+    return (
+      <WorkoutPlannerLogView
+        log={log as unknown as Record<string, unknown>}
+        openSections={openSections}
+        onToggleSection={onToggleSection}
+        allExpanded={allExpanded}
+      />
+    );
+  }
+  if (page === 'targets' && agent === 'health-plan') {
+    return (
+      <HealthPlanLogView
+        log={log as unknown as Record<string, unknown>}
         openSections={openSections}
         onToggleSection={onToggleSection}
         allExpanded={allExpanded}

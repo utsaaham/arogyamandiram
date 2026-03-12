@@ -14,6 +14,7 @@ import { useUser } from '@/hooks/useUser';
 interface WorkoutPlan {
   name: string;
   description: string;
+  progressionTip?: string;
   exercises: {
     name: string;
     sets: number;
@@ -27,9 +28,10 @@ interface WorkoutPlan {
 
 interface AIWorkoutPlanModalProps {
   onClose: () => void;
+  onDebugLog?: (log: unknown) => void;
 }
 
-export default function AIWorkoutPlanModal({ onClose }: AIWorkoutPlanModalProps) {
+export default function AIWorkoutPlanModal({ onClose, onDebugLog }: AIWorkoutPlanModalProps) {
   const { user } = useUser();
   const hasApiKey = user?.hasOpenAiKey;
 
@@ -63,8 +65,11 @@ export default function AIWorkoutPlanModal({ onClose }: AIWorkoutPlanModalProps)
       if (workoutDuration) context.duration = workoutDuration;
       const res = await api.getWorkoutPlan(context);
       if (res.success && res.data) {
-        const data = res.data as { plan: WorkoutPlan };
-        setWorkout(data.plan || null);
+        const data = res.data as { plan?: unknown; debugLog?: unknown };
+        setWorkout(data.plan && typeof data.plan === 'object' ? (data.plan as WorkoutPlan) : null);
+        if (data.debugLog != null && onDebugLog) {
+          onDebugLog(data.debugLog);
+        }
       } else {
         const rawError = res.error || 'Failed to fetch workout plan';
         const normalized = rawError.toLowerCase();
@@ -185,6 +190,11 @@ export default function AIWorkoutPlanModal({ onClose }: AIWorkoutPlanModalProps)
                 <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4">
                   <p className="text-base font-semibold text-[#a3a3a3]">{workout.name}</p>
                   <p className="mt-1 text-xs text-text-secondary">{workout.description}</p>
+                  {workout.progressionTip && (
+                    <p className="mt-2 rounded-lg border border-neutral-800 bg-neutral-950/70 px-2.5 py-2 text-[11px] text-text-muted">
+                      Progression tip: {workout.progressionTip}
+                    </p>
+                  )}
                   <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-text-secondary">
                     <div className="flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-accent-rose" />

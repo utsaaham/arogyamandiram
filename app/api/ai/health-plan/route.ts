@@ -28,7 +28,7 @@ export async function POST(_req: NextRequest) {
     const result = await generateHealthPlanTargets(userId);
     if (!result) return errorResponse('User not found or failed to generate plan', 404);
 
-    const { targets, explanations } = result;
+    const { targets, explanations, debugLog } = result;
 
     const updated = await User.findByIdAndUpdate(
       userId,
@@ -40,8 +40,13 @@ export async function POST(_req: NextRequest) {
 
     if (!updated) return errorResponse('User not found', 404);
 
+    const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
     return maskedResponse(
-      { user: maskUser(updated), explanations },
+      {
+        user: maskUser(updated),
+        explanations,
+        ...(isDebugMode && debugLog ? { debugLog } : {}),
+      },
       { message: 'Health plan updated' }
     );
   } catch (err) {
