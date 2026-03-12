@@ -26,9 +26,9 @@ export default function MacroBar({
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-neutral-400">{label}</span>
         <span className="text-xs text-neutral-400">
-          <span className="font-semibold text-orange-400">{Math.round(current)}</span>
-          <span className="mx-0.5 text-neutral-500">/</span>
-          <span className="text-neutral-300">
+          <span className="font-semibold text-neutral-400">{Math.round(current)}</span>
+          <span className="mx-0.5 text-neutral-400">/</span>
+          <span className="text-neutral-400">
             {Math.round(target)}
             {unit}
           </span>
@@ -36,14 +36,14 @@ export default function MacroBar({
       </div>
       <div
         className={cn(
-          'h-2 w-full overflow-hidden rounded-full bg-neutral-800/80',
-          bgColor
+          'h-2 w-full overflow-hidden rounded-full',
+          bgColor || 'bg-neutral-800/80'
         )}
         aria-hidden="true"
       >
         <div
           className={cn(
-            'h-full rounded-full bg-gradient-to-r from-orange-600 to-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.25)] transition-all duration-700 ease-out',
+            'h-full rounded-full transition-all duration-700 ease-out',
             color
           )}
           style={{ width: `${percent}%` }}

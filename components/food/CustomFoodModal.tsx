@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Plus, Coffee, Sun, Moon, Cookie } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { cn, getCurrentTime } from '@/lib/utils';
 
 interface CustomFoodModalProps {
@@ -39,6 +40,8 @@ function getDefaultMealType(): string {
 }
 
 export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodModalProps) {
+  const [mounted, setMounted] = useState(false);
+
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -51,6 +54,23 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
   const [unit, setUnit] = useState('g');
   const [mealType, setMealType] = useState(getDefaultMealType());
   const [time, setTime] = useState(getCurrentTime());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+  }, [mounted]);
 
   const handleSubmit = () => {
     if (!name.trim() || !calories) return;
@@ -75,30 +95,47 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overscroll-contain"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up">
-        <div className="flex items-start justify-between">
-          <h3 className="text-lg font-semibold text-text-primary">Add Custom Food</h3>
+      <div
+        className="relative z-10 mx-4 flex w-full max-w-md flex-col overflow-x-visible overflow-y-hidden rounded-3xl border border-neutral-800 bg-neutral-900/95 px-5 pb-5 shadow-lg animate-slide-up sm:rounded-2xl"
+        style={{
+          maxHeight:
+            'min(70dvh, calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 16px) - 32px))',
+        }}
+      >
+        <div className="sticky top-0 z-10 -mx-5 mb-2 flex items-center justify-between bg-neutral-900/95 px-5 py-2">
+          <h3 className="text-lg font-semibold text-neutral-400">Add Custom Food</h3>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-white/[0.06]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-300 hover:bg-white/[0.06]"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mt-5 space-y-4">
+        <div
+          className="flex-1 space-y-4 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {/* Name */}
           <div>
-            <label className="text-xs font-medium text-text-muted">Food Name *</label>
+            <label className="text-xs font-medium text-neutral-400">Food Name *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="flex-1 mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
+              className="flex-1 mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 placeholder:text-neutral-500 input-no-focus-ring"
               placeholder="e.g., Homemade Upma"
             />
           </div>
@@ -106,20 +143,20 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
           {/* Quantity + Unit */}
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs font-medium text-text-muted">Quantity</label>
+              <label className="text-xs font-medium text-neutral-400">Quantity</label>
               <input
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
               />
             </div>
             <div className="w-28">
-              <label className="text-xs font-medium text-text-muted">Unit</label>
+              <label className="text-xs font-medium text-neutral-400">Unit</label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
               >
                 <option value="g">g</option>
                 <option value="ml">ml</option>
@@ -135,72 +172,72 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
           {/* Nutrition */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-text-muted">Calories (kcal) *</label>
+              <label className="text-xs font-medium text-neutral-400">Calories (kcal) *</label>
               <input
                 type="number"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-muted">Protein (g)</label>
+              <label className="text-xs font-medium text-neutral-400">Protein (g)</label>
               <input
                 type="number"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-muted">Carbs (g)</label>
+              <label className="text-xs font-medium text-neutral-400">Carbs (g)</label>
               <input
                 type="number"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-muted">Fat (g)</label>
+              <label className="text-xs font-medium text-neutral-400">Fat (g)</label>
               <input
                 type="number"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-muted">Fiber (g)</label>
+              <label className="text-xs font-medium text-neutral-400">Fiber (g)</label>
               <input
                 type="number"
                 value={fiber}
                 onChange={(e) => setFiber(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-muted">Sugar (g)</label>
+              <label className="text-xs font-medium text-neutral-400">Sugar (g)</label>
               <input
                 type="number"
                 value={sugar}
                 onChange={(e) => setSugar(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-muted">Sodium (mg)</label>
+              <label className="text-xs font-medium text-neutral-400">Sodium (mg)</label>
               <input
                 type="number"
                 value={sodium}
                 onChange={(e) => setSodium(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 placeholder="0"
               />
             </div>
@@ -208,20 +245,20 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
 
           {/* Meal Type */}
           <div>
-            <label className="text-xs font-medium text-text-muted">Meal Type</label>
-            <div className="mt-2 grid grid-cols-4 gap-2">
+            <label className="text-xs font-medium text-neutral-400">Meal Type</label>
+            <div className="mt-2 grid grid-cols-4 gap-1.5 px-0.5">
               {mealTypes.map((mt) => (
                 <button
                   key={mt.key}
                   onClick={() => setMealType(mt.key)}
                   className={cn(
-                    'flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all',
+                    'flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all text-neutral-400',
                     mealType === mt.key
-                      ? 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/40'
-                      : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
+                      ? 'bg-orange-500/15 ring-1 ring-orange-400/40'
+                      : 'bg-white/[0.04] hover:bg-white/[0.06]'
                   )}
                 >
-                  <mt.icon className="h-4 w-4" />
+                  <mt.icon className="h-4 w-4 text-neutral-400" />
                   {mt.label}
                 </button>
               ))}
@@ -230,31 +267,34 @@ export default function CustomFoodModal({ onClose, onAdd, loading }: CustomFoodM
 
           {/* Time */}
           <div>
-            <label className="text-xs font-medium text-text-muted">Time</label>
+            <label className="text-xs font-medium text-neutral-400">Time</label>
             <input
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+              className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
             />
           </div>
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !name.trim() || !calories}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-400 disabled:opacity-50"
-        >
-          {loading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              Add Custom Food
-            </>
-          )}
-        </button>
+        <div className="sticky bottom-0 z-10 -mx-6 mt-4 bg-gradient-to-t from-neutral-900/95 via-neutral-900/90 to-transparent px-6 pt-3">
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !name.trim() || !calories}
+            className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-orange-400 disabled:opacity-50"
+          >
+            {loading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                Add Custom Food
+              </>
+            )}
+          </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

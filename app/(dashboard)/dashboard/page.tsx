@@ -20,9 +20,10 @@ import { getLevelProgress, BASE_LEVEL_XP } from '@/lib/level';
 import { getTargetsForUser } from '@/lib/health';
 import { BadgeCard } from '@/components/achievements/BadgeCard';
 import { BadgeDetailModal } from '@/components/achievements/BadgeDetailModal';
+import { StreakCard as AchievementStreakCard } from '@/components/achievements/StreakCard';
 import StatMini from '@/components/ui/StatMini';
 import { Droplets, Flame, Moon, Utensils } from 'lucide-react';
-import type { UserBadge } from '@/types';
+import type { UserBadge, UserStreaks } from '@/types';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -92,7 +93,10 @@ export default function DashboardPage() {
         {/* Top row */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-heading text-[32px] font-normal tracking-[0.03em] leading-none text-text-primary">
+            <h1
+              className="font-heading text-[32px] font-normal tracking-[0.03em] leading-none"
+              style={{ color: '#e5e5e5' }}
+            >
               {getGreeting()}
               {userName ? `, ${userName}` : ''} 👋
             </h1>
@@ -130,12 +134,14 @@ export default function DashboardPage() {
                   bgColor="stroke-white/[0.06]"
                   value={formatNumber(Math.round(totalCal))}
                   label="kcal"
-                  valueClassName="font-heading text-4xl font-normal tracking-[0.03em] text-text-primary"
+                  valueClassName="font-heading text-4xl font-normal tracking-[0.03em] text-text-secondary"
                   labelClassName="font-body text-xs font-medium text-text-muted"
                 />
                 </div>
                 <p className="text-center text-sm text-text-muted leading-relaxed font-body">
-                  <span className="font-semibold text-accent-emerald">{formatNumber(Math.round(remaining))} remaining</span>
+                  <span className="font-semibold text-text-secondary">
+                    {formatNumber(Math.round(remaining))} remaining
+                  </span>
                   <br />
                   of {formatNumber(targets.dailyCalories)} kcal goal
                 </p>
@@ -165,45 +171,49 @@ export default function DashboardPage() {
           <div className="bento-stats-cards">
             <div className="stat-card-water">
               <StatMini
-                icon={<Droplets className="h-6 w-6" strokeWidth={1.8} />}
+                icon={<Droplets className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
                 value={formatWater(log?.waterIntake || 0)}
                 label="Water"
                 sub="2.5 L target"
                 valueColor="text-accent-cyan"
-                iconBg="bg-accent-cyan/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 compact
               />
             </div>
             <div className="stat-card-burned">
               <StatMini
-                icon={<Flame className="h-6 w-6" strokeWidth={1.8} />}
+                icon={<Flame className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
                 value={formatNumber(Math.round(burned))}
                 label="Burned"
                 sub={`${log?.workouts?.length || 0} workouts`}
                 valueColor="text-accent-rose"
-                iconBg="bg-accent-rose/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 compact
               />
             </div>
             <div className="stat-card-meals">
               <StatMini
-                icon={<Utensils className="h-6 w-6" strokeWidth={1.8} />}
+                icon={<Utensils className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
                 value={String(meals.length)}
                 label="Meals"
                 sub={`${formatNumber(Math.round(totalCal))} kcal`}
                 valueColor="text-accent-amber"
-                iconBg="bg-accent-amber/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 compact
               />
             </div>
             <div className="stat-card-sleep">
               <StatMini
-                icon={<Moon className="h-6 w-6" strokeWidth={1.8} />}
+                icon={<Moon className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
                 value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
                 label="Sleep"
                 sub={log?.sleep ? `${log.sleep.quality}/5 quality` : '8h target'}
                 valueColor="text-accent-violet"
-                iconBg="bg-accent-violet/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 compact
               />
             </div>
@@ -329,45 +339,49 @@ export default function DashboardPage() {
           <div className="m-stats-grid">
             <div className="stat-card-water">
               <StatMini
-                icon={<Droplets className="h-8 w-8" strokeWidth={1.8} />}
+                icon={<Droplets className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
                 value={formatWater(log?.waterIntake || 0)}
                 label="Water"
                 sub="of 2.5 L target"
                 valueColor="text-accent-cyan"
-                iconBg="bg-accent-cyan/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 stackLabel
               />
             </div>
             <div className="stat-card-burned">
               <StatMini
-                icon={<Flame className="h-8 w-8" strokeWidth={1.8} />}
+                icon={<Flame className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
                 value={formatNumber(Math.round(burned))}
                 label="Burned"
                 sub={`${log?.workouts?.length || 0} workouts`}
                 valueColor="text-accent-rose"
-                iconBg="bg-accent-rose/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 stackLabel
               />
             </div>
             <div className="stat-card-meals">
               <StatMini
-                icon={<Utensils className="h-8 w-8" strokeWidth={1.8} />}
+                icon={<Utensils className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
                 value={String(meals.length)}
                 label="Meals"
                 sub={`${formatNumber(Math.round(totalCal))} kcal logged`}
                 valueColor="text-accent-amber"
-                iconBg="bg-accent-amber/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 stackLabel
               />
             </div>
             <div className="stat-card-sleep">
               <StatMini
-                icon={<Moon className="h-8 w-8" strokeWidth={1.8} />}
+                icon={<Moon className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
                 value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
                 label="Sleep"
                 sub="of 8h target"
                 valueColor="text-accent-violet"
-                iconBg="bg-accent-violet/15"
+                labelClassName="text-text-secondary"
+                iconBg=""
                 stackLabel
               />
             </div>
@@ -482,7 +496,7 @@ function MacroCol({
     <div className="flex flex-col">
       <div className="mb-2 flex justify-between text-sm text-text-muted">
         <span className="font-body font-medium">{label}</span>
-        <span className="font-heading text-base tracking-[0.03em] text-text-primary">
+        <span className="font-heading text-base tracking-[0.03em] text-text-secondary">
           {Math.round(current)}/{displayTarget}
         </span>
       </div>
@@ -530,33 +544,79 @@ function RecentBadges({ earnedBadges }: { earnedBadges: UserBadge[] }) {
   );
 }
 
+const EMPTY_STREAKS: UserStreaks = {
+  current: {
+    logging: 0,
+    healthy: 0,
+    calories: 0,
+    water: 0,
+    workout: 0,
+    sleep: 0,
+    weight: 0,
+  },
+  best: {
+    logging: 0,
+    healthy: 0,
+    calories: 0,
+    water: 0,
+    workout: 0,
+    sleep: 0,
+    weight: 0,
+  },
+};
+
 function StreakCard({
-  streaks: _streaks,
+  streaks,
   displayDayIndex,
   loggingStreak,
 }: {
-  streaks?: { current?: { logging?: number }; best?: { logging?: number } } | null;
+  streaks?: UserStreaks | null;
   displayDayIndex: number;
   loggingStreak: number;
 }) {
-  const active = loggingStreak > 0;
+  const s = streaks ?? EMPTY_STREAKS;
+  const items = [
+    { key: 'logging' as const, label: 'Active days' },
+    { key: 'healthy' as const, label: 'Healthy days' },
+    { key: 'calories' as const, label: 'Food log' },
+    { key: 'water' as const, label: 'Water' },
+    { key: 'weight' as const, label: 'Weight' },
+    { key: 'workout' as const, label: 'Workouts' },
+    { key: 'sleep' as const, label: 'Sleep' },
+  ];
+
+  const activeItems = items.filter((item) => s.current[item.key] > 0);
+  const daysToSeven = Math.max(1, 7 - loggingStreak);
 
   return (
     <div className="streak-card card-glow">
       <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-text-muted">
         Active Streaks
       </p>
-      <div className="mb-2.5 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-4 text-center">
-        <p className="streak-value">
-          {active ? `${loggingStreak} day streak` : 'No active streaks'}
-        </p>
-        <p className="mt-0.5 text-xs text-text-muted opacity-70">
-          {active ? 'Keep it up!' : 'Log today to start one.'}
-        </p>
-      </div>
+      {activeItems.length === 0 ? (
+        <div className="mb-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4 text-center">
+          <p className="text-sm font-medium text-text-secondary">No active streaks</p>
+          <p className="mt-1 text-[11px] text-text-muted">Log today to start one.</p>
+        </div>
+      ) : (
+        <div className="mb-2.5 px-1">
+          <div className="flex gap-3 overflow-x-auto pb-1 hide-scrollbar">
+            {activeItems.map((item) => (
+              <div key={item.key} className="w-[165px] shrink-0 sm:w-[175px] lg:w-[175px]">
+                <AchievementStreakCard
+                  label={item.label}
+                  current={s.current[item.key]}
+                  best={s.best[item.key]}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <p className="mb-3 text-xs text-text-muted leading-relaxed">
-        Just <span className="font-semibold text-accent-violet">7 active days</span> away from your first 7-day
-        streak badge.
+        {loggingStreak >= 7
+          ? 'Keep your active-day streak alive to climb to the next badge tier.'
+          : `Just ${daysToSeven} active day${daysToSeven === 1 ? '' : 's'} away from your first 7-day streak badge.`}
       </p>
       <div className="flex gap-1.5">
         {DAY_LABELS.map((lbl, i) => (

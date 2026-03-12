@@ -1,5 +1,7 @@
 'use client';
 
+import { cn } from '@/lib/utils';
+
 // ============================================
 // ProgressRing - Circular progress indicator
 // ============================================
@@ -18,6 +20,7 @@ interface ProgressRingProps {
   sublabel?: string;
   valueClassName?: string;
   labelClassName?: string;
+  sublabelClassName?: string;
 }
 
 export default function ProgressRing({
@@ -32,6 +35,7 @@ export default function ProgressRing({
   sublabel,
   valueClassName,
   labelClassName,
+  sublabelClassName,
 }: ProgressRingProps) {
   const center = size / 2;
   const radius = (size - strokeWidth) / 2;
@@ -90,11 +94,14 @@ export default function ProgressRing({
         )}
       </svg>
 
-      {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        {value && <span className={valueClassName ?? 'text-lg font-bold text-text-primary'}>{value}</span>}
-        {label && <span className={labelClassName ?? 'text-[10px] font-medium text-text-muted'}>{label}</span>}
-        {sublabel && <span className="text-[9px] text-text-muted">{sublabel}</span>}
+      {/* Center content – perfectly centered inside the ring */}
+      <div
+        className="absolute flex flex-col items-center gap-0.5 text-center"
+        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: `${size - strokeWidth * 2 - 8}px` }}
+      >
+        {value && <span className={cn('block leading-none', valueClassName ?? 'text-lg font-bold text-neutral-400')}>{value}</span>}
+        {label && <span className={cn('block leading-none', labelClassName ?? 'text-[10px] font-medium text-neutral-400')}>{label}</span>}
+        {sublabel && <span className={cn('block leading-none', sublabelClassName ?? 'text-[9px] text-neutral-400')}>{sublabel}</span>}
       </div>
     </div>
   );
