@@ -102,6 +102,16 @@ export default function WorkoutPage() {
   const totalDuration = workouts.reduce((s, w) => s + (w.duration || 0), 0);
   const totalSets = workouts.reduce((s, w) => s + (w.sets || 0), 0);
 
+  const saveDebugLog = (agent: 'ai-logger' | 'workout-planner', debugLog: unknown) => {
+    if (process.env.NEXT_PUBLIC_DEBUG_MODE !== 'true') return;
+    fetch('/api/debug-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: 'workout', agent, log: debugLog }),
+      credentials: 'include',
+    }).catch(() => {});
+  };
+
   // Fetch workout history (last 7 days)
   useEffect(() => {
     setHistoryLoading(true);
@@ -731,12 +741,14 @@ export default function WorkoutPage() {
         <AIWorkoutLoggerModal
           onClose={() => setShowAiLogger(false)}
           onAdd={handleAddFromAi}
+          onDebugLog={(logData) => saveDebugLog('ai-logger', logData)}
           loading={addingFromAi}
         />
       )}
       {showPlan && (
         <AIWorkoutPlanModal
           onClose={() => setShowPlan(false)}
+          onDebugLog={(logData) => saveDebugLog('workout-planner', logData)}
         />
       )}
       {editingWorkout && (

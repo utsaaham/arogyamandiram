@@ -8,6 +8,12 @@ import { decrypt } from '@/lib/encryption';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import type { UserTargets } from '@/types';
 
+type OpenAIUsage = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+};
+
 export async function getOpenAIKeyForHealthPlan(userId: string): Promise<string | null> {
   await connectDB();
   const user = await User.findById(userId).select('+apiKeys.openai').lean();
@@ -29,7 +35,19 @@ export async function getOpenAIKeyForHealthPlan(userId: string): Promise<string 
   return null;
 }
 
-async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: string) {
+async function callOpenAI(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<{
+  parsed: Record<string, unknown>;
+  rawText: string;
+  usage: OpenAIUsage;
+  latencyMs: number;
+  model: string;
+  timestamp: string;
+}> {
+  const startedAt = Date.now();
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -54,7 +72,18 @@ async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: stri
   }
 
   const data = await res.json();
-  return JSON.parse(data.choices[0].message.content);
+  const rawText = data?.choices?.[0]?.message?.content;
+  if (typeof rawText !== 'string' || !rawText.trim()) {
+    throw new Error('OpenAI returned an empty response.');
+  }
+  return {
+    parsed: JSON.parse(rawText),
+    rawText,
+    usage: (data?.usage ?? {}) as OpenAIUsage,
+    latencyMs: Math.max(0, Date.now() - startedAt),
+    model: typeof data?.model === 'string' ? data.model : 'gpt-4o-mini',
+    timestamp: new Date().toISOString(),
+  };
 }
 
 export function clampTargets(raw: Record<string, unknown>): UserTargets {
@@ -97,6 +126,7 @@ Use science-backed ranges. For ideal weight use healthy BMI range for height and
 export interface GenerateHealthPlanResult {
   targets: UserTargets;
   explanations: Record<string, string> | null;
+  debugLog?: Record<string, unknown>;
 }
 
 /**
@@ -132,12 +162,54 @@ export async function generateHealthPlanTargets(userId: string): Promise<Generat
   const goal = profile.goal ?? 'maintain';
   const targetWeight = profile.targetWeight;
 
+  const requestedAt = new Date().toISOString();
   const userPrompt = `User: ${profile.name ?? 'User'}, ${age} years, ${gender}, ${height} cm, ${weight} kg. Activity: ${activityLevel}. Goal: ${goal}.${targetWeight != null ? ` Target weight: ${targetWeight} kg.` : ''} Generate the health plan JSON.`;
 
-  const result = await callOpenAI(apiKey, SYSTEM_PROMPT, userPrompt);
-  const rawTargets = result?.targets && typeof result.targets === 'object' ? result.targets : {};
+  const ai = await callOpenAI(apiKey, SYSTEM_PROMPT, userPrompt);
+  const result = ai.parsed;
+  const rawTargets: Record<string, unknown> =
+    result.targets && typeof result.targets === 'object'
+      ? (result.targets as Record<string, unknown>)
+      : {};
   const targets = clampTargets(rawTargets);
-  const explanations = result?.explanations && typeof result.explanations === 'object' ? result.explanations : null;
+  const explanations: Record<string, string> | null =
+    result.explanations && typeof result.explanations === 'object'
+      ? Object.fromEntries(
+          Object.entries(result.explanations as Record<string, unknown>)
+            .filter(([, value]) => typeof value === 'string')
+            .map(([key, value]) => [key, value as string])
+        )
+      : null;
+  const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
+  const debugLog = isDebugMode
+    ? {
+        userRequest: {
+          requestedAt,
+          profile: {
+            age,
+            gender,
+            height,
+            weight,
+            activityLevel,
+            goal,
+            ...(targetWeight != null ? { targetWeight } : {}),
+          },
+        },
+        systemPrompt: SYSTEM_PROMPT,
+        userPrompt,
+        response: ai.rawText,
+        parsedResult: result,
+        clampedTargets: targets,
+        explanations,
+        metadata: {
+          model: ai.model,
+          usage: ai.usage,
+          latencyMs: ai.latencyMs,
+          timestamp: ai.timestamp,
+          status: 'success',
+        },
+      }
+    : undefined;
 
-  return { targets, explanations };
+  return { targets, explanations, ...(debugLog ? { debugLog } : {}) };
 }

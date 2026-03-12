@@ -7,6 +7,7 @@ export const PAGE_LABELS: Record<string, string> = {
   food: 'Food',
   workout: 'Workout',
   insights: 'Insights',
+  targets: 'Targets',
   sleep: 'Sleep',
 };
 
@@ -15,6 +16,7 @@ export const AGENT_LABELS: Record<string, string> = {
   'ai-insights': 'AI Insights',
   'workout-planner': 'Workout Planner',
   'ai-logger': 'AI Logger',
+  'health-plan': 'AI Health Plan',
   'sleep-coach': 'Sleep Coach',
   'yesterday': "Yesterday's insights",
   'weekly': 'Weekly insights',
@@ -27,6 +29,7 @@ export const AGENT_DESCRIPTIONS: Record<string, string> = {
   'ai-insights': 'Generates personalized health insights from your data.',
   'workout-planner': 'Plans workouts tailored to your goals.',
   'ai-logger': 'Logs food entries via natural language.',
+  'health-plan': 'Generates personalized targets from your profile.',
   'sleep-coach': 'Provides sleep tips and analysis.',
   'yesterday': "Yesterday's AI insights.",
   'weekly': 'Weekly AI insights.',

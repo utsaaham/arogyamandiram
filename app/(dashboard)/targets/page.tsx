@@ -86,9 +86,25 @@ export default function TargetsPage() {
     try {
       const res = await api.generateHealthPlan();
       if (res.success && res.data) {
-        const data = res.data as { user?: { targets?: Record<string, number> }; explanations?: Record<string, string> };
+        const data = res.data as {
+          user?: { targets?: Record<string, number> };
+          explanations?: Record<string, string>;
+          debugLog?: unknown;
+        };
         showToast('AI health plan updated', 'success');
         refetch();
+        if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true' && data.debugLog != null) {
+          fetch('/api/debug-logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              page: 'targets',
+              agent: 'health-plan',
+              log: data.debugLog,
+            }),
+            credentials: 'include',
+          }).catch(() => {});
+        }
         if (data.explanations && Object.keys(data.explanations).length > 0) {
           const first = Object.entries(data.explanations)[0];
           showToast(first[1], 'info');

@@ -12,6 +12,14 @@ import { resolveOpenAIKey } from '@/lib/openaiKey';
 
 export const dynamic = 'force-dynamic';
 
+type OpenAIUsage = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  input_tokens?: number;
+  output_tokens?: number;
+  total_tokens?: number;
+};
+
 const INSTRUCTIONS = `
 You are an expert workout-activity parser used in a health and fitness logging system.
 
@@ -344,6 +352,7 @@ function normalizeWorkout(raw: RawWorkout) {
 
 export async function POST(req: NextRequest) {
   try {
+    const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
     const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
 
@@ -361,6 +370,8 @@ export async function POST(req: NextRequest) {
     }
 
     const userMessage = `The user describes completed workouts: "${text.trim()}". Parse this into structured workout entries that can be logged.`;
+    const requestedAt = new Date().toISOString();
+    const startedAt = Date.now();
 
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -406,6 +417,8 @@ export async function POST(req: NextRequest) {
     }
 
     const data = (await res.json()) as {
+      model?: string;
+      usage?: OpenAIUsage;
       output?: Array<{
         type?: string;
         name?: string;
@@ -461,6 +474,30 @@ export async function POST(req: NextRequest) {
         'Could not parse workout data from AI response. Try describing the workout in more detail.',
         422
       );
+    }
+
+    if (isDebugMode) {
+      const timestamp = new Date().toISOString();
+      const debugLog = {
+        userRequest: {
+          text: text.trim(),
+          requestedAt,
+        },
+        instructions: INSTRUCTIONS,
+        userMessage,
+        response: JSON.stringify(data, null, 2),
+        parsedResult: {
+          workouts,
+        },
+        metadata: {
+          model: typeof data.model === 'string' ? data.model : 'gpt-4o',
+          usage: data.usage ?? {},
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          timestamp,
+          status: 'success',
+        },
+      };
+      return maskedResponse({ workouts, debugLog });
     }
 
     return maskedResponse({ workouts });

@@ -27,9 +27,10 @@ interface WorkoutPlan {
 
 interface AIWorkoutPlanModalProps {
   onClose: () => void;
+  onDebugLog?: (log: unknown) => void;
 }
 
-export default function AIWorkoutPlanModal({ onClose }: AIWorkoutPlanModalProps) {
+export default function AIWorkoutPlanModal({ onClose, onDebugLog }: AIWorkoutPlanModalProps) {
   const { user } = useUser();
   const hasApiKey = user?.hasOpenAiKey;
 
@@ -63,8 +64,11 @@ export default function AIWorkoutPlanModal({ onClose }: AIWorkoutPlanModalProps)
       if (workoutDuration) context.duration = workoutDuration;
       const res = await api.getWorkoutPlan(context);
       if (res.success && res.data) {
-        const data = res.data as { plan: WorkoutPlan };
-        setWorkout(data.plan || null);
+        const data = res.data as { plan?: unknown; debugLog?: unknown };
+        setWorkout(data.plan && typeof data.plan === 'object' ? (data.plan as WorkoutPlan) : null);
+        if (data.debugLog != null && onDebugLog) {
+          onDebugLog(data.debugLog);
+        }
       } else {
         const rawError = res.error || 'Failed to fetch workout plan';
         const normalized = rawError.toLowerCase();

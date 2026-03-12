@@ -15,7 +15,27 @@ import { getToday, getYesterday, getAgeFromDateOfBirth, toLocalDateString } from
 
 export const dynamic = 'force-dynamic';
 
-async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: string) {
+type OpenAIUsage = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+};
+
+type OpenAICallResult = {
+  parsed: Record<string, unknown>;
+  rawText: string;
+  usage: OpenAIUsage;
+  latencyMs: number;
+  model: string;
+  timestamp: string;
+};
+
+async function callOpenAI(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<OpenAICallResult> {
+  const startedAt = Date.now();
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -53,7 +73,18 @@ async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: stri
   }
 
   const data = await res.json();
-  return JSON.parse(data.choices[0].message.content);
+  const rawText = data?.choices?.[0]?.message?.content;
+  if (typeof rawText !== 'string' || !rawText.trim()) {
+    throw new Error('OpenAI returned an empty response.');
+  }
+  return {
+    parsed: JSON.parse(rawText),
+    rawText,
+    usage: (data?.usage ?? {}) as OpenAIUsage,
+    latencyMs: Math.max(0, Date.now() - startedAt),
+    model: typeof data?.model === 'string' ? data.model : 'gpt-4o-mini',
+    timestamp: new Date().toISOString(),
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -112,20 +143,45 @@ Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended w
 
     const recentContext = buildLogContext(recentLogs as LogWithSleep[], 'Recent 7-day data');
 
-    let result;
+    const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
+    let result: Record<string, unknown>;
+    let debugLog: Record<string, unknown> | undefined;
 
     switch (type) {
       case 'meal': {
         const systemPrompt = `You are a nutritionist AI for an Indian health app called Arogyamandiram. Suggest Indian meals that fit the user's dietary needs. Always respond with JSON: { "suggestions": [{ "name": string, "description": string, "calories": number, "protein": number, "carbs": number, "fat": number, "mealType": "breakfast"|"lunch"|"dinner"|"snack", "ingredients": string[], "isVegetarian": boolean }] }. Include 4-6 suggestions. Focus on Indian cuisine.`;
         const userPrompt = `${profileContext}\n${recentContext}\nToday's date: ${getToday()}\n${context.mealType ? `Suggest for: ${context.mealType}` : 'Suggest meals for the full day'}\n${context.preferences ? `Preferences: ${context.preferences}` : ''}`;
-        result = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        result = ai.parsed;
         break;
       }
 
       case 'workout': {
         const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided. Always respond with JSON: { "plan": { "name": string, "description": string, "exercises": [{ "name": string, "sets": number, "reps": string, "restSeconds": number, "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }. Align duration and estimated calories with the user's daily targets when possible.`;
         const userPrompt = `${profileContext}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Use their recommended daily workout duration if provided'}`;
-        result = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        result = ai.parsed;
+        if (isDebugMode) {
+          debugLog = {
+            userRequest: {
+              type: 'workout',
+              focusArea: typeof context.focusArea === 'string' ? context.focusArea : '',
+              duration: typeof context.duration === 'string' ? context.duration : '',
+              requestedAt: ai.timestamp,
+            },
+            systemPrompt,
+            userPrompt,
+            response: ai.rawText,
+            parsedResult: ai.parsed,
+            metadata: {
+              model: ai.model,
+              usage: ai.usage,
+              latencyMs: ai.latencyMs,
+              timestamp: ai.timestamp,
+              status: 'success',
+            },
+          };
+        }
         break;
       }
 
@@ -194,15 +250,38 @@ Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended w
         const periodLabel = periodLabels[period] ?? 'weekly';
         const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's tracking data and provide actionable insights. Use their extended targets (ideal weight, recommended workout minutes, daily calorie burn goal, recommended sleep) when relevant. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest. Reference how they are doing vs their ideal weight, workout goal, and sleep target when applicable.`;
         const userPrompt = `${profileContext}\n${insightContext}\nProvide ${periodLabel} insights and recommendations.`;
-        const raw = await callOpenAI(apiKey, systemPrompt, userPrompt);
-        result = { ...raw, generatedAt: new Date().toISOString() };
+        const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        result = { ...ai.parsed, generatedAt: new Date().toISOString() };
+        if (isDebugMode) {
+          debugLog = {
+            userRequest: {
+              type: 'insights',
+              period,
+              startDate,
+              endDate,
+              requestedAt: ai.timestamp,
+            },
+            systemPrompt,
+            userPrompt,
+            response: ai.rawText,
+            parsedResult: ai.parsed,
+            metadata: {
+              model: ai.model,
+              usage: ai.usage,
+              latencyMs: ai.latencyMs,
+              timestamp: ai.timestamp,
+              status: 'success',
+            },
+          };
+        }
         break;
       }
 
       case 'sleep': {
         const systemPrompt = `You are a sleep coach AI for Arogyamandiram health app. Analyze the user's sleep data (duration, quality, consistency of bed/wake times) and their target sleep hours. Always respond with JSON: { "summary": string, "tips": [{ "title": string, "description": string }] }. Provide 4-6 personalized tips. Include advice on: bedtime routine, caffeine cutoff, screen time, consistency, sleep environment, or stress if relevant. Be encouraging. If they have little or no sleep data, give general evidence-based sleep hygiene tips.`;
         const userPrompt = `${profileContext}\n${recentContext}\nProvide personalized sleep analysis and actionable tips.`;
-        result = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
+        result = ai.parsed;
         break;
       }
 
@@ -210,6 +289,9 @@ Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended w
         return errorResponse('Invalid recommendation type. Use: meal, workout, insights, or sleep', 400);
     }
 
+    if (isDebugMode && debugLog) {
+      return maskedResponse({ ...result, debugLog });
+    }
     return maskedResponse(result);
   } catch (err) {
     console.error('[AI Recommendations Error]:', err);

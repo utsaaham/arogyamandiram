@@ -19,6 +19,7 @@ interface WorkoutEntry {
 interface AIWorkoutLoggerModalProps {
   onClose: () => void;
   onAdd: (workouts: WorkoutEntry[]) => void;
+  onDebugLog?: (log: unknown) => void;
   loading?: boolean;
 }
 
@@ -30,7 +31,12 @@ const categoryLabels: Record<string, string> = {
   other: 'Other',
 };
 
-export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWorkoutLoggerModalProps) {
+export default function AIWorkoutLoggerModal({
+  onClose,
+  onAdd,
+  onDebugLog,
+  loading,
+}: AIWorkoutLoggerModalProps) {
   const [mounted, setMounted] = useState(false);
   const [text, setText] = useState('');
   const [fetching, setFetching] = useState(false);
@@ -58,6 +64,10 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
     try {
       const res = await api.aiWorkoutLogger(trimmed);
       if (res.success && res.data?.workouts && Array.isArray(res.data.workouts)) {
+        const debugLog = (res.data as { debugLog?: unknown }).debugLog;
+        if (debugLog != null && onDebugLog) {
+          onDebugLog(debugLog);
+        }
         const parsed = (res.data.workouts as unknown[]).map((w) => {
           const obj = (w || {}) as Record<string, unknown>;
           return {

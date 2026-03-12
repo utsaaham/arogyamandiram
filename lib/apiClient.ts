@@ -189,7 +189,7 @@ export const api = {
     }),
 
   aiWorkoutLogger: (text: string) =>
-    apiFetch<{ workouts: Record<string, unknown>[] }>('/ai/workout-logger', {
+    apiFetch<{ workouts: Record<string, unknown>[]; debugLog?: unknown }>('/ai/workout-logger', {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
@@ -250,7 +250,7 @@ export const api = {
     }),
 
   getWorkoutPlan: (context: Record<string, unknown>) =>
-    apiFetch('/ai/recommendations', {
+    apiFetch<{ plan?: Record<string, unknown>; debugLog?: unknown }>('/ai/recommendations', {
       method: 'POST',
       body: JSON.stringify({ type: 'workout', ...context }),
     }),
@@ -259,7 +259,7 @@ export const api = {
     apiFetch('/ai/insights-eligibility'),
 
   getInsights: (params?: { period?: 'yesterday' | 'week' | 'month' | 'year'; startDate?: string; endDate?: string }) =>
-    apiFetch('/ai/recommendations', {
+    apiFetch<{ insights?: Record<string, unknown>[]; generatedAt?: string; debugLog?: unknown }>('/ai/recommendations', {
       method: 'POST',
       body: JSON.stringify({ type: 'insights', ...params }),
     }),
@@ -271,7 +271,11 @@ export const api = {
     }),
 
   generateHealthPlan: () =>
-    apiFetch('/ai/health-plan', {
+    apiFetch<{
+      user?: Record<string, unknown>;
+      explanations?: Record<string, string>;
+      debugLog?: unknown;
+    }>('/ai/health-plan', {
       method: 'POST',
       body: JSON.stringify({}),
     }),
