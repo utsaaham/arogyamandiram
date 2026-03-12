@@ -41,17 +41,18 @@ export default function StatCard({
   variant = 'default',
 }: StatCardProps & { variant?: 'default' | 'workout' }) {
   const Wrapper = onClick ? 'button' : 'div';
-  const iconBg = iconBgFromColor(iconColor);
   const isWorkout = variant === 'workout';
+  const iconBg = isWorkout ? 'bg-transparent' : iconBgFromColor(iconColor);
 
   return (
     <Wrapper
       className={cn(
-        'flex items-start text-left transition-all duration-200',
+        'flex text-left transition-all duration-200',
+        isWorkout ? 'items-center' : 'items-start',
         isWorkout
-          ? 'relative rounded-2xl bg-workout-bg text-text-primary shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+          ? 'relative rounded-2xl bg-workout-bg text-text-primary border border-white/[0.06] shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
           : 'glass-card',
-        compact ? 'gap-2.5 rounded-xl p-2.5' : 'gap-4 rounded-2xl p-4',
+        compact ? 'gap-2.5 rounded-xl p-2.5' : isWorkout ? 'gap-3 rounded-2xl p-4' : 'gap-4 rounded-2xl p-4',
         onClick && !isWorkout && 'cursor-pointer hover:border-white/[0.08] hover:bg-bg-hover',
         className
       )}
@@ -61,30 +62,38 @@ export default function StatCard({
         className={cn(
           'flex shrink-0 items-center justify-center',
           iconBg,
-          compact ? 'h-8 w-8 rounded-md' : 'h-10 w-10 rounded-xl',
+          compact ? 'h-8 w-8 rounded-md' : isWorkout ? 'h-12 w-12 rounded-none' : 'h-10 w-10 rounded-xl',
           iconColor
         )}
       >
-        <Icon className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
+        <Icon className={compact ? 'h-4 w-4' : isWorkout ? 'h-7 w-7' : 'h-5 w-5'} />
       </div>
       <div className="min-w-0 flex-1 space-y-0.5">
         {label ? (
           <p
             className={cn(
               'm-0 font-medium leading-tight',
-              isWorkout ? 'text-workout-label' : 'text-text-muted',
+              isWorkout ? 'text-neutral-400' : 'text-text-muted',
               compact ? 'text-[10px]' : 'text-xs',
             )}
           >
             {label}
           </p>
         ) : null}
-        <p className={cn('m-0 font-bold leading-tight text-text-primary', compact ? 'text-sm' : 'text-xl')}>{value}</p>
+        <p
+          className={cn(
+            'm-0 font-bold leading-tight',
+            isWorkout ? 'text-text-primary' : 'text-text-primary',
+            compact ? 'text-sm' : 'text-xl'
+          )}
+        >
+          {value}
+        </p>
         {subtitle ? (
           <p
             className={cn(
               'm-0 leading-tight break-words',
-              isWorkout ? 'text-workout-label' : 'text-text-muted',
+              isWorkout ? 'text-neutral-400' : 'text-text-muted',
               compact ? 'text-[10px]' : 'text-xs',
             )}
           >

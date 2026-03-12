@@ -19,7 +19,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ? // Premium deep red gradient for primary CTAs
           'bg-[linear-gradient(135deg,#FF4D4D,#B32D2D)] text-white shadow-[0_4px_18px_rgba(0,0,0,0.6)] hover:brightness-110 focus-visible:ring-workout-accent'
         : // Subtle bordered button that still fits the workout palette
-          'border border-workout-border bg-[rgba(26,18,18,0.9)] text-neutral-200 hover:bg-[rgba(26,18,18,1)] focus-visible:ring-workout-accent';
+          'border border-workout-border bg-workout-bg/90 text-neutral-400 hover:bg-workout-bg focus-visible:ring-workout-accent';
 
     return (
       <button

@@ -105,7 +105,7 @@ export default function DashboardPageShell({
                 {subtitle != null && (
                   <p
                     className={cn(
-                      'mt-1 text-[11px] text-white',
+                      'mt-1 text-[11px] text-neutral-400',
                       subtitleClassName
                     )}
                   >
