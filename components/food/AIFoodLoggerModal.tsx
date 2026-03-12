@@ -256,13 +256,25 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up">
+      <div
+        className="relative z-10 mx-4 w-full max-w-md overflow-y-auto rounded-3xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/95 p-6 shadow-lg animate-slide-up"
+        style={{
+          maxHeight:
+            'min(70dvh, calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 16px) - 32px))',
+        }}
+      >
         <div className="flex items-start justify-between">
-          <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-orange-400" />
+          <h3 className="text-lg font-semibold text-neutral-400 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-neutral-400" />
             AI Food Logger
           </h3>
           <button
@@ -275,12 +287,12 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
 
         {!items ? (
           <>
-            <p className="mt-4 text-sm text-text-muted">What do you want to log today?</p>
+            <p className="mt-4 text-sm text-neutral-400">What do you want to log today?</p>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="e.g., 60 ml tomato pappu, 150g rice, 10g chutney, 5 potato chips"
-              className="mt-2 min-h-[100px] w-full resize-y rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2.5 text-sm text-neutral-100 placeholder:text-neutral-500 input-no-focus-ring"
+              className="mt-2 min-h-[100px] w-full resize-y rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2.5 text-sm text-neutral-400 placeholder:text-neutral-500 input-no-focus-ring"
               disabled={fetching}
               rows={3}
             />
@@ -311,9 +323,9 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
             </button>
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-text-primary">AI breakdown</p>
-                <div className="flex items-center gap-1 text-xs text-text-secondary">
-                  <Flame className="h-3.5 w-3.5 text-accent-rose" />
+                <p className="text-sm font-medium text-neutral-400">AI breakdown</p>
+                <div className="flex items-center gap-1 text-xs text-neutral-400">
+                  <Flame className="h-3.5 w-3.5 text-neutral-400" />
                   <span>{Math.round(totalCalories)} kcal total</span>
                 </div>
               </div>
@@ -325,13 +337,13 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-text-primary truncate">{item.name}</p>
-                        <p className="text-[11px] text-text-muted">
+                        <p className="text-sm font-semibold text-neutral-400 truncate">{item.name}</p>
+                        <p className="text-[11px] text-neutral-400">
                           {item.quantity} {item.unit}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end gap-0.5 text-right text-xs text-text-secondary">
-                        <span className="font-medium text-text-primary">{Math.round(item.calories)} kcal</span>
+                      <div className="flex flex-col items-end gap-0.5 text-right text-xs text-neutral-400">
+                        <span className="font-medium text-neutral-400">{Math.round(item.calories)} kcal</span>
                         <span className="text-[11px]">
                           P {item.protein}g · C {item.carbs}g · F {item.fat}g
                         </span>
@@ -341,7 +353,7 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
                 ))}
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Meal type</label>
+                <label className="text-xs font-medium text-neutral-400">Meal type</label>
                 <div className="mt-2 grid grid-cols-4 gap-2">
                   {mealTypes.map((mt) => (
                     <button
@@ -349,25 +361,25 @@ export default function AIFoodLoggerModal({ onClose, onAdd, onAddBatch, onDebugL
                       type="button"
                       onClick={() => setMealType(mt.key)}
                       className={cn(
-                        'flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all',
+                        'flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all text-neutral-400',
                         mealType === mt.key
-                          ? 'bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/40'
-                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
+                          ? 'bg-orange-500/15 ring-1 ring-orange-400/40'
+                          : 'bg-white/[0.04] hover:bg-white/[0.06]'
                       )}
                     >
-                      <mt.icon className="h-4 w-4" />
+                      <mt.icon className="h-4 w-4 text-neutral-400" />
                       {mt.label}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Time</label>
+                <label className="text-xs font-medium text-neutral-400">Time</label>
                 <input
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-100 input-no-focus-ring"
+                  className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-sm text-neutral-400 input-no-focus-ring"
                 />
               </div>
             </div>

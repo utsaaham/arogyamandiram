@@ -311,7 +311,7 @@ export default function WorkoutPage() {
         variant="secondary"
         className="flex shrink-0 items-center gap-2"
       >
-        <Dumbbell className="h-4 w-4 text-accent-rose" />
+        <Dumbbell className="h-4 w-4" />
         Workout Plan
       </Button>
       <Button
@@ -319,7 +319,7 @@ export default function WorkoutPage() {
         variant="secondary"
         className="flex shrink-0 items-center gap-2"
       >
-        <Sparkles className="h-4 w-4 text-accent-violet" />
+        <Sparkles className="h-4 w-4" />
         AI Logger
       </Button>
     </div>
@@ -331,7 +331,8 @@ export default function WorkoutPage() {
         title="Workouts"
         subtitle={formatDate(today)}
         icon={Dumbbell}
-        iconClassName="text-accent-rose"
+        iconClassName="text-neutral-400"
+        titleClassName="text-neutral-400"
         rightDesktop={actionButtons}
         mobileVariant="card"
         mobileCardClassName="border border-transparent bg-workout-bg text-text-primary shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
@@ -357,7 +358,7 @@ export default function WorkoutPage() {
             label="Duration"
             value={`${totalDuration}`}
             subtitle={`of ${recommendedMinutes} min goal`}
-            iconColor="text-accent-amber"
+            iconColor="text-neutral-400"
             variant="workout"
           />
           <StatCard
@@ -365,7 +366,7 @@ export default function WorkoutPage() {
             label="Workouts"
             value={`${workouts.length}`}
             subtitle="sessions today"
-            iconColor="text-accent-violet"
+            iconColor="text-accent-rose"
             variant="workout"
           />
           <StatCard
@@ -384,7 +385,7 @@ export default function WorkoutPage() {
         {/* Workout List */}
         <div className="flex flex-col lg:col-span-2">
           <WorkoutCard className="flex flex-1 flex-col p-6">
-            <h2 className="mb-4 text-base font-semibold text-text-primary">Today&apos;s Sessions</h2>
+            <h2 className="mb-4 text-base font-semibold text-neutral-400">Today&apos;s Sessions</h2>
 
             {workouts.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
@@ -421,7 +422,7 @@ export default function WorkoutPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between">
                             <div>
-                              <p className="text-sm font-semibold text-text-primary">{workout.exercise}</p>
+                              <p className="text-sm font-semibold text-neutral-400">{workout.exercise}</p>
                               <p className="text-xs capitalize text-text-muted">{cat}</p>
                             </div>
                             <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-all group-hover:opacity-100">
@@ -526,22 +527,22 @@ export default function WorkoutPage() {
           {/* Burn Rate */}
           {totalDuration > 0 && (
             <WorkoutCard className="p-5">
-              <h3 className="mb-3 text-sm font-semibold text-text-primary">Burn Rate</h3>
+              <h3 className="mb-3 text-sm font-semibold text-neutral-400">Burn Rate</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">Per minute</span>
-                  <span className="text-sm font-semibold text-accent-rose">{burnPerMinute.toFixed(1)} kcal</span>
+                  <span className="text-xs text-neutral-400">Per minute</span>
+                  <span className="text-sm font-semibold text-neutral-400">{burnPerMinute.toFixed(1)} kcal</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">Per 30 min</span>
-                  <span className="text-sm font-semibold text-accent-amber">{Math.round(burnPer30Min)} kcal</span>
+                  <span className="text-xs text-neutral-400">Per 30 min</span>
+                  <span className="text-sm font-semibold text-neutral-400">{Math.round(burnPer30Min)} kcal</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">Per hour</span>
-                  <span className="text-sm font-semibold text-accent-violet">{Math.round(burnPerHour)} kcal</span>
+                  <span className="text-xs text-neutral-400">Per hour</span>
+                  <span className="text-sm font-semibold text-neutral-400">{Math.round(burnPerHour)} kcal</span>
                 </div>
               </div>
-              <p className="mt-2 text-[10px] text-text-muted">
+              <p className="mt-2 text-[10px] text-neutral-400">
                 Average rate across {workouts.length} session{workouts.length !== 1 ? 's' : ''} ({totalDuration} min)
               </p>
             </WorkoutCard>
@@ -550,7 +551,7 @@ export default function WorkoutPage() {
           {/* Category Breakdown */}
           {Object.keys(categoryBreakdown).length > 0 && (
             <WorkoutCard className="p-5">
-              <h3 className="mb-3 text-sm font-semibold text-text-primary">Category Breakdown</h3>
+              <h3 className="mb-3 text-sm font-semibold text-neutral-400">Category Breakdown</h3>
               <div className="space-y-3">
                 {Object.entries(categoryBreakdown).map(([cat, data]) => {
                   const CatIcon = categoryIcons[cat] || Dumbbell;
@@ -562,9 +563,9 @@ export default function WorkoutPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <CatIcon className={cn('h-3.5 w-3.5', textColor)} />
-                          <span className="text-xs font-medium capitalize text-text-secondary">{cat}</span>
+                          <span className="text-xs font-medium capitalize text-neutral-400">{cat}</span>
                         </div>
-                        <span className="text-xs text-text-muted">
+                        <span className="text-xs text-neutral-400">
                           {data.calories} kcal · {data.duration}min
                         </span>
                       </div>
@@ -590,28 +591,28 @@ export default function WorkoutPage() {
           {/* Baseline calorie burn – hidden on mobile, visible on laptop/desktop */}
           {baselineBurn && (
             <WorkoutCard className="hidden lg:block p-5">
-              <h3 className="mb-3 text-sm font-semibold text-text-primary">Baseline Burn</h3>
+              <h3 className="mb-3 text-sm font-semibold text-neutral-400">Baseline Burn</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">BMR (at rest)</span>
-                  <span className="text-sm font-semibold text-text-primary">{formatNumber(baselineBurn.bmr)} kcal/day</span>
+                  <span className="text-xs text-neutral-400">BMR (at rest)</span>
+                  <span className="text-sm font-semibold text-neutral-400">{formatNumber(baselineBurn.bmr)} kcal/day</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">TDEE (daily total)</span>
-                  <span className="text-sm font-semibold text-accent-amber">{formatNumber(baselineBurn.tdee)} kcal/day</span>
+                  <span className="text-xs text-neutral-400">TDEE (daily total)</span>
+                  <span className="text-sm font-semibold text-neutral-400">{formatNumber(baselineBurn.tdee)} kcal/day</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                  <span className="text-xs text-text-secondary">Per hour (sitting)</span>
-                  <span className="text-sm font-medium text-text-primary">~{baselineBurn.sittingPerHour} kcal</span>
+                  <span className="text-xs text-neutral-400">Per hour (sitting)</span>
+                  <span className="text-sm font-medium text-neutral-400">~{baselineBurn.sittingPerHour} kcal</span>
                 </div>
                 <div className="mt-1 flex items-center justify-between rounded-lg border border-accent-rose/30 bg-accent-rose/5 px-3 py-2.5">
-                  <span className="text-xs font-medium text-text-secondary">Total burn today</span>
-                  <span className="text-sm font-bold text-accent-rose">
+                  <span className="text-xs font-medium text-neutral-400">Total burn today</span>
+                  <span className="text-sm font-bold text-neutral-400">
                     {formatNumber(totalBurnedSoFar)} kcal
                   </span>
                 </div>
               </div>
-              <p className="mt-2 text-[10px] text-text-muted">
+              <p className="mt-2 text-[10px] text-neutral-400">
                 Baseline so far ({formatNumber(baselineSoFar)}) + workout ({formatNumber(Math.round(totalBurned))})
               </p>
             </WorkoutCard>
@@ -621,7 +622,7 @@ export default function WorkoutPage() {
 
       {/* Workout History Chart – hidden on mobile, visible on laptop/desktop */}
       <WorkoutCard className="hidden lg:block p-6 lg:mt-4">
-        <h2 className="mb-4 text-base font-semibold text-text-primary">Last 7 Days</h2>
+        <h2 className="mb-4 text-base font-semibold text-neutral-400">Last 7 Days</h2>
         {historyLoading ? (
           <div className="flex h-[200px] items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
@@ -686,7 +687,7 @@ export default function WorkoutPage() {
                   />
                 </BarChart>
               </ResponsiveContainer>
-              <p className="mt-1 text-center text-[10px] text-text-muted">Calories burned from exercise</p>
+              <p className="mt-1 text-center text-[10px] text-neutral-400">Calories burned from exercise</p>
             </div>
 
             {/* Weekly summary chips */}
@@ -698,16 +699,16 @@ export default function WorkoutPage() {
                 return (
                   <>
                     <div className="flex-1 rounded-xl bg-white/[0.03] px-3 py-2 text-center sm:flex-none">
-                      <p className="text-lg font-bold text-accent-rose">{formatNumber(Math.round(weekCals))}</p>
-                      <p className="text-[10px] text-text-muted">kcal this week</p>
+                      <p className="text-lg font-bold text-neutral-400">{formatNumber(Math.round(weekCals))}</p>
+                      <p className="text-[10px] text-neutral-400">kcal this week</p>
                     </div>
                     <div className="flex-1 rounded-xl bg-white/[0.03] px-3 py-2 text-center sm:flex-none">
-                      <p className="text-lg font-bold text-accent-amber">{weekDuration}</p>
-                      <p className="text-[10px] text-text-muted">min this week</p>
+                      <p className="text-lg font-bold text-neutral-400">{weekDuration}</p>
+                      <p className="text-[10px] text-neutral-400">min this week</p>
                     </div>
                     <div className="flex-1 rounded-xl bg-white/[0.03] px-3 py-2 text-center sm:flex-none">
-                      <p className="text-lg font-bold text-accent-emerald">{activeDays}/7</p>
-                      <p className="text-[10px] text-text-muted">active days</p>
+                      <p className="text-lg font-bold text-neutral-400">{activeDays}/7</p>
+                      <p className="text-[10px] text-neutral-400">active days</p>
                     </div>
                   </>
                 );

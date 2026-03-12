@@ -13,6 +13,7 @@ import {
   Timer,
   Clock,
 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import api from '@/lib/apiClient';
 
@@ -151,6 +152,7 @@ const exerciseThumbnails: Record<string, string> = {
 };
 
 export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [category, setCategory] = useState('cardio');
   const [exercise, setExercise] = useState('');
   const [customExercise, setCustomExercise] = useState('');
@@ -162,6 +164,19 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
   const [notes, setNotes] = useState('');
 
   const [recentExercises, setRecentExercises] = useState<{ name: string; count: number; lastDate: string }[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mounted]);
 
   useEffect(() => {
     let cancelled = false;
@@ -300,19 +315,39 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
             ? '🏅'
             : '💪');
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overscroll-contain"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-workout-bg p-6 shadow-lg animate-slide-up">
-        <div className="flex items-start justify-between">
-          <h3 className="text-lg font-semibold text-text-primary">Add Workout</h3>
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-white/[0.06]">
+      <div
+        className="relative z-10 mx-4 flex w-full max-w-lg flex-col overflow-x-visible overflow-y-hidden rounded-3xl border border-neutral-800 bg-workout-bg px-5 pb-5 shadow-lg animate-slide-up sm:rounded-2xl"
+        style={{
+          maxHeight:
+            'min(70dvh, calc(100dvh - max(env(safe-area-inset-top), 12px) - max(env(safe-area-inset-bottom), 16px) - 32px))',
+        }}
+      >
+        <div className="sticky top-0 z-10 -mx-5 mb-2 flex items-center justify-between bg-workout-bg px-5 py-2">
+          <h3 className="text-lg font-semibold text-[#a3a3a3]">Add Workout</h3>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-white/[0.06]"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mt-5 space-y-5">
+        <div
+          className="flex-1 space-y-5 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {/* Category */}
           <div>
             <label className="text-xs font-medium text-text-muted">Category</label>
@@ -320,7 +355,11 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
               {workoutCategories.map((cat) => (
                 <button
                   key={cat.key}
-                  onClick={() => { setCategory(cat.key); setExercise(''); setCustomExercise(''); }}
+                  onClick={() => {
+                    setCategory(cat.key);
+                    setExercise('');
+                    setCustomExercise('');
+                  }}
                   className={cn(
                     'flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium transition-all',
                     category === cat.key
@@ -341,7 +380,9 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
             {category === 'recent' ? (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {recentExercises.length === 0 ? (
-                  <p className="text-xs text-text-muted">No recent exercises yet. Log a workout from any category to see them here.</p>
+                  <p className="text-xs text-text-muted">
+                    No recent exercises yet. Log a workout from any category to see them here.
+                  </p>
                 ) : (
                   recentExercises.map((item) => (
                     <button
@@ -350,8 +391,8 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                       onClick={() => handleSuggestionSelect(item.name)}
                       className={cn(
                         'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
-                        (exercise === item.name || customExercise === item.name)
-                          ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                        exercise === item.name || customExercise === item.name
+                          ? 'bg-accent-rose/15 text-accent-rose ring-1 ring-accent-rose/30'
                           : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
                       )}
                     >
@@ -370,7 +411,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                     className={cn(
                       'rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
                       exercise === p.name
-                        ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
+                        ? 'bg-accent-rose/15 text-accent-rose ring-1 ring-accent-rose/30'
                         : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.08]'
                     )}
                   >
@@ -382,7 +423,10 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
             <input
               type="text"
               value={customExercise}
-              onChange={(e) => { setCustomExercise(e.target.value); setExercise(''); }}
+              onChange={(e) => {
+                setCustomExercise(e.target.value);
+                setExercise('');
+              }}
               placeholder="Start typing to search or add your own..."
               className="glass-input mt-2 w-full rounded-xl px-3 py-2 text-sm"
             />
@@ -409,14 +453,8 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                 <span aria-hidden="true">{exerciseEmoji}</span>
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-text-primary">
-                  {currentExerciseName}
-                </p>
-                {categoryMeta && (
-                  <p className="text-[11px] text-text-muted">
-                    {categoryMeta.label} exercise
-                  </p>
-                )}
+                <p className="truncate text-sm font-semibold text-[#a3a3a3]">{currentExerciseName}</p>
+                {categoryMeta && <p className="text-[11px] text-[#a3a3a3]">{categoryMeta.label} exercise</p>}
               </div>
             </div>
           )}
@@ -445,7 +483,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                       className={cn(
                         'rounded-md px-2 py-0.5 text-[10px] font-medium',
                         parseInt(reps) === r
-                          ? 'bg-accent-violet/15 text-accent-violet'
+                          ? 'bg-accent-rose/15 text-accent-rose'
                           : 'bg-white/[0.04] text-text-muted'
                       )}
                     >
@@ -467,9 +505,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                   />
                 </div>
                 {selectedPreset?.calPerRep && (
-                  <p className="mt-1.5 text-[10px] text-text-muted">
-                    ~{selectedPreset.calPerRep} cal/rep estimated
-                  </p>
+                  <p className="mt-1.5 text-[10px] text-text-muted">~{selectedPreset.calPerRep} cal/rep estimated</p>
                 )}
               </div>
             </div>
@@ -499,7 +535,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                       className={cn(
                         'rounded-md px-2 py-0.5 text-[10px] font-medium',
                         parseInt(duration) === d
-                          ? 'bg-accent-violet/15 text-accent-violet'
+                          ? 'bg-accent-rose/15 text-accent-rose'
                           : 'bg-white/[0.04] text-text-muted'
                       )}
                     >
@@ -521,9 +557,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
                   />
                 </div>
                 {selectedPreset?.calPerMin && (
-                  <p className="mt-1.5 text-[10px] text-text-muted">
-                    ~{selectedPreset.calPerMin} cal/min estimated
-                  </p>
+                  <p className="mt-1.5 text-[10px] text-text-muted">~{selectedPreset.calPerMin} cal/min estimated</p>
                 )}
               </div>
             </div>
@@ -579,21 +613,25 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
           </div>
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !canSubmit}
-          className="glass-button-primary mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
-        >
-          {loading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              Add Workout
-            </>
-          )}
-        </button>
+        <div className="sticky bottom-0 z-10 -mx-6 mt-4 bg-gradient-to-t from-workout-bg via-workout-bg/90 to-transparent px-6 pt-3">
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !canSubmit}
+            className="glass-button mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-accent-rose px-4 py-3 text-sm font-semibold text-white shadow-glow transition-colors duration-200 hover:bg-accent-rose/90"
+            style={{ color: '#ffffff' }}
+          >
+            {loading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <>
+                <Plus className="h-4 w-4 text-white" />
+                <span className="text-white">Add Workout</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

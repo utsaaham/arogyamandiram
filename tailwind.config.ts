@@ -56,8 +56,9 @@ const config: Config = {
           'pink-dim': '#831843',
         },
         // Workout page design tokens (used via bg-workout-bg, border-workout-border, text-workout-accent, etc.)
-        'workout-bg': '#1A1212',
-        'workout-border': '#3D2424',
+        // Keep the workout theme warm, but reduce the red cast.
+        'workout-bg': '#141017',
+        'workout-border': '#2A1E29',
         'workout-accent': '#FF4D4D',
         'workout-label': '#A38F8F',
       },

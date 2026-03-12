@@ -15,17 +15,25 @@ export function StreakCard({ label, current, best }: StreakCardProps) {
   return (
     <div
       className={cn(
-        'glass-card flex h-16 items-center gap-3 rounded-2xl p-3 text-left transition-all duration-200 sm:h-14 sm:gap-2 sm:p-2.5',
-        active && 'border border-white/[0.08] bg-white/[0.03]'
+        'glass-card flex h-16 items-center gap-3 rounded-2xl border border-transparent p-3 text-left transition-all duration-200 sm:h-14 sm:gap-2 sm:p-2.5',
+        active && 'border-[#f5d76e66] bg-white/[0.03]',
+        !active && 'border-white/[0.04] bg-white/[0.01]'
       )}
     >
       <div
         className={cn(
-          'flex h-9 w-9 flex-none items-center justify-center rounded-xl sm:h-8 sm:w-8 sm:rounded-lg',
-          active ? 'bg-white/[0.08] text-text-primary' : 'bg-white/[0.04] text-text-muted opacity-60'
+          'flex h-9 w-9 flex-none items-center justify-center rounded-xl sm:h-8 sm:w-8 sm:rounded-lg border border-transparent',
+          active
+            ? 'bg-white/[0.08] text-text-primary border-[#f5d76e80]'
+            : 'bg-white/[0.04] text-text-muted opacity-60 border-white/[0.04]'
         )}
       >
-        <Flame className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+        <Flame
+          className="h-4 w-4 sm:h-3.5 sm:w-3.5"
+          color="#f5d76e"
+          fill="#f5d76e"
+          strokeWidth={1.8}
+        />
       </div>
       <div className="min-w-0">
         <p className="truncate text-[11px] font-medium leading-tight text-text-muted sm:text-xs">

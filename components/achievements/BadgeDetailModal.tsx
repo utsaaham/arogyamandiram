@@ -30,7 +30,7 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
   }, [onClose]);
 
   useEffect(() => {
-    // Reset flip state when a new badge is opened
+    // Reset flip state when a new badge is openedonly 2 l
     setIsFlipped(false);
   }, [badge?.id]);
 

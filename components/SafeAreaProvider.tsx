@@ -18,14 +18,21 @@ export function SafeAreaProvider() {
       const cs = getComputedStyle(el);
       const root = document.documentElement;
 
+      // Detect "real" notch devices vs classic status bar.
+      // On non‑notch iPhones the top inset is typically ~20px; on notch devices it's larger (e.g. 44px).
+      const topInsetPx = parseFloat(cs.paddingTop || '0');
+      const hasNotch = Number.isFinite(topInsetPx) && topInsetPx > 20;
+
+      const safeTop = hasNotch ? cs.paddingTop : '0px';
+
       // Primary safe-area CSS variables (used throughout the app)
-      root.style.setProperty('--sat', cs.paddingTop);
+      root.style.setProperty('--sat', safeTop);
       root.style.setProperty('--sar', cs.paddingRight);
       root.style.setProperty('--sab', cs.paddingBottom);
       root.style.setProperty('--sal', cs.paddingLeft);
 
       // Backwards-compatible aliases for previous variable names
-      root.style.setProperty('--safe-area-top', cs.paddingTop);
+      root.style.setProperty('--safe-area-top', safeTop);
       root.style.setProperty('--safe-area-right', cs.paddingRight);
       root.style.setProperty('--safe-area-bottom', cs.paddingBottom);
       root.style.setProperty('--safe-area-left', cs.paddingLeft);
