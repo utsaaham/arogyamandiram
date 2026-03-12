@@ -184,7 +184,7 @@ export default function AiInsightsPage() {
       {/* Tabs: Year / Month / Week / Yesterday insights */}
       <div className="mt-4 w-full">
         <div
-          className="mobile-fade-up mobile-dash-px lg:px-0 max-w-5xl mx-auto w-full"
+          className="mobile-fade-up mobile-dash-px lg:px-0 w-full"
           style={{ animationDelay: '80ms' }}
         >
       <div className="space-y-3 sm:space-y-4">

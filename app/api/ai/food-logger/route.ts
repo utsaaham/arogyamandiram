@@ -67,6 +67,17 @@ Rules:
   E.g. "25 tortilla chips" → quantity: 62, unit: "g"
 - Units: piece, bowl, serving, cup, g, ml, tbsp, tsp.
 
+- If the user specifies weight per piece (e.g. "3 dosa each 65g", "2 cookies (30g each)"):
+  - Set quantity to the piece count (e.g. 3) and unit to a normalized unit such as "piece".
+  - Always include a numeric field "each_weight_g" with the weight of ONE piece in grams (e.g. 65).
+  - If the user does NOT specify weight per piece, still include "each_weight_g" and set it to 0.
+  - Do NOT embed the per-piece weight into the name string.
+  Example:
+    Input text: "3 dosa each 65g and 20g mango pickle"
+    Parsed items:
+      - { "name": "dosa with jeera and masala powder", "quantity": 3, "unit": "piece", "each_weight_g": 65 }
+      - { "name": "mango pickle", "quantity": 20, "unit": "g" }
+
 Return JSON only using tool: parse_meal_foods
 `;
 
@@ -87,8 +98,13 @@ const PARSE_MEAL_TOOL = {
             name: { type: 'string', description: 'Food item name (e.g. "sambar rice", "chips", "curd rice").' },
             quantity: { type: 'number', description: 'Numeric quantity (e.g. 2 for "2 idlis"). Use 1 if unknown.' },
             unit: { type: 'string', description: 'Unit: piece, bowl, serving, cup, ml, g, tbsp, tsp, etc.' },
+            each_weight_g: {
+              type: 'number',
+              description:
+                'If the user specified weight per piece (e.g. "3 dosa each 65g"), this is the weight of ONE piece in grams. If not specified, set to 0.',
+            },
           },
-          required: ['name', 'quantity', 'unit'],
+          required: ['name', 'quantity', 'unit', 'each_weight_g'],
           additionalProperties: false,
         },
       },
@@ -107,47 +123,57 @@ const PARSE_MEAL_TOOL = {
 const NUTRITION_INSTRUCTIONS = `
 You are a clinical-grade nutrition engine for a food tracking app.
 
-Input: structured items with name, quantity, unit (already scaled — do not re-scale).
+Input: structured items with:
+  - name (string)
+  - quantity (number)
+  - unit (string)
+  - each_weight_g (number)
+  - total_weight_g (number or null)
 
-━━━ MACRO RULES ━━━
+each_weight_g is ALWAYS present:
+- if each_weight_g > 0, the user specified weight per piece
+- if each_weight_g = 0, no per-piece weight was provided in the text
+
+total_weight_g is computed by the system:
+- if total_weight_g is not null, it already represents the total grams for the item
+- if total_weight_g is null, there is no reliable total grams from per-piece weights
+
+If total_weight_g is not null:
+  - Always use total_weight_g when estimating nutrition for the TOTAL amount eaten.
+  - Do NOT recompute total_weight_g from quantity × each_weight_g.
+  - Do NOT change the quantity or unit in your output.
+
+Units will already be normalized to one of: piece, bowl, serving, cup, g, ml, tbsp, tsp.
+
+━━━ MACRO & MICRONUTRIENT RULES ━━━
 1. Normalize the food name to its closest standard food.
    Strip purely descriptive qualifiers that don't affect nutrition.
    E.g. "veg pulao with veggies masala" → "veg pulao with soya chunks and cashews"
         "raita with onion and tomato" → "raita"
 
-2. Estimate macros using USDA, IFCT (Indian Food Composition Tables),
+2. Estimate macros and micros using USDA, IFCT (Indian Food Composition Tables),
    or well-known brand data — whichever is most specific.
 
 3. Scale ALL nutrients to the given quantity and unit.
    Never change the quantity or unit from the input.
+   ALL returned nutrition values (calories, protein, carbs, fat, fiber, sugar,
+   sodium, saturatedFat, cholesterol) MUST represent the TOTAL for the provided
+   quantity and unit. Never return per-unit, per-serving, or per-100g nutrition.
 
-4. High-protein ingredients override generic estimates:
-   - Soya chunks / nuggets: ~330 kcal, ~52g protein, ~33g carbs, ~0.5g fat per 100g dry weight.
-     When part of a mixed dish, assume ~10–15g dry soya per serving unless a quantity is given.
-   - Paneer: ~265 kcal, ~18g protein per 100g.
-   - Tofu: ~76 kcal, ~8g protein per 100g.
-   - Chicken breast: ~165 kcal, ~31g protein per 100g.
-
-5. Calorie integrity check:
+4. Calorie integrity check:
    calories = (protein × 4) + (carbs × 4) + (fat × 9)
    If your computed calories deviate from this formula by more than 3%,
-   adjust the macro with the most uncertainty until the equation holds.
+   adjust the macro with the highest uncertainty (usually carbs or fat) until the equation holds.
 
-━━━ MICRONUTRIENT RULES ━━━
-6. NEVER return 0 for fiber, sugar, sodium, saturatedFat, or cholesterol
+5. NEVER return 0 for fiber, sugar, sodium, saturatedFat, or cholesterol
    unless the nutrient is genuinely negligible (e.g. cholesterol in pure sugar).
    Always estimate realistic typical values from food composition data.
 
-   Reference minimums for common items:
-   - Any rice dish (100g): fiber ≥ 0.4g, sodium ≥ 200mg
-   - Any fried/baked chips (100g): sodium ≥ 300mg, saturatedFat ≥ 1g, fiber ≥ 1g
-   - Any yogurt-based dish (1 serving): sugar ≥ 4g, sodium ≥ 150mg
-   - Any curry or spiced dish: sodium ≥ 300mg per serving
-
 ━━━ OUTPUT RULES ━━━
-7. Return protein, carbs, fat rounded to 2 decimal places.
-8. Return sodium and cholesterol as whole numbers (mg).
-9. Return the same quantity and unit as the input — no exceptions.
+6. Return protein, carbs, fat rounded to 2 decimal places.
+7. Return sodium and cholesterol as whole numbers (mg).
+8. Return the same quantity and unit as the input — no exceptions.
+9. Units in your output must be one of: piece, bowl, serving, cup, g, ml, tbsp, tsp.
 
 Return JSON only using tool: get_meal_nutrition
 `;
@@ -291,28 +317,56 @@ function normalizeItem(obj: Record<string, unknown>): NormalizedItem {
     protein: Number(protein.toFixed(2)),
     carbs: Number(carbs.toFixed(2)),
     fat: Number(fat.toFixed(2)),
-    fiber: Math.max(0, num(obj.fiber)),
-    sugar: Math.max(0, num(obj.sugar)),
-    sodium: Math.max(0, num(obj.sodium)),
-    saturatedFat: Math.max(0, num(obj.saturatedFat)),
-    cholesterol: Math.max(0, num(obj.cholesterol)),
+    fiber: Number(Math.max(0, num(obj.fiber)).toFixed(2)),
+    sugar: Number(Math.max(0, num(obj.sugar)).toFixed(2)),
+    sodium: Math.round(Math.max(0, num(obj.sodium))),
+    saturatedFat: Number(Math.max(0, num(obj.saturatedFat)).toFixed(2)),
+    cholesterol: Math.round(Math.max(0, num(obj.cholesterol))),
     quantity: Math.max(0.1, num(obj.quantity)) || 1,
     unit: str(obj.unit).trim() || 'serving',
   };
 }
 
 function computeTotal(items: NormalizedItem[]) {
+  const caloriesSum = items.reduce((s, i) => s + i.calories, 0);
+  const proteinSum = items.reduce((s, i) => s + i.protein, 0);
+  const carbsSum = items.reduce((s, i) => s + i.carbs, 0);
+  const fatSum = items.reduce((s, i) => s + i.fat, 0);
+  const fiberSum = items.reduce((s, i) => s + i.fiber, 0);
+  const sugarSum = items.reduce((s, i) => s + i.sugar, 0);
+  const sodiumSum = items.reduce((s, i) => s + i.sodium, 0);
+  const saturatedFatSum = items.reduce((s, i) => s + i.saturatedFat, 0);
+  const cholesterolSum = items.reduce((s, i) => s + i.cholesterol, 0);
+
   return {
-    calories: items.reduce((s, i) => s + i.calories, 0),
-    protein: items.reduce((s, i) => s + i.protein, 0),
-    carbs: items.reduce((s, i) => s + i.carbs, 0),
-    fat: items.reduce((s, i) => s + i.fat, 0),
-    fiber: items.reduce((s, i) => s + i.fiber, 0),
-    sugar: items.reduce((s, i) => s + i.sugar, 0),
-    sodium: items.reduce((s, i) => s + i.sodium, 0),
-    saturatedFat: items.reduce((s, i) => s + i.saturatedFat, 0),
-    cholesterol: items.reduce((s, i) => s + i.cholesterol, 0),
+    calories: Math.round(caloriesSum),
+    protein: Number(proteinSum.toFixed(2)),
+    carbs: Number(carbsSum.toFixed(2)),
+    fat: Number(fatSum.toFixed(2)),
+    fiber: Number(fiberSum.toFixed(2)),
+    sugar: Number(sugarSum.toFixed(2)),
+    sodium: Math.round(sodiumSum),
+    saturatedFat: Number(saturatedFatSum.toFixed(2)),
+    cholesterol: Math.round(cholesterolSum),
   };
+}
+
+function clampSodiumSpikes(items: NormalizedItem[]) {
+  for (const item of items) {
+    const name = item.name.toLowerCase();
+
+    if (name.includes('pickle') && item.sodium > 1200) {
+      item.sodium = 800;
+    }
+
+    if (name.includes('chips') && item.sodium > 900) {
+      item.sodium = 700;
+    }
+
+    if (name.includes('sauce') && item.sodium > 1200) {
+      item.sodium = 900;
+    }
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -407,14 +461,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    type ParsedItem = { name: string; quantity: number; unit: string };
+    type ParsedItem = {
+      name: string;
+      quantity: number;
+      unit: string;
+      each_weight_g: number;
+      total_weight_g: number | null;
+    };
+
+    const MEASURE_UNITS = new Set(['g', 'ml', 'tbsp', 'tsp', 'cup', 'bowl', 'serving']);
+
+    const normalizeUnit = (rawUnit: unknown): string => {
+      const u = String(rawUnit ?? '').trim().toLowerCase();
+      if (!u) return 'serving';
+      if (MEASURE_UNITS.has(u)) return u;
+      return 'piece';
+    };
+
     const parsedItems: ParsedItem[] = parsedArgs.items
       .filter((x): x is Record<string, unknown> => x != null && typeof x === 'object')
-      .map((x) => ({
-        name: String(x.name ?? '').trim() || 'Item',
-        quantity: typeof x.quantity === 'number' && !Number.isNaN(x.quantity) ? Math.max(0.1, x.quantity) : 1,
-        unit: String(x.unit ?? 'serving').trim() || 'serving',
-      }))
+      .map((x) => {
+        const name = String(x.name ?? '').trim() || 'Item';
+        const quantity =
+          typeof x.quantity === 'number' && !Number.isNaN(x.quantity) ? Math.max(0.1, x.quantity) : 1;
+        const unit = normalizeUnit(x.unit);
+        const each_weight_g =
+          typeof x.each_weight_g === 'number' && !Number.isNaN(x.each_weight_g)
+            ? Math.max(0, x.each_weight_g)
+            : 0;
+        const total_weight_g =
+          unit === 'piece' && each_weight_g > 0 ? quantity * each_weight_g : null;
+
+        return {
+          name,
+          quantity,
+          unit,
+          each_weight_g,
+          total_weight_g,
+        };
+      })
       .filter((i) => i.name && i.name !== 'Item');
 
     if (parsedItems.length === 0) {
@@ -514,17 +599,24 @@ export async function POST(req: NextRequest) {
     let items: NormalizedItem[] = rawItems
       .filter((x): x is Record<string, unknown> => x != null && typeof x === 'object')
       .map(normalizeItem)
-      .filter((i) => (i.name && i.name !== 'Item') || i.calories > 0);
+      .filter((i) => i.calories > 0 || i.name !== 'Item');
 
-    // Safeguard: preserve quantity and unit from Step-1; scale nutrition if model used different quantity
-    for (let i = 0; i < items.length && i < parsedItems.length; i++) {
-      const parsed = parsedItems[i];
-      const current = items[i];
+    // Safeguard: preserve quantity and unit from Step-1; scale nutrition if model used different quantity.
+    // Match items by normalized name to avoid index-based mismatches if the model reorders items.
+    const parsedByName = new Map(
+      parsedItems.map((parsed) => [parsed.name.toLowerCase(), parsed] as const)
+    );
+
+    items = items.map((current) => {
+      const parsed = parsedByName.get(current.name.toLowerCase());
+      if (!parsed) return current;
+
       const scale = current.quantity > 0 ? parsed.quantity / current.quantity : 1;
       const protein = Number((current.protein * scale).toFixed(2));
       const carbs = Number((current.carbs * scale).toFixed(2));
       const fat = Number((current.fat * scale).toFixed(2));
-      items[i] = {
+
+      return {
         ...current,
         quantity: parsed.quantity,
         unit: parsed.unit,
@@ -538,7 +630,10 @@ export async function POST(req: NextRequest) {
         saturatedFat: Number((current.saturatedFat * scale).toFixed(2)),
         cholesterol: Math.round(current.cholesterol * scale),
       };
-    }
+    });
+
+    // Clamp unrealistic sodium spikes after normalization/scaling, before totals
+    clampSodiumSpikes(items);
 
     if (items.length === 0) {
       return errorResponse(
