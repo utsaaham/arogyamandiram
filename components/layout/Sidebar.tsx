@@ -64,7 +64,7 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
     <aside
       className={cn(
         'fixed left-0 top-0 z-40 hidden h-screen-safe flex-col bg-white/[0.015] backdrop-blur-xl transition-all duration-300 lg:flex',
-        collapsed ? 'w-[72px]' : 'w-[210px]'
+        collapsed ? 'w-[64px]' : 'w-[232px]'
       )}
       style={{ paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))' }}
     >
@@ -99,7 +99,8 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
               key={item.href}
               href={item.href}
               className={cn(
-                'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+                'flex items-center rounded-xl py-2 text-[13px] font-medium transition-all duration-150',
+                collapsed ? 'mx-1.5 justify-center px-0' : 'mx-2 gap-2.5 justify-start px-3',
                 isActive
                   ? 'bg-emerald-500/10 text-emerald-400 font-medium'
                   : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
@@ -125,7 +126,8 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+                    'flex items-center rounded-xl py-2 text-[13px] font-medium transition-all duration-150',
+                    collapsed ? 'mx-1.5 justify-center px-0' : 'mx-2 gap-2.5 justify-start px-3',
                     isActive
                   ? 'bg-emerald-500/10 text-emerald-400 font-medium'
                   : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
@@ -150,7 +152,8 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
           <Link
             href="/project"
             className={cn(
-              'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+              'flex items-center rounded-xl py-2 text-[13px] font-medium transition-all duration-150',
+              collapsed ? 'mx-1.5 justify-center px-0' : 'mx-2 gap-2.5 justify-start px-3',
               pathname === '/project' || pathname.startsWith('/project/')
                 ? 'bg-emerald-500/10 text-emerald-400'
                 : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
@@ -171,7 +174,8 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
           <Link
             href="/settings"
             className={cn(
-              'mx-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
+              'flex items-center rounded-xl py-2 text-[13px] font-medium transition-all duration-150',
+              collapsed ? 'mx-1.5 justify-center px-0' : 'mx-2 gap-2.5 justify-start px-3',
               pathname === '/settings' || pathname.startsWith('/settings/')
                 ? 'bg-emerald-500/10 text-emerald-400'
                 : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
@@ -191,7 +195,11 @@ export default function Sidebar({ collapsed: controlledCollapsed, onCollapsedCha
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="mx-2 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-zinc-400 transition-all hover:bg-white/[0.04] hover:text-rose-400"
+            className={cn(
+              'flex items-center rounded-xl py-2 text-[13px] font-medium transition-all duration-150',
+              collapsed ? 'mx-1.5 w-[calc(100%-0.75rem)] justify-center px-0' : 'mx-2 w-[calc(100%-1rem)] gap-2.5 justify-start px-3',
+              'text-rose-400 hover:bg-white/[0.04] hover:text-rose-300'
+            )}
             title={collapsed ? 'Sign Out' : undefined}
           >
             <LogOut className="h-[15px] w-[15px] shrink-0" strokeWidth={1.8} />
