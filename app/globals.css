@@ -154,7 +154,7 @@ body {
 /* ---------- Glassmorphism Card ---------- */
 @layer components {
   .glass-card {
-    @apply relative overflow-hidden rounded-2xl border border-white/[0.04];
+    @apply relative overflow-hidden rounded-2xl;
     background: rgba(15, 15, 24, 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -164,7 +164,6 @@ body {
   .card-glow {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.04);
     background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
   }
   .card-glow::after {
@@ -217,13 +216,11 @@ body {
   .ring-card {
     @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
-    border-color: rgba(30, 221, 139, 0.15);
   }
   /* When card-glow is applied, use same shade on glass/ring cards (desktop) */
   .glass-card.card-glow,
   .ring-card.card-glow {
     background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
-    border: 1px solid rgba(255, 255, 255, 0.04);
   }
   /* Hero card tints for dashboard-style pages */
   .glass-card-tint-emerald {
@@ -483,7 +480,7 @@ body {
     height: 200px;
   }
   .stat-mini-card {
-    @apply flex items-center gap-4 rounded-2xl border border-white/[0.06] px-4 py-4 transition-all duration-200;
+    @apply flex items-center gap-4 rounded-2xl px-4 py-4 transition-all duration-200;
     background: rgba(255, 255, 255, 0.03);
     min-height: 0;
   }
@@ -509,7 +506,6 @@ body {
     min-height: 0;
   }
   .bento-stats-cards .stat-mini-card {
-    border: 1px solid rgba(0, 229, 160, 0.06);
     background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
     position: relative;
     overflow: hidden;
@@ -541,69 +537,26 @@ body {
     flex: 1;
     min-height: 0;
   }
-  /* Water card: normal border (desktop + mobile) */
+  /* Stat cards (Water, Burned, Meals, Sleep): use neutral dashboard card background (no per-card color tints) */
   .bento-stats-cards .stat-card-water .stat-mini-card,
-  .m-stats-grid .stat-card-water .stat-mini-card {
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    background: linear-gradient(160deg, #0f1a1f 0%, #0d1820 100%);
+  .bento-stats-cards .stat-card-burned .stat-mini-card,
+  .bento-stats-cards .stat-card-meals .stat-mini-card,
+  .bento-stats-cards .stat-card-sleep .stat-mini-card,
+  .m-stats-grid .stat-card-water .stat-mini-card,
+  .m-stats-grid .stat-card-burned .stat-mini-card,
+  .m-stats-grid .stat-card-meals .stat-mini-card,
+  .m-stats-grid .stat-card-sleep .stat-mini-card {
+    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
   }
   .bento-stats-cards .stat-card-water .stat-mini-card::after,
-  .m-stats-grid .stat-card-water .stat-mini-card::after {
-    display: none;
-  }
-  /* Burned card: rose/red shade (desktop + mobile) – matches Workout page */
-  .bento-stats-cards .stat-card-burned .stat-mini-card,
-  .m-stats-grid .stat-card-burned .stat-mini-card {
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    background: linear-gradient(160deg, #1a0f12 0%, #180d10 100%);
-  }
   .bento-stats-cards .stat-card-burned .stat-mini-card::after,
-  .m-stats-grid .stat-card-burned .stat-mini-card::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    right: -60px;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  /* Meals card: amber/orange shade (desktop + mobile) – matches Food page */
-  .bento-stats-cards .stat-card-meals .stat-mini-card,
-  .m-stats-grid .stat-card-meals .stat-mini-card {
-    border: 1px solid rgba(245, 158, 11, 0.22);
-    background: linear-gradient(160deg, #1a1608 0%, #181408 100%);
-  }
   .bento-stats-cards .stat-card-meals .stat-mini-card::after,
-  .m-stats-grid .stat-card-meals .stat-mini-card::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    right: -60px;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  /* Sleep card: blue/purple shade (desktop + mobile) – matches Sleep page */
-  .bento-stats-cards .stat-card-sleep .stat-mini-card,
-  .m-stats-grid .stat-card-sleep .stat-mini-card {
-    border: 1px solid rgba(139, 92, 246, 0.08);
-    background: linear-gradient(160deg, #151a28 0%, #16142a 100%);
-  }
   .bento-stats-cards .stat-card-sleep .stat-mini-card::after,
+  .m-stats-grid .stat-card-water .stat-mini-card::after,
+  .m-stats-grid .stat-card-burned .stat-mini-card::after,
+  .m-stats-grid .stat-card-meals .stat-mini-card::after,
   .m-stats-grid .stat-card-sleep .stat-mini-card::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    right: -60px;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.03) 40%, transparent 70%);
-    pointer-events: none;
+    display: none;
   }
   .bento-stats-2x2 {
     display: grid;
@@ -724,12 +677,12 @@ body {
 
   /* Mobile dashboard */
   .m-xp-card {
-    @apply rounded-2xl border px-4 py-3;
+    @apply rounded-2xl px-4 py-3;
     background: linear-gradient(120deg, rgba(139, 92, 246, 0.13) 0%, rgba(255, 255, 255, 0.02) 100%);
     border-color: rgba(139, 92, 246, 0.22);
   }
   .m-ring-card {
-    @apply flex flex-col items-center gap-3.5 rounded-2xl border px-5 py-5;
+    @apply flex flex-col items-center gap-3.5 rounded-2xl px-5 py-5;
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.09) 0%, rgba(255, 255, 255, 0.02) 70%);
     border-color: rgba(30, 221, 139, 0.18);
   }
@@ -748,7 +701,6 @@ body {
   }
   .m-stats-grid .stat-mini-card {
     @apply rounded-2xl px-4 py-4;
-    border: 1px solid rgba(0, 229, 160, 0.06);
     background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
     position: relative;
     overflow: hidden;
@@ -775,7 +727,7 @@ body {
     display: none;
   }
   .m-bitem {
-    @apply flex shrink-0 flex-col items-center gap-1 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2 py-2.5 transition-all duration-200;
+    @apply flex shrink-0 flex-col items-center gap-1 rounded-xl bg-white/[0.03] px-2 py-2.5 transition-all duration-200;
     width: 72px;
     cursor: pointer;
   }
@@ -793,13 +745,13 @@ body {
     @apply bg-accent-emerald/10;
   }
   .m-bico-q {
-    @apply flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-white/[0.12] bg-white/[0.04] text-sm text-text-muted;
+    @apply flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] text-sm text-text-muted;
   }
   .m-bico-lbl {
     @apply text-center text-[8.5px] leading-tight text-text-muted;
   }
   .m-streak-card {
-    @apply rounded-2xl border border-white/[0.06] p-4;
+    @apply rounded-2xl p-4;
     background: rgba(255, 255, 255, 0.03);
   }
   .m-streak-card .m-streak-value {

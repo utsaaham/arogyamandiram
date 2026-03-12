@@ -9,6 +9,8 @@ export interface StatMiniProps {
   sub: string;
   valueColor: string;
   iconBg: string;
+  /** Optional override for label color class (e.g. text-text-secondary) */
+  labelClassName?: string;
   compact?: boolean;
   tiny?: boolean;
   /** Mobile: value on first line, label on second line; smaller text, aligned */
@@ -22,6 +24,7 @@ export default function StatMini({
   sub,
   valueColor,
   iconBg,
+  labelClassName,
   compact,
   tiny,
   stackLabel,
@@ -39,12 +42,12 @@ export default function StatMini({
         {stackLabel ? (
           <div className="flex flex-col items-start gap-0.5 leading-tight">
             <span className={cn('font-heading font-semibold', valueColor, valueSize)}>{value}</span>
-            <span className={cn('font-body font-medium text-text-primary', labelSize)}>{label}</span>
+            <span className={cn('font-body font-medium text-text-primary', labelClassName, labelSize)}>{label}</span>
           </div>
         ) : (
           <div className="leading-none tracking-tight">
             <span className={cn('font-heading font-semibold', valueColor, valueSize)}>{value}</span>
-            <span className={cn('font-body font-medium text-text-primary ml-1.5', labelSize)}>{label}</span>
+            <span className={cn('font-body font-medium text-text-primary ml-1.5', labelClassName, labelSize)}>{label}</span>
           </div>
         )}
         <div className={cn('font-body text-text-muted/90 mt-0.5', subSize)}>{sub}</div>
