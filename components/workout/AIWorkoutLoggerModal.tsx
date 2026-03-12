@@ -138,8 +138,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
         }}
       >
         <div className="sticky top-0 z-10 -mx-5 mb-2 flex items-center justify-between bg-workout-bg px-5 py-2">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
-            <Sparkles className="h-5 w-5 text-accent-rose" />
+          <h3 className="text-lg font-semibold text-[#a3a3a3]">
             AI Workout Logger
           </h3>
           <button
@@ -190,7 +189,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
                 ← Change description
               </button>
               <div className="space-y-3">
-                <p className="text-sm font-medium text-text-primary">Parsed workouts</p>
+                <p className="text-sm font-medium text-[#a3a3a3]">Parsed workouts</p>
                 <div className="space-y-2 pr-1">
                   {workouts.map((w, idx) => {
                     const category = w.category?.toLowerCase() || 'other';
@@ -202,7 +201,7 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-text-primary">
+                            <p className="truncate text-sm font-semibold text-[#a3a3a3]">
                               {w.exercise}
                             </p>
                             <p className="text-[11px] text-text-muted capitalize">{label}</p>
@@ -251,8 +250,10 @@ export default function AIWorkoutLoggerModal({ onClose, onAdd, loading }: AIWork
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
                 <>
-                  <Dumbbell className="h-4 w-4" />
-                  Add {workouts.length === 1 ? 'workout' : `${workouts.length} workouts`} to log
+                  <Dumbbell className="h-4 w-4 text-white" />
+                  <span className="text-white">
+                    Add {workouts.length === 1 ? 'workout' : `${workouts.length} workouts`} to log
+                  </span>
                 </>
               )}
             </button>

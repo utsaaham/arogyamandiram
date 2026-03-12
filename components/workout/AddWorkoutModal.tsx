@@ -335,7 +335,7 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
         }}
       >
         <div className="sticky top-0 z-10 -mx-5 mb-2 flex items-center justify-between bg-workout-bg px-5 py-2">
-          <h3 className="text-lg font-semibold text-text-primary">Add Workout</h3>
+          <h3 className="text-lg font-semibold text-[#a3a3a3]">Add Workout</h3>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-white/[0.06]"
@@ -617,14 +617,15 @@ export default function AddWorkoutModal({ onClose, onAdd, loading }: AddWorkoutM
           <button
             onClick={handleSubmit}
             disabled={loading || !canSubmit}
-            className="glass-button mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-accent-rose px-4 py-3 text-sm font-semibold text-[#a3a3a3] shadow-glow transition-colors duration-200 hover:bg-accent-rose/90 disabled:opacity-50"
+            className="glass-button mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-accent-rose px-4 py-3 text-sm font-semibold text-white shadow-glow transition-colors duration-200 hover:bg-accent-rose/90"
+            style={{ color: '#ffffff' }}
           >
             {loading ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               <>
-                <Plus className="h-4 w-4" />
-                Add Workout
+                <Plus className="h-4 w-4 text-white" />
+                <span className="text-white">Add Workout</span>
               </>
             )}
           </button>
