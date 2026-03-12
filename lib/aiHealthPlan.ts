@@ -7,6 +7,7 @@ import User from '@/models/User';
 import { decrypt } from '@/lib/encryption';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { calculateIdealWeight } from '@/lib/health';
+import { getLatestLoggedWeight } from '@/lib/latestWeight';
 import type { UserTargets } from '@/types';
 
 type OpenAIUsage = {
@@ -199,7 +200,8 @@ export async function generateHealthPlanTargets(userId: string): Promise<Generat
     ? getAgeFromDateOfBirth(profile.dateOfBirth)
     : (profile.age ?? 25);
   const height = profile.height ?? 170;
-  const weight = profile.weight ?? 70;
+  const latestLoggedWeight = await getLatestLoggedWeight(userId);
+  const weight = latestLoggedWeight ?? profile.weight ?? 70;
   const gender = profile.gender ?? 'male';
   const activityLevel = profile.activityLevel ?? 'moderate';
   const goal = profile.goal ?? 'maintain';

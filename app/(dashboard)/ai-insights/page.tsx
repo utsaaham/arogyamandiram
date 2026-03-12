@@ -223,9 +223,9 @@ export default function AiInsightsPage() {
             tab.key === 'yesterday' && !eligibility?.yesterday
               ? "Log something yesterday to see yesterday's insights"
               : tab.key === 'month' && !eligibility?.month
-                ? 'Log for at least 30 days to unlock monthly insights'
+                ? 'Log for at least 14 days to unlock monthly insights'
                 : tab.key === 'year' && !eligibility?.year
-                  ? 'Log for at least one year to unlock yearly insights'
+                  ? 'Log for at least 60 days to unlock yearly insights'
                   : tab.key === 'week' && !eligibility?.week
                     ? 'Log for at least 7 days to unlock weekly insights'
                     : undefined;
@@ -331,8 +331,8 @@ export default function AiInsightsPage() {
                     : insightPeriod === 'week'
                       ? 'Log for at least 7 days to generate weekly insights'
                       : insightPeriod === 'month'
-                        ? 'Log for at least 30 days to unlock monthly insights'
-                        : 'Log for at least one year to unlock yearly insights'}
+                        ? 'Log for at least 14 days to unlock monthly insights'
+                        : 'Log for at least 60 days to unlock yearly insights'}
                 </p>
                 <p className="text-xs text-text-muted">
                   {insightPeriod === 'yesterday' ? 'Yesterday had no logged data.' : 'Track food, water, weight, sleep, or workouts to build your history.'}

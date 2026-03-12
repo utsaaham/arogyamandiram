@@ -14,8 +14,8 @@ export const dynamic = 'force-dynamic';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const DAYS_FOR_WEEK = 7;
-const DAYS_FOR_MONTH = 30;
-const DAYS_FOR_YEAR = 365;
+const DAYS_FOR_MONTH = 14;
+const DAYS_FOR_YEAR = 60;
 
 export async function GET() {
   try {

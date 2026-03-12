@@ -9,6 +9,7 @@ import User from '@/models/User';
 import { resolveOpenAIKey } from '@/lib/openaiKey';
 import { getToday, toLocalDateString, getAgeFromDateOfBirth } from '@/lib/utils';
 import { calculateBMR, calculateTDEE } from '@/lib/health';
+import { getLatestLoggedWeight } from '@/lib/latestWeight';
 import type { ActivityLevel, Goal, Gender } from '@/types';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
@@ -414,6 +415,8 @@ export async function getUserProfileForMealIdeas(userId: string): Promise<UserCo
 
   if (!profile) return {};
 
+  const latestLoggedWeight = await getLatestLoggedWeight(userId);
+
   let age: number | undefined;
   if (profile.dateOfBirth) {
     age = getAgeFromDateOfBirth(profile.dateOfBirth);
@@ -423,7 +426,7 @@ export async function getUserProfileForMealIdeas(userId: string): Promise<UserCo
 
   return {
     height: profile.height,
-    weight: profile.weight,
+    weight: latestLoggedWeight ?? profile.weight,
     targetWeight: profile.targetWeight,
     activityLevel: profile.activityLevel ?? 'moderate',
     goal: profile.goal ?? 'maintain',

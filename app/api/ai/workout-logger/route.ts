@@ -21,161 +21,35 @@ type OpenAIUsage = {
 };
 
 const INSTRUCTIONS = `
-You are an expert workout-activity parser used in a health and fitness logging system.
+You are a workout parser for a fitness logging app.
+Convert messy workout text into structured workout entries that match the tool schema.
 
-Your job is to convert a messy natural-language description of completed workouts into structured workout entries that exactly match the function schema.
+Parse all exercises mentioned. Normalize typos and common aliases:
+- push ups -> Push-ups, pullups -> Pull-ups, situps -> Sit-ups
+- dands -> Hindu Push-ups, baithak -> Hindu Squats
+- treadmill/thread mill -> Running
 
-The user may write incomplete sentences, typos, shorthand gym notation, or mixed units.
+For each workout:
+- exercise: short standard name
+- category: cardio | strength | flexibility | sports | other
+- duration: minutes (use explicit duration if provided)
+- sets/reps/weight: include when present, else null
+- notes: short clarification when useful, else null
 
-Examples of user input:
-- "75 pushups 60 decline situps ran 3 miles 40 min burned 456 calories"
-- "bench 3x10 60kg + pullups 3x8"
-- "20 min brisk walk and yoga"
-- "gym 8 to 9:30 pushups + run"
-- "3x20 barbell push"
-- "surya namaskar 12 rounds"
-- "dands 30 baithak 40"
+Calorie rules:
+- If user explicitly gives calories, copy that exact value for that exercise.
+- If not provided and category is cardio with duration > 0, estimate realistic calories (never 0).
+- If rep-based strength exercise has no calorie info, caloriesBurned may be 0.
+- Avoid unrealistic calorie values.
 
-You must interpret the meaning and return clean structured workout objects.
+Parsing rules:
+- Split into multiple entries if multiple exercises are mentioned.
+- "3x12" means 3 sets, 12 reps.
+- For rep-only exercises, duration can be 0.
 
-------------------------------------------------
-PRIMARY TASK
-------------------------------------------------
-
-Extract ALL exercises performed by the user.
-
-For each exercise determine:
-
-exercise:
-  Short human-readable name.
-  Examples:
-  "Running"
-  "Push-ups"
-  "Decline Sit-ups"
-  "Bench Press"
-
-category:
-  One of exactly:
-  cardio
-  strength
-  flexibility
-  sports
-  other
-
-duration:
-  Duration in minutes.
-  If explicit duration exists, use it.
-
-sets:
-  Number of sets if mentioned.
-
-reps:
-  Number of reps per set if mentioned.
-
-weight:
-  Weight in kilograms if mentioned.
-
-notes:
-  Optional clarification such as:
-  "3 miles at 5 mph"
-  "outdoor run"
-  "bodyweight exercise"
-
-------------------------------------------------
-CALORIE RULES
-------------------------------------------------
-
-If the user explicitly provides calories for an exercise:
-
-Example:
-"3 mile run ... 456 calories"
-
-Then:
-
-- caloriesBurned MUST equal exactly the value given by the user.
-- Do NOT change the value.
-- Do NOT distribute this calorie value to other exercises.
-
-If calories are NOT provided:
-
-- cardio exercises may estimate calories using duration.
-- rep-based exercises may set caloriesBurned to 0 because the backend will calculate calories using kcal-per-rep rules.
-
-Never hallucinate extremely large calorie values.
-
-------------------------------------------------
-DURATION RULES
-------------------------------------------------
-
-If the user explicitly provides duration:
-Use it directly.
-
-Examples:
-"40 min run"
-"30 minute walk"
-
-If the exercise only has reps:
-Duration may be 0 because the backend will estimate duration from reps.
-
-Shorthand parsing:
-- "3x12" means 3 sets of 12 reps
-- "X reps Y each" means X sets of Y reps
-- "20 each" after a set count should be interpreted as reps per set when context implies strength work
-
-------------------------------------------------
-TYPO HANDLING
-------------------------------------------------
-
-The user may write misspelled exercise names.
-
-Examples:
-declane situs → decline sit-ups
-push ups → push-ups
-squats → squats
-pullups → pull-ups
-dands/dandas → hindu push-ups (strength)
-baithak → hindu squats (strength)
-surya namaskar → surya namaskar (flexibility)
-
-You must normalize these to standard names.
-
-------------------------------------------------
-MULTI-EXERCISE PARSING
-------------------------------------------------
-
-Split the workout into multiple entries if the user describes multiple activities.
-
-Example input:
-
-"75 pushups 60 situps ran 3 miles 40 min burned 456 calories"
-
-Output should include THREE exercises:
-1. Push-ups
-2. Sit-ups
-3. Running
-
-------------------------------------------------
-STRICT OUTPUT RULES
-------------------------------------------------
-
-You MUST ONLY respond by calling the function tool:
-
-get_workout_log
-
-Return a single object:
-
-{
-  "workouts": [...]
-}
-
-Each workout MUST follow the schema exactly.
-
-Do NOT output explanations.
-Do NOT output markdown.
-Do NOT output code blocks.
-Do NOT output plain text.
-
-Only the function call is allowed.
+Output rules:
+- You MUST call get_workout_log with: { "workouts": [...] }.
+- No plain text, no markdown, no explanations.
 `;
 
 const WORKOUT_LOG_TOOL = {
@@ -287,6 +161,27 @@ function getKcalPerRep(exerciseName: string): number | null {
   return null;
 }
 
+/** Kcal per minute fallback for cardio exercises when model returns 0 calories. */
+const KCAL_PER_MIN: { pattern: RegExp; kcalPerMin: number }[] = [
+  { pattern: /treadmill|running|run\b/i, kcalPerMin: 10 },
+  { pattern: /jogging|jog\b/i, kcalPerMin: 8 },
+  { pattern: /brisk walk|walking|walk\b/i, kcalPerMin: 4.5 },
+  { pattern: /cycling|biking|bike\b/i, kcalPerMin: 8 },
+  { pattern: /swimming|swim\b/i, kcalPerMin: 9 },
+  { pattern: /elliptical/i, kcalPerMin: 7 },
+  { pattern: /rowing|rower/i, kcalPerMin: 8 },
+  { pattern: /jump rope|skipping/i, kcalPerMin: 11 },
+  { pattern: /stairs|stair climber/i, kcalPerMin: 8 },
+];
+
+function getKcalPerMin(exerciseName: string): number | null {
+  const name = exerciseName.trim().toLowerCase();
+  for (const { pattern, kcalPerMin } of KCAL_PER_MIN) {
+    if (pattern.test(name)) return kcalPerMin;
+  }
+  return null;
+}
+
 function extractJsonFromText(text: string): Record<string, unknown> | null {
   const trimmed = text.trim();
   const jsonBlock = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -347,6 +242,12 @@ function normalizeWorkout(raw: RawWorkout) {
     if (kcalPerRep !== null) {
       caloriesBurned = Math.round(kcalPerRep * totalReps);
     }
+  }
+
+  // Cardio fallback: if model returns 0 but duration exists, estimate from kcal/min
+  if (caloriesBurned === 0 && category === 'cardio' && duration > 0) {
+    const kcalPerMin = getKcalPerMin(exercise) ?? 6;
+    caloriesBurned = Math.round(kcalPerMin * duration);
   }
 
   return {
