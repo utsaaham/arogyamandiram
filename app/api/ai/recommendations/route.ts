@@ -126,16 +126,34 @@ Daily Targets: ${targets.dailyCalories} kcal, ${targets.protein}g protein, ${tar
 Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended workout ${targets.dailyWorkoutMinutes ?? '—'} min/day, daily calorie burn goal ${targets.dailyCalorieBurn ?? '—'} kcal, recommended sleep ${targets.sleepHours ?? '—'} hours.
     `.trim();
 
-    type LogWithSleep = { date: string; totalCalories?: number; waterIntake?: number; weight?: number; caloriesBurned?: number; sleep?: { duration?: number; quality?: number; bedtime?: string; wakeTime?: string } };
+    type LogWithSleep = {
+      date: string;
+      totalCalories?: number;
+      totalProtein?: number;
+      totalCarbs?: number;
+      totalFat?: number;
+      waterIntake?: number;
+      weight?: number;
+      caloriesBurned?: number;
+      workouts?: { duration?: number }[];
+      sleep?: { duration?: number; quality?: number; bedtime?: string; wakeTime?: string };
+    };
     const buildLogContext = (logs: LogWithSleep[], label: string) =>
       logs.length > 0
         ? `${label}: ${JSON.stringify(
             logs.map((l) => ({
               date: l.date,
               cal: l.totalCalories,
+              protein: l.totalProtein,
+              carbs: l.totalCarbs,
+              fat: l.totalFat,
               water: l.waterIntake,
               weight: l.weight,
               burned: l.caloriesBurned,
+              workoutMinutes: Array.isArray(l.workouts)
+                ? l.workouts.reduce((sum, w) => sum + (Number(w?.duration) || 0), 0)
+                : 0,
+              workoutCount: Array.isArray(l.workouts) ? l.workouts.length : 0,
               sleep: l.sleep ? { duration: l.sleep.duration, quality: l.sleep.quality, bedtime: l.sleep.bedtime, wakeTime: l.sleep.wakeTime } : undefined,
             }))
           )}`
@@ -157,7 +175,15 @@ Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended w
       }
 
       case 'workout': {
-        const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided. Always respond with JSON: { "plan": { "name": string, "description": string, "exercises": [{ "name": string, "sets": number, "reps": string, "restSeconds": number, "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }. Align duration and estimated calories with the user's daily targets when possible.`;
+        const systemPrompt = `You are a fitness trainer AI for Arogyamandiram health app. Create a workout plan based on user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided.
+Always respond with JSON:
+{ "plan": { "name": string, "description": string, "progressionTip": string, "exercises": [{ "name": string, "sets": number, "reps": string, "durationMinutes": number, "restSeconds": number, "intensity": "low"|"medium"|"high", "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }.
+Rules:
+- Build a balanced session order: warm-up first, then main work, then cool-down.
+- "reps" must be reps/rep-ranges only (e.g. "10-12"), never time strings.
+- For time-based exercises set durationMinutes > 0 and keep reps simple (e.g. "1").
+- Keep total duration close to requested/recommended duration.
+- Keep estimatedCalories realistic and aligned with the user's daily calorie burn target.`;
         const userPrompt = `${profileContext}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Use their recommended daily workout duration if provided'}`;
         const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
         result = ai.parsed;
@@ -248,7 +274,18 @@ Extended targets: ideal weight ${targets.idealWeight ?? '—'} kg, recommended w
           `Tracking data for selected period (${startDate} to ${endDate})`
         );
         const periodLabel = periodLabels[period] ?? 'weekly';
-        const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's tracking data and provide actionable insights. Use their extended targets (ideal weight, recommended workout minutes, daily calorie burn goal, recommended sleep) when relevant. Always respond with JSON: { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string }] }. Provide 4-6 insights. Be encouraging but honest. Reference how they are doing vs their ideal weight, workout goal, and sleep target when applicable.`;
+        const systemPrompt = `You are a health analytics AI for Arogyamandiram. Analyze the user's tracking data and provide actionable insights.
+Sleep quality is on a 1-5 scale (1=poor, 5=excellent).
+Always respond with JSON:
+{ "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string, "priority": "high"|"medium"|"low" }] }.
+Provide 4-6 insights.
+Rules:
+- Include trend thinking (improving/declining/stable) where possible, not only single data-point commentary.
+- At least one insight should be motivational and practical.
+- Be specific and actionable (avoid vague advice like "exercise more").
+- Compare current values against targets in the value field when possible (e.g. "900 ml / 2500 ml target").
+- Reference progress vs ideal weight, workout goal, calorie burn goal, macro targets, and sleep target when relevant.
+- Be encouraging but honest.`;
         const userPrompt = `${profileContext}\n${insightContext}\nProvide ${periodLabel} insights and recommendations.`;
         const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
         result = { ...ai.parsed, generatedAt: new Date().toISOString() };

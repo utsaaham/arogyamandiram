@@ -32,6 +32,9 @@ Examples of user input:
 - "bench 3x10 60kg + pullups 3x8"
 - "20 min brisk walk and yoga"
 - "gym 8 to 9:30 pushups + run"
+- "3x20 barbell push"
+- "surya namaskar 12 rounds"
+- "dands 30 baithak 40"
 
 You must interpret the meaning and return clean structured workout objects.
 
@@ -114,6 +117,11 @@ Examples:
 If the exercise only has reps:
 Duration may be 0 because the backend will estimate duration from reps.
 
+Shorthand parsing:
+- "3x12" means 3 sets of 12 reps
+- "X reps Y each" means X sets of Y reps
+- "20 each" after a set count should be interpreted as reps per set when context implies strength work
+
 ------------------------------------------------
 TYPO HANDLING
 ------------------------------------------------
@@ -125,6 +133,9 @@ declane situs → decline sit-ups
 push ups → push-ups
 squats → squats
 pullups → pull-ups
+dands/dandas → hindu push-ups (strength)
+baithak → hindu squats (strength)
+surya namaskar → surya namaskar (flexibility)
 
 You must normalize these to standard names.
 

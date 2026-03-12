@@ -52,10 +52,13 @@ Correct spelling errors silently (e.g. "pulov" → "veg pulao", "raitha" → "ra
 
 Rules:
 - Split only clearly separate dishes/sides ("burger with fries" → 2 items).
+- For combo text with add-ons/sides (e.g. "burger with fries and coke", "grilled cheese with 2 sauce packets"), split into separate items when each component is eaten separately.
 - Keep ingredients mentioned inside a dish as part of that item, not separate
   ("pulao with cashews" → 1 item, "raita with onion" → 1 item).
 - Include key ingredients in the item name so Step 2 can estimate nutrition accurately
   ("veg pulao with cashews and soya chunks" not just "veg pulao").
+- Preserve known brand names in item names when present (e.g. Vadilal, Haldiram's, MTR, Amul, Dunkin, McDonald's, KFC, Domino's).
+- Normalize obvious misspellings of brand names while preserving brand context.
 - If quantity is missing, use quantity = 1 and unit = "serving".
 - For piece-count items (chips, cookies, crackers, nuggets), always convert to grams
   using standard per-piece weights:
@@ -160,6 +163,10 @@ Units will already be normalized to one of: piece, bowl, serving, cup, g, ml, tb
    sodium, saturatedFat, cholesterol) MUST represent the TOTAL for the provided
    quantity and unit. Never return per-unit, per-serving, or per-100g nutrition.
 
+   For piece items, return TOTAL for all pieces.
+   Example: quantity=3, unit=piece, dosa (~130 kcal each) => calories should be ~390 total, not ~130.
+   If total_weight_g is provided, base nutrition on total_weight_g for the whole eaten quantity.
+
 4. Calorie integrity check:
    calories = (protein × 4) + (carbs × 4) + (fat × 9)
    If your computed calories deviate from this formula by more than 3%,
@@ -174,6 +181,10 @@ Units will already be normalized to one of: piece, bowl, serving, cup, g, ml, tb
 7. Return sodium and cholesterol as whole numbers (mg).
 8. Return the same quantity and unit as the input — no exceptions.
 9. Units in your output must be one of: piece, bowl, serving, cup, g, ml, tbsp, tsp.
+10. Add:
+   - confidence: "high" | "medium" | "low"
+   - sourceType: "brand_label" | "restaurant_db" | "ifct_usda_estimate"
+   - preparationType: "homemade" | "restaurant" | "packaged" | "unknown"
 
 Return JSON only using tool: get_meal_nutrition
 `;
@@ -250,6 +261,18 @@ const MEAL_NUTRITION_TOOL = {
               description:
                 'Must match the input unit exactly (e.g. g, ml, piece, serving). Do not change the unit from the input.',
             },
+            confidence: {
+              type: 'string',
+              description: 'Confidence in estimate: high, medium, or low.',
+            },
+            sourceType: {
+              type: 'string',
+              description: 'Primary data source used: brand_label, restaurant_db, or ifct_usda_estimate.',
+            },
+            preparationType: {
+              type: 'string',
+              description: 'Whether the logged item is homemade, restaurant, packaged, or unknown.',
+            },
           },
           required: [
             'name',
@@ -264,6 +287,9 @@ const MEAL_NUTRITION_TOOL = {
             'cholesterol',
             'quantity',
             'unit',
+            'confidence',
+            'sourceType',
+            'preparationType',
           ],
           additionalProperties: false,
         },
@@ -298,7 +324,14 @@ type NormalizedItem = {
   cholesterol: number;
   quantity: number;
   unit: string;
+  confidence: 'high' | 'medium' | 'low';
+  sourceType: 'brand_label' | 'restaurant_db' | 'ifct_usda_estimate';
+  preparationType: 'homemade' | 'restaurant' | 'packaged' | 'unknown';
 };
+
+type NutritionConfidence = 'high' | 'medium' | 'low';
+type NutritionSourceType = 'brand_label' | 'restaurant_db' | 'ifct_usda_estimate';
+type NutritionPreparationType = 'homemade' | 'restaurant' | 'packaged' | 'unknown';
 
 function normalizeItem(obj: Record<string, unknown>): NormalizedItem {
   const num = (v: unknown) =>
@@ -310,6 +343,27 @@ function normalizeItem(obj: Record<string, unknown>): NormalizedItem {
   const carbs = Math.max(0, num(obj.carbs));
   const fat = Math.max(0, num(obj.fat));
   const calories = Math.round((protein * 4) + (carbs * 4) + (fat * 9));
+
+  const confidenceRaw = str(obj.confidence).toLowerCase();
+  const sourceTypeRaw = str(obj.sourceType).toLowerCase();
+  const preparationTypeRaw = str(obj.preparationType).toLowerCase();
+  const confidence: NutritionConfidence =
+    confidenceRaw === 'high' || confidenceRaw === 'medium' || confidenceRaw === 'low'
+      ? (confidenceRaw as NutritionConfidence)
+      : 'medium';
+  const sourceType: NutritionSourceType =
+    sourceTypeRaw === 'brand_label' ||
+    sourceTypeRaw === 'restaurant_db' ||
+    sourceTypeRaw === 'ifct_usda_estimate'
+      ? (sourceTypeRaw as NutritionSourceType)
+      : 'ifct_usda_estimate';
+  const preparationType: NutritionPreparationType =
+    preparationTypeRaw === 'homemade' ||
+    preparationTypeRaw === 'restaurant' ||
+    preparationTypeRaw === 'packaged' ||
+    preparationTypeRaw === 'unknown'
+      ? (preparationTypeRaw as NutritionPreparationType)
+      : 'unknown';
 
   return {
     name: str(obj.name).trim() || 'Item',
@@ -324,8 +378,14 @@ function normalizeItem(obj: Record<string, unknown>): NormalizedItem {
     cholesterol: Math.round(Math.max(0, num(obj.cholesterol))),
     quantity: Math.max(0.1, num(obj.quantity)) || 1,
     unit: str(obj.unit).trim() || 'serving',
+    confidence,
+    sourceType,
+    preparationType,
   };
 }
+
+const DENSE_PIECE_ITEM_PATTERN =
+  /dosa|idli|chapati|roti|paratha|puri|sandwich|burger|cookie|biscuit|samosa|cutlet|roll|wrap|pizza|nugget/i;
 
 function computeTotal(items: NormalizedItem[]) {
   const caloriesSum = items.reduce((s, i) => s + i.calories, 0);
@@ -616,7 +676,7 @@ export async function POST(req: NextRequest) {
       const carbs = Number((current.carbs * scale).toFixed(2));
       const fat = Number((current.fat * scale).toFixed(2));
 
-      return {
+      const scaled = {
         ...current,
         quantity: parsed.quantity,
         unit: parsed.unit,
@@ -630,6 +690,35 @@ export async function POST(req: NextRequest) {
         saturatedFat: Number((current.saturatedFat * scale).toFixed(2)),
         cholesterol: Math.round(current.cholesterol * scale),
       };
+
+      // Guard against model returning per-piece values for multi-piece foods.
+      if (
+        parsed.unit === 'piece' &&
+        parsed.quantity > 1 &&
+        parsed.each_weight_g > 0 &&
+        DENSE_PIECE_ITEM_PATTERN.test(scaled.name) &&
+        scaled.calories / parsed.quantity < 50
+      ) {
+        const pieceScale = parsed.quantity;
+        const protein = Number((scaled.protein * pieceScale).toFixed(2));
+        const carbs = Number((scaled.carbs * pieceScale).toFixed(2));
+        const fat = Number((scaled.fat * pieceScale).toFixed(2));
+        return {
+          ...scaled,
+          protein,
+          carbs,
+          fat,
+          calories: Math.round(protein * 4 + carbs * 4 + fat * 9),
+          fiber: Number((scaled.fiber * pieceScale).toFixed(2)),
+          sugar: Number((scaled.sugar * pieceScale).toFixed(2)),
+          sodium: Math.round(scaled.sodium * pieceScale),
+          saturatedFat: Number((scaled.saturatedFat * pieceScale).toFixed(2)),
+          cholesterol: Math.round(scaled.cholesterol * pieceScale),
+          confidence: 'low',
+        };
+      }
+
+      return scaled;
     });
 
     // Clamp unrealistic sodium spikes after normalization/scaling, before totals

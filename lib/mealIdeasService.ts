@@ -26,6 +26,11 @@ export interface MealSuggestion {
   protein: number;
   carbs: number;
   fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+  prepTimeMinutes?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
   mealType: string;
   ingredients: string[];
   isVegetarian: boolean;
@@ -182,6 +187,7 @@ interface MealPayload {
   mealHistoryLast4Days: MealHistoryEntry[];
   patternSummary: PatternSummary;
   targets: { calories: number; protein: number; carbs: number; fat: number };
+  todayIntake: { calories: number; remainingCalories: number };
   task: string;
 }
 
@@ -297,6 +303,13 @@ function buildPayload(
   const mealHistoryLast4Days = buildMealHistoryLast4Days(byDay, mealTypes, 4);
   const patternSummary = computePatternSummary(mealHistoryLast4Days);
   const userProfile = buildUserProfileForPrompt(userContext);
+  const today = getToday();
+  const todayMeals = byDay[today] ?? {};
+  const todayCalories = Object.values(todayMeals).reduce(
+    (sum, meal) => sum + (meal.totalCalories || 0),
+    0
+  );
+  const remainingCalories = Math.max(0, Math.round(targets.calories - todayCalories));
 
   const typesStr = mealTypes.join(', ');
   let task = `Suggest 4 ${typesStr} meals.`;
@@ -307,23 +320,30 @@ function buildPayload(
     mealHistoryLast4Days,
     patternSummary,
     targets,
+    todayIntake: {
+      calories: Math.round(todayCalories),
+      remainingCalories,
+    },
     task,
   };
 }
 
 // ---------- System prompt (compressed for latency) ----------
 
-const SYSTEM_PROMPT = `Suggest meals based on the user's recent meal history.
+const SYSTEM_PROMPT = `Suggest meals based on the user's recent meal history and today's remaining calorie budget.
 
 Rules:
 - Use userProfile (height, weight, age, activity level, goal) to estimate appropriate calorie ranges and portion sizes.
-- Follow similar meal structure (use patternSummary).
+- Follow similar meal structure and cuisine cues from patternSummary.
 - Avoid repeating identical meals.
 - Improve nutrition slightly (more vegetables, fewer processed snacks).
-- Descriptions must be under 12 words.
+- Respect todayIntake.remainingCalories so suggestions fit the day realistically.
+- Descriptions must be under 12 words and include one practical cue (time-saving, prep style, or nutrition focus).
 - Infer cuisine from foods — do not assume.
+- Keep suggestions culturally relevant to the user's recent patterns unless preferences ask otherwise.
+- Include estimated prepTimeMinutes and difficulty.
 
-Return JSON only: {"suggestions":[{"name","description","calories","protein","carbs","fat","mealType","ingredients","isVegetarian"}]}`;
+Return JSON only: {"suggestions":[{"name","description","calories","protein","carbs","fat","fiber","sugar","sodium","prepTimeMinutes","difficulty","mealType","ingredients","isVegetarian"}]}`;
 
 // ---------- Data fetching ----------
 

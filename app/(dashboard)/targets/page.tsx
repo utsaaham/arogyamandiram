@@ -1,7 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, RefreshCw, Sparkles, Save, Target, Flame, Droplets, Drumstick, Cookie, ChefHat } from 'lucide-react';
+import {
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Save,
+  Target,
+  Flame,
+  Droplets,
+  Drumstick,
+  Cookie,
+  ChefHat,
+  Scale,
+  Timer,
+  Moon,
+} from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
@@ -144,7 +158,7 @@ export default function TargetsPage() {
       {/* Summary + content */}
       <div className="mobile-fade-up mobile-dash-px lg:px-0" style={{ animationDelay: '80ms' }}>
       <div className="space-y-3 lg:space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 lg:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
         <StatCard
           icon={Flame}
           label="Calories"
@@ -179,6 +193,34 @@ export default function TargetsPage() {
           value={`${currentTargets?.fat ?? '—'}`}
           subtitle="g/day"
           iconColor="text-accent-rose"
+        />
+        <StatCard
+          icon={Scale}
+          label="Ideal Weight"
+          value={`${currentTargets?.idealWeight ?? '—'}`}
+          subtitle="kg"
+          iconColor="text-accent-emerald"
+        />
+        <StatCard
+          icon={Timer}
+          label="Workout"
+          value={`${currentTargets?.dailyWorkoutMinutes ?? '—'}`}
+          subtitle="min/day"
+          iconColor="text-accent-cyan"
+        />
+        <StatCard
+          icon={Flame}
+          label="Burn Goal"
+          value={`${currentTargets?.dailyCalorieBurn ?? '—'}`}
+          subtitle="kcal/day"
+          iconColor="text-accent-amber"
+        />
+        <StatCard
+          icon={Moon}
+          label="Sleep"
+          value={`${currentTargets?.sleepHours ?? '—'}`}
+          subtitle="hours/night"
+          iconColor="text-accent-violet"
         />
       </div>
 
