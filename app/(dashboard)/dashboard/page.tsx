@@ -91,7 +91,7 @@ export default function DashboardPage() {
       {/* ─── Desktop / iPad (lg+) ─── */}
       <div className="hidden flex-col gap-6 lg:flex">
         {/* Top row */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1
               className="font-heading text-[32px] font-normal tracking-[0.03em] leading-none"
@@ -105,10 +105,10 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5">
-            <span className="font-heading text-xl tracking-[0.03em] text-accent-violet">LV {level}</span>
+            <span className="font-heading text-xl tracking-[0.03em] text-accent-emerald">LV {level}</span>
             <div className="h-1.5 w-[110px] overflow-hidden rounded-full bg-white/[0.08]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-accent-violet to-accent-violet/80 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-accent-emerald to-accent-emerald/80 transition-all duration-500"
                 style={{ width: `${xpPercent}%` }}
               />
             </div>
@@ -241,10 +241,10 @@ export default function DashboardPage() {
             {/* Row 1: Greeting + Avatar — T centered with left text block */}
             <div className="flex justify-between items-center">
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-white text-[22px] font-extrabold leading-tight" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
+                <p className="m-0 text-text-secondary text-[22px] font-extrabold leading-tight" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
                   {getGreeting()}
                 </p>
-                <p className="m-0 mt-0.5 text-white text-[22px] font-extrabold leading-tight" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
+                <p className="m-0 mt-0.5 text-text-secondary text-[22px] font-extrabold leading-tight" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
                   {userName || 'Guest'} 👋
                 </p>
                 <div className="flex items-center gap-1.5 mt-1.5">
@@ -264,8 +264,8 @@ export default function DashboardPage() {
               {/* Avatar — larger, shifted slightly left */}
               <Link href="/settings" className="shrink-0 active:opacity-90 transition-opacity -translate-x-3" aria-label="Open settings">
                 <div
-                  className="w-[76px] h-[76px] rounded-full flex items-center justify-center text-[24px] font-black text-[#e8f0ff]"
-                  style={{ background: '#1a2035' }}
+                  className="w-[76px] h-[76px] rounded-full flex items-center justify-center text-[24px] font-black"
+                  style={{ background: '#1a2035', color: '#a3a3a3' }}
                 >
                   {(userName || 'Guest').charAt(0).toUpperCase()}
                 </div>
@@ -303,22 +303,31 @@ export default function DashboardPage() {
           <div className="m-calorie-card card-glow">
             <div className="m-calorie-inner">
               <div>
-                <div className="text-[11px] font-semibold tracking-[0.1em] uppercase text-text-muted mb-2">Today&apos;s Calories</div>
-                <div className="text-[52px] font-extrabold leading-none tracking-[-0.04em] text-text-primary" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
+                <div className="text-[11px] font-semibold tracking-[0.1em] uppercase text-text-muted mb-2">
+                  Today&apos;s Calories
+                </div>
+                <div
+                  className="text-[52px] font-extrabold leading-none tracking-[-0.04em] text-text-secondary"
+                  style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}
+                >
                   {formatNumber(Math.round(totalCal))}
                 </div>
                 <div className="text-[13px] text-text-muted mt-1">kcal consumed</div>
                 <div className="flex items-center gap-1.5 mt-3">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: M_COLORS.green }} />
-                  <span className="font-bold text-[15px]" style={{ color: M_COLORS.green }}>{formatNumber(Math.round(remaining))}</span>
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#a3a3a3' }} />
+                  <span className="font-bold text-[15px]" style={{ color: '#a3a3a3' }}>
+                    {formatNumber(Math.round(remaining))}
+                  </span>
                   <span className="text-[13px] text-text-muted">kcal remaining</span>
                 </div>
-                <div className="text-[11.5px] text-text-muted mt-0.5">of {formatNumber(targets.dailyCalories)} kcal goal</div>
+                <div className="text-[11.5px] text-text-muted mt-0.5">
+                  of {formatNumber(targets.dailyCalories)} kcal goal
+                </div>
               </div>
               <div className="m-calorie-ring-wrap">
                 <MobileCalorieRing value={totalCal} max={targets.dailyCalories} size={120} strokeWidth={10} />
                 <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                  <span className="text-[13px] font-extrabold" style={{ color: M_COLORS.green }}>
+                  <span className="text-[13px] font-extrabold" style={{ color: '#a3a3a3' }}>
                     {Math.round(calPercent)}%
                   </span>
                 </div>
@@ -436,7 +445,7 @@ function MacroCard({
         <span className="macro-title">
           Today&apos;s Macros
         </span>
-        <Link href="/food" className="font-body text-sm font-medium text-accent-violet hover:underline">
+        <Link href="/food" className="font-body text-xs font-medium text-accent-emerald hover:underline">
           Details →
         </Link>
       </div>
@@ -523,7 +532,7 @@ function RecentBadges({ earnedBadges }: { earnedBadges: UserBadge[] }) {
         <span className="font-body text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Recent Badges
         </span>
-        <Link href="/achievements" className="font-body text-xs font-medium text-accent-violet hover:underline">
+        <Link href="/achievements" className="font-body text-xs font-medium text-accent-emerald hover:underline">
           View all →
         </Link>
       </div>
@@ -631,7 +640,17 @@ function StreakCard({
 
 // ─── Mobile-only components (design layout) ───
 
-function MobileCalorieRing({ value, max, size = 120, strokeWidth = 10 }: { value: number; max: number; size?: number; strokeWidth?: number }) {
+function MobileCalorieRing({
+  value,
+  max,
+  size = 120,
+  strokeWidth = 10,
+}: {
+  value: number;
+  max: number;
+  size?: number;
+  strokeWidth?: number;
+}) {
   const radius = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * radius;
   const pct = Math.min(value / max, 1);
@@ -645,8 +664,8 @@ function MobileCalorieRing({ value, max, size = 120, strokeWidth = 10 }: { value
     <svg width={size} height={size} className="rotate-[-90deg]" style={{ overflow: 'visible' }}>
       <defs>
         <linearGradient id="mobileRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#00e5a0" />
-          <stop offset="100%" stopColor="#00b4d8" />
+          <stop offset="0%" stopColor="#a3a3a3" />
+          <stop offset="100%" stopColor="#a3a3a3" />
         </linearGradient>
       </defs>
       <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={strokeWidth} strokeLinecap="round" />

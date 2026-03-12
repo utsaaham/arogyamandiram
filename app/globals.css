@@ -209,9 +209,11 @@ body {
   .recent-badges-grid::-webkit-scrollbar {
     display: none;
   }
+  /* Default (desktop / non-mobile-dash) recent badges row:
+     keep every card the same width so TCG cards don't vary with content length. */
   .recent-badges-grid > * {
-    flex-shrink: 0;
-    min-width: 120px;
+    flex: 0 0 190px;
+    max-width: 190px;
   }
   .ring-card {
     @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;
@@ -576,7 +578,7 @@ body {
     background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
   }
   .macro-card .macro-title {
-    @apply font-body text-base font-semibold uppercase tracking-wider text-text-muted;
+    @apply font-body text-sm font-semibold uppercase tracking-wider text-text-muted;
   }
   .macro-scroll {
     display: flex;
@@ -670,9 +672,9 @@ body {
     @apply flex h-9 w-9 flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-[11px] font-semibold text-text-muted;
   }
   .sdot-today {
-    border-color: rgba(139, 92, 246, 0.5);
-    background: rgba(139, 92, 246, 0.12);
-    color: var(--accent-violet);
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(16, 185, 129, 0.14);
+    color: var(--accent-emerald);
   }
 
   /* Mobile dashboard */
@@ -939,7 +941,7 @@ body {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: 12px; /* X between recent badge cards on mobile */
+    gap: 12px; /* X between recent badge cards on small phones */
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
@@ -949,11 +951,24 @@ body {
   .mobile-dash .recent-badges-grid::-webkit-scrollbar {
     display: none;
   }
-  /* Same width/height as one card on achievements page (2-col grid): (viewport − padding − gap) ÷ 2 */
+  /* Phone: horizontal scroll, show ~2 cards; all equal width. */
   .mobile-dash .recent-badges-grid > * {
-    width: calc((100vw - 76px) / 2);
-    min-width: calc((100vw - 76px) / 2);
-    flex-shrink: 0;
+    flex: 0 0 60%;
+    max-width: 260px;
+  }
+
+  /* iPad-sized (md) – switch to a proper 3‑column grid to mirror the achievements page card sizing. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .mobile-dash .recent-badges-grid {
+      display: grid;
+      grid-auto-flow: row;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow-x: visible;
+    }
+    .mobile-dash .recent-badges-grid > * {
+      flex: initial;
+      max-width: none;
+    }
   }
 
   /* Helper layout utilities for card spacing (X / 2X) */
@@ -1094,6 +1109,15 @@ body {
 
     .deck-art-box {
       min-height: 3rem;
+    }
+  }
+
+  /* On tablet and desktop (iPad and up), lock badge card height
+     so every card is exactly the same physical size across dashboard
+     and achievements, regardless of text wrapping. */
+  @media (min-width: 768px) {
+    .portrait-card {
+      height: 230px;
     }
   }
 
