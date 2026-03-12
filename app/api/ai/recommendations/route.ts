@@ -197,6 +197,32 @@ export async function POST(req: NextRequest) {
           )}`
         : 'No recent tracking data available.';
 
+    const buildInsightsDailyContext = (logs: LogWithSleep[], label: string) =>
+      logs.length > 0
+        ? `${label}: ${JSON.stringify(
+            logs.map((l) => ({
+              date: l.date,
+              caloriesKcal: Number(l.totalCalories) || 0,
+              proteinG: Number(l.totalProtein) || 0,
+              carbsG: Number(l.totalCarbs) || 0,
+              fatG: Number(l.totalFat) || 0,
+              waterMl: Number(l.waterIntake) || 0,
+              weightKg: Number(l.weight) || 0,
+              caloriesBurnedKcal: Number(l.caloriesBurned) || 0,
+              workoutMinutes: Array.isArray(l.workouts)
+                ? l.workouts.reduce((sum, w) => sum + (Number(w?.duration) || 0), 0)
+                : 0,
+              workoutCount: Array.isArray(l.workouts) ? l.workouts.length : 0,
+              sleep: l.sleep
+                ? {
+                    durationHours: Number(l.sleep.duration) || 0,
+                    quality1to5: Number(l.sleep.quality) || 0,
+                  }
+                : undefined,
+            }))
+          )}`
+        : 'No recent tracking data available.';
+
     const toMetricsRow = (l: LogWithSleep) => ({
       date: l.date,
       cal: Number(l.totalCalories) || 0,
@@ -461,7 +487,7 @@ Rules:
                 startDate,
                 endDate
               )
-            : buildLogContext(
+            : buildInsightsDailyContext(
                 insightLogs as LogWithSleep[],
                 `Tracking data for selected period (${startDate} to ${endDate})`
               );
