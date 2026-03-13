@@ -164,7 +164,7 @@ body {
   .card-glow {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
   }
   .card-glow::after {
     display: none;
@@ -180,7 +180,7 @@ body {
     display: grid;
     grid-template-columns: auto 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 12px; /* X between ring + stats */
+    gap: 12px;
     grid-column: 1 / -1;
   }
   .bento-ring {
@@ -219,11 +219,11 @@ body {
     @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
   }
-  /* When card-glow is applied, use same shade on glass/ring cards (desktop) */
-  .glass-card.card-glow,
-  .ring-card.card-glow {
-    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+  /* When card-glow is applied, use green-tinted shade on glass cards (desktop) */
+  .glass-card.card-glow {
+    background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
   }
+  /* ring-card.card-glow intentionally NOT overridden — keeps its natural emerald tint */
   /* Hero card tints for dashboard-style pages */
   .glass-card-tint-emerald {
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
@@ -508,7 +508,7 @@ body {
     min-height: 0;
   }
   .bento-stats-cards .stat-mini-card {
-    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
     position: relative;
     overflow: hidden;
   }
@@ -548,7 +548,7 @@ body {
   .m-stats-grid .stat-card-burned .stat-mini-card,
   .m-stats-grid .stat-card-meals .stat-mini-card,
   .m-stats-grid .stat-card-sleep .stat-mini-card {
-    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
   }
   .bento-stats-cards .stat-card-water .stat-mini-card::after,
   .bento-stats-cards .stat-card-burned .stat-mini-card::after,
@@ -574,8 +574,7 @@ body {
     @apply rounded-2xl px-6 py-5;
   }
   .macro-card.card-glow {
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
   }
   .macro-card .macro-title {
     @apply font-body text-sm font-semibold uppercase tracking-wider text-text-muted;
@@ -662,8 +661,7 @@ body {
     @apply rounded-2xl px-5 py-5;
   }
   .streak-card.card-glow {
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    background: linear-gradient(160deg, #151d28 0%, #10181a 100%);
+    background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
   }
   .streak-card .streak-value {
     @apply font-heading text-2xl font-semibold tracking-tight text-text-primary;

@@ -104,7 +104,7 @@ export default function DashboardPage() {
               {formatDate(today)} · Let&apos;s make today count.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5">
+          <div className="flex shrink-0 items-center gap-2.5 rounded-xl px-4 py-2.5" style={{ background: 'linear-gradient(160deg, #111712 0%, #0c1410 100%)' }}>
             <span className="font-heading text-xl tracking-[0.03em] text-accent-emerald">LV {level}</span>
             <div className="h-1.5 w-[110px] overflow-hidden rounded-full bg-white/[0.08]">
               <div
@@ -152,6 +152,7 @@ export default function DashboardPage() {
             <div className="bento-ring-badges min-h-0">
               <RecentBadges earnedBadges={earnedBadges} />
             </div>
+
           </div>
 
           {/* Macros */}
