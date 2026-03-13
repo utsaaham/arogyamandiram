@@ -148,9 +148,14 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Recent Badges — same size as achievement badges, 5 most recent */}
+            {/* Recent Badges */}
             <div className="bento-ring-badges min-h-0">
               <RecentBadges earnedBadges={earnedBadges} />
+            </div>
+
+            {/* Water Ring */}
+            <div className="bento-water-ring">
+              <WaterRingCard waterIntake={log?.waterIntake || 0} dailyWater={targets.dailyWater} />
             </div>
 
           </div>
@@ -344,6 +349,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Water Ring card – mobile */}
+        <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '120ms' }}>
+          <WaterRingCard waterIntake={log?.waterIntake || 0} dailyWater={targets.dailyWater} />
+        </div>
+
         {/* Quick stats 2x2 – two-line value + label on mobile (each with section shade) */}
         <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '160ms' }}>
           <div className="m-stats-grid">
@@ -412,6 +422,36 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+function WaterRingCard({ waterIntake, dailyWater }: { waterIntake: number; dailyWater: number }) {
+  const waterPercent = calcPercent(waterIntake, dailyWater);
+  const remaining = Math.max(dailyWater - waterIntake, 0);
+
+  return (
+    <div className="glass-card ring-card card-glow">
+      <div className="ring-wrap">
+        <ProgressRing
+          progress={waterPercent}
+          size={160}
+          strokeWidth={10}
+          color="stroke-accent-cyan"
+          bgColor="stroke-white/[0.06]"
+          value={formatWater(waterIntake)}
+          label="water"
+          valueClassName="font-heading text-3xl font-normal tracking-[0.03em] text-text-secondary"
+          labelClassName="font-body text-xs font-medium text-text-muted"
+        />
+      </div>
+      <p className="text-center text-sm text-text-muted leading-relaxed font-body">
+        <span className="font-semibold text-text-secondary">
+          {formatWater(remaining)} remaining
+        </span>
+        <br />
+        of {formatWater(dailyWater)} goal
+      </p>
     </div>
   );
 }
