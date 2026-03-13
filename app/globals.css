@@ -41,9 +41,9 @@
 /* ---------- Base Styles & Root Layout ---------- */
 html {
   height: 100%;
-  min-height: calc(100% + env(safe-area-inset-top));
+  min-height: 100%;
   padding:
-    env(safe-area-inset-top)
+    0
     env(safe-area-inset-right)
     env(safe-area-inset-bottom)
     env(safe-area-inset-left);
@@ -973,11 +973,11 @@ body {
 
   /* Helper layout utilities for card spacing (X / 2X) */
   .cards-stack-mobile {
-    @apply flex flex-col space-y-3;
+    @apply flex flex-col gap-3;
   }
 
   .cards-stack-desktop {
-    @apply flex flex-col space-y-3;
+    @apply flex flex-col gap-3;
   }
 
   .card-row {
@@ -1580,3 +1580,78 @@ input[type='date'].date-input {
   max-height: 2.5rem;
   text-align: left !important;
 }
+
+/* ============================================
+   LANDING PAGE — World-Class Aesthetic
+   ============================================ */
+
+/* 1. Film grain overlay */
+.noise-layer {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 999;
+  opacity: 0.038;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
+/* 2. Dot grid hero background */
+.dot-grid {
+  background-image: radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* 3. Marquee */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.animate-marquee      { animation: marquee 38s linear infinite; }
+.animate-marquee-slow { animation: marquee 65s linear infinite; }
+
+/* 4. Floating orbs */
+@keyframes float-orb {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(30px,-20px) scale(1.05); }
+  66%      { transform: translate(-18px,22px) scale(0.97); }
+}
+@keyframes float-orb-alt {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%      { transform: translate(-35px,-28px) scale(1.07); }
+}
+.animate-float-orb      { animation: float-orb 18s ease-in-out infinite; }
+.animate-float-orb-alt  { animation: float-orb-alt 24s ease-in-out infinite; }
+.animate-float-orb-slow { animation: float-orb 30s ease-in-out infinite; }
+
+/* 5. Animated gradient text */
+@keyframes gradient-shift {
+  0%,100% { background-position: 0 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.animate-gradient-text { background-size: 200% 200%; animation: gradient-shift 5s ease infinite; }
+
+/* 6. Staggered fade-in-up */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-fade-up   { opacity: 0; animation: fade-in-up 0.7s ease-out forwards; }
+.anim-delay-100 { animation-delay: 0.1s; }
+.anim-delay-200 { animation-delay: 0.2s; }
+.anim-delay-300 { animation-delay: 0.3s; }
+.anim-delay-500 { animation-delay: 0.5s; }
+.anim-delay-700 { animation-delay: 0.7s; }
+.anim-delay-900 { animation-delay: 0.9s; }
+
+/* 7. CTA glow breathe */
+@keyframes glow-breathe {
+  0%,100% { box-shadow: 0 0 18px rgba(139,92,246,0.35); }
+  50%      { box-shadow: 0 0 44px rgba(139,92,246,0.65), 0 0 80px rgba(139,92,246,0.18); }
+}
+.glow-breathe { animation: glow-breathe 3s ease-in-out infinite; }
+
+/* 8. Section gradient dividers */
+.section-fade-top    { mask-image: linear-gradient(to bottom, transparent, black 30%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%); }
+.section-fade-bottom { mask-image: linear-gradient(to bottom, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent); }
+.hero-preview-fade   { -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%); mask-image: linear-gradient(to bottom, black 55%, transparent 100%); }
+
+/* 9. Typing cursor blink */
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor-blink { animation: blink 1.1s step-start infinite; }
