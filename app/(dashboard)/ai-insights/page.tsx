@@ -30,6 +30,13 @@ interface Insight {
 type InsightPeriod = 'yesterday' | 'week' | 'month' | 'year';
 type TabKey = InsightPeriod;
 
+function insightsAgentForPeriod(period: InsightPeriod): 'yesterday' | 'weekly' | 'monthly' | 'yearly' {
+  if (period === 'week') return 'weekly';
+  if (period === 'month') return 'monthly';
+  if (period === 'year') return 'yearly';
+  return 'yesterday';
+}
+
 const tabs: { key: TabKey; label: string; icon: typeof Sparkles }[] = [
   { key: 'yesterday', label: "Yesterday's insights", icon: TrendingUp },
   { key: 'week', label: 'Week insights', icon: TrendingUp },
@@ -90,9 +97,24 @@ export default function AiInsightsPage() {
     try {
       const res = await api.getInsights({ period: insightPeriod });
       if (res.success && res.data) {
-        const data = res.data as { insights: Insight[]; generatedAt?: string };
-        setInsights(data.insights || []);
-        setInsightsGeneratedAt(data.generatedAt || new Date().toISOString());
+        const data = res.data as { insights?: unknown; generatedAt?: unknown; debugLog?: unknown };
+        const parsedInsights = Array.isArray(data.insights) ? (data.insights as Insight[]) : [];
+        setInsights(parsedInsights);
+        setInsightsGeneratedAt(
+          typeof data.generatedAt === 'string' ? data.generatedAt : new Date().toISOString()
+        );
+        if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true' && data.debugLog != null) {
+          fetch('/api/debug-logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              page: 'insights',
+              agent: insightsAgentForPeriod(insightPeriod),
+              log: data.debugLog,
+            }),
+            credentials: 'include',
+          }).catch(() => {});
+        }
       } else {
         const rawError = res.error || 'Failed to fetch insights';
         const normalized = rawError.toLowerCase();
@@ -201,9 +223,9 @@ export default function AiInsightsPage() {
             tab.key === 'yesterday' && !eligibility?.yesterday
               ? "Log something yesterday to see yesterday's insights"
               : tab.key === 'month' && !eligibility?.month
-                ? 'Log for at least 30 days to unlock monthly insights'
+                ? 'Log for at least 14 days to unlock monthly insights'
                 : tab.key === 'year' && !eligibility?.year
-                  ? 'Log for at least one year to unlock yearly insights'
+                  ? 'Log for at least 60 days to unlock yearly insights'
                   : tab.key === 'week' && !eligibility?.week
                     ? 'Log for at least 7 days to unlock weekly insights'
                     : undefined;
@@ -309,8 +331,8 @@ export default function AiInsightsPage() {
                     : insightPeriod === 'week'
                       ? 'Log for at least 7 days to generate weekly insights'
                       : insightPeriod === 'month'
-                        ? 'Log for at least 30 days to unlock monthly insights'
-                        : 'Log for at least one year to unlock yearly insights'}
+                        ? 'Log for at least 14 days to unlock monthly insights'
+                        : 'Log for at least 60 days to unlock yearly insights'}
                 </p>
                 <p className="text-xs text-text-muted">
                   {insightPeriod === 'yesterday' ? 'Yesterday had no logged data.' : 'Track food, water, weight, sleep, or workouts to build your history.'}

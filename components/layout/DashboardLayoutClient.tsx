@@ -104,7 +104,7 @@ export default function DashboardLayoutClient({ children }: { children: ReactNod
           sidebarCollapsed ? 'lg:pl-[64px]' : 'lg:pl-[232px]'
         )}
       >
-        <div className="w-full px-4 pt-6 pb-0 sm:px-6 sm:pt-8 sm:pb-4 lg:px-8 lg:pt-14 2xl:max-w-[1600px] 2xl:mx-auto">
+        <div className="w-full px-4 pt-3 pb-0 sm:px-6 sm:pt-8 sm:pb-4 lg:px-8 lg:pt-8 2xl:max-w-[1600px] 2xl:mx-auto">
           {showTour && <DashboardTour onClose={() => setShowTour(false)} />}
           <DebugLogsProvider>{children}</DebugLogsProvider>
         </div>

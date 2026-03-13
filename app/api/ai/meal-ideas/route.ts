@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const { suggestions, debugLog } = await getMealIdeas(userId, valid, preferences);
 
     const payload: { suggestions: typeof suggestions; debugLog?: typeof debugLog } = { suggestions };
-    if (process.env.DEBUG_MODE === 'true') {
+    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
       payload.debugLog = debugLog;
     }
     return maskedResponse(payload);

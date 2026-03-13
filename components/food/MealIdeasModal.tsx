@@ -13,6 +13,11 @@ interface MealSuggestion {
   protein: number;
   carbs: number;
   fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+  prepTimeMinutes?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
   mealType: string;
   ingredients: string[];
   isVegetarian: boolean;
@@ -214,6 +219,25 @@ export default function MealIdeasModal({ onClose, onDebugLog }: MealIdeasModalPr
                     <p className="text-[9px] text-text-muted">F</p>
                   </div>
                 </div>
+                {(meal.prepTimeMinutes || meal.difficulty || meal.fiber != null) && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-neutral-400">
+                    {meal.prepTimeMinutes ? (
+                      <span className="rounded-md border border-neutral-800 bg-black/30 px-1.5 py-0.5">
+                        {meal.prepTimeMinutes} min
+                      </span>
+                    ) : null}
+                    {meal.difficulty ? (
+                      <span className="rounded-md border border-neutral-800 bg-black/30 px-1.5 py-0.5 capitalize">
+                        {meal.difficulty}
+                      </span>
+                    ) : null}
+                    {meal.fiber != null ? (
+                      <span className="rounded-md border border-neutral-800 bg-black/30 px-1.5 py-0.5">
+                        Fiber {meal.fiber}g
+                      </span>
+                    ) : null}
+                  </div>
+                )}
                 {meal.ingredients?.length > 0 && (
                   <div className="mt-2">
                     <p className="text-[10px] font-medium text-neutral-400">Ingredients:</p>
