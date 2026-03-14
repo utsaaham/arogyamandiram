@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ProgressRing from '@/components/ui/ProgressRing';
+import WaterGlass from '@/components/water/WaterGlass';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
@@ -429,20 +430,18 @@ export default function DashboardPage() {
 function WaterRingCard({ waterIntake, dailyWater }: { waterIntake: number; dailyWater: number }) {
   const waterPercent = calcPercent(waterIntake, dailyWater);
   const remaining = Math.max(dailyWater - waterIntake, 0);
+  const glowIntensity = Math.min(waterPercent / 100, 1);
 
   return (
-    <div className="glass-card ring-card card-glow">
-      <div className="ring-wrap">
-        <ProgressRing
-          progress={waterPercent}
-          size={160}
-          strokeWidth={10}
-          color="stroke-accent-cyan"
-          bgColor="stroke-white/[0.06]"
-          value={formatWater(waterIntake)}
-          label="water"
-          valueClassName="font-heading text-3xl font-normal tracking-[0.03em] text-text-secondary"
-          labelClassName="font-body text-xs font-medium text-text-muted"
+    <div className="glass-card water-beaker-card card-glow">
+      <div className="beaker-wrap">
+        <WaterGlass
+          percent={waterPercent}
+          isPouring={false}
+          size="compact"
+          textColor="#22d3ee"
+          labelColor="#67e8f9"
+          glowIntensity={glowIntensity}
         />
       </div>
       <p className="text-center text-sm text-text-muted leading-relaxed font-body">

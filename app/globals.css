@@ -178,10 +178,12 @@ body {
   }
   .bento-ring-stats {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    /* Keep calorie + water cards identical width in both sidebar states. */
+    grid-template-columns: minmax(240px, 240px) minmax(0, 1fr) minmax(240px, 240px);
     grid-template-rows: 1fr;
     gap: 12px;
     grid-column: 1 / -1;
+    transition: grid-template-columns 300ms ease;
   }
   .bento-ring {
     grid-column: 1;
@@ -200,29 +202,26 @@ body {
     @apply px-3 py-3;
   }
   .recent-badges-grid {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 10px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     min-height: 0;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    padding-bottom: 0;
   }
   .recent-badges-grid::-webkit-scrollbar {
     display: none;
   }
-  /* Default (desktop / non-mobile-dash) recent badges row:
-     keep every card the same width so TCG cards don't vary with content length. */
+  /* Desktop: each recent badge fills available width equally. */
   .recent-badges-grid > * {
-    flex: 0 0 190px;
-    max-width: 190px;
+    min-width: 0;
+    max-width: none;
   }
   .ring-card {
     @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
+    width: 100%;
+    min-height: 100%;
   }
   /* When card-glow is applied, use green-tinted shade on glass cards (desktop) */
   .glass-card.card-glow {
@@ -485,6 +484,45 @@ body {
     @apply relative flex items-center justify-center;
     width: 200px;
     height: 200px;
+    transition: width 300ms ease, height 300ms ease;
+  }
+  .beaker-wrap {
+    @apply relative flex items-center justify-center;
+    width: 120px;
+    height: 170px;
+    transition: width 300ms ease, height 300ms ease;
+  }
+  .water-beaker-card {
+    @apply flex h-full flex-col items-center justify-center gap-3 px-5 py-5;
+    background: linear-gradient(145deg, rgba(6, 182, 212, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
+    width: 100%;
+    min-height: 100%;
+    transition: padding 300ms ease;
+  }
+  .ring-card {
+    transition: padding 300ms ease;
+  }
+
+  /* Sidebar collapsed (desktop): grow calorie + water cards in both width and height. */
+  @media (min-width: 1024px) {
+    .sidebar-collapsed .bento-ring-stats {
+      grid-template-columns: minmax(276px, 276px) minmax(0, 1fr) minmax(276px, 276px);
+    }
+    .sidebar-collapsed .ring-card,
+    .sidebar-collapsed .water-beaker-card {
+      padding-top: 1.75rem;
+      padding-bottom: 1.75rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    .sidebar-collapsed .ring-wrap {
+      width: 220px;
+      height: 220px;
+    }
+    .sidebar-collapsed .beaker-wrap {
+      width: 136px;
+      height: 188px;
+    }
   }
   .stat-mini-card {
     @apply flex items-center gap-4 rounded-2xl px-4 py-4 transition-all duration-200;
@@ -818,6 +856,10 @@ body {
   /* All dashboard pages (mobile): header wrapper no extra bottom padding so gap = space-y only (12px when space-y-3) */
   .mobile-dash > div.pb-3 {
     padding-bottom: 0;
+  }
+  .beaker-wrap {
+    width: 140px;
+    height: 190px;
   }
   .m-calorie-card {
     border-radius: 28px;
