@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ProgressRing from '@/components/ui/ProgressRing';
+import WaterGlass from '@/components/water/WaterGlass';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useUser } from '@/hooks/useUser';
@@ -104,7 +105,7 @@ export default function DashboardPage() {
               {formatDate(today)} · Let&apos;s make today count.
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5">
+          <div className="flex shrink-0 items-center gap-2.5 rounded-xl px-4 py-2.5" style={{ background: 'linear-gradient(160deg, #111712 0%, #0c1410 100%)' }}>
             <span className="font-heading text-xl tracking-[0.03em] text-accent-emerald">LV {level}</span>
             <div className="h-1.5 w-[110px] overflow-hidden rounded-full bg-white/[0.08]">
               <div
@@ -148,10 +149,16 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Recent Badges — same size as achievement badges, 5 most recent */}
+            {/* Recent Badges */}
             <div className="bento-ring-badges min-h-0">
               <RecentBadges earnedBadges={earnedBadges} />
             </div>
+
+            {/* Water Ring */}
+            <div className="bento-water-ring">
+              <WaterRingCard waterIntake={log?.waterIntake || 0} dailyWater={targets.dailyWater} />
+            </div>
+
           </div>
 
           {/* Macros */}
@@ -343,6 +350,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Water Ring card – mobile */}
+        <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '120ms' }}>
+          <WaterRingCard waterIntake={log?.waterIntake || 0} dailyWater={targets.dailyWater} />
+        </div>
+
         {/* Quick stats 2x2 – two-line value + label on mobile (each with section shade) */}
         <div className={cn('mobile-fade-up mobile-dash-px')} style={{ animationDelay: '160ms' }}>
           <div className="m-stats-grid">
@@ -411,6 +423,34 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+function WaterRingCard({ waterIntake, dailyWater }: { waterIntake: number; dailyWater: number }) {
+  const waterPercent = calcPercent(waterIntake, dailyWater);
+  const remaining = Math.max(dailyWater - waterIntake, 0);
+  const glowIntensity = Math.min(waterPercent / 100, 1);
+
+  return (
+    <div className="glass-card water-beaker-card card-glow">
+      <div className="beaker-wrap">
+        <WaterGlass
+          percent={waterPercent}
+          isPouring={false}
+          size="compact"
+          textColor="#22d3ee"
+          labelColor="#67e8f9"
+          glowIntensity={glowIntensity}
+        />
+      </div>
+      <p className="text-center text-sm text-text-muted leading-relaxed font-body">
+        <span className="font-semibold text-text-secondary">
+          {formatWater(remaining)} remaining
+        </span>
+        <br />
+        of {formatWater(dailyWater)} goal
+      </p>
     </div>
   );
 }
@@ -505,7 +545,7 @@ function MacroCol({
     <div className="flex flex-col">
       <div className="mb-2 flex justify-between text-sm text-text-muted">
         <span className="font-body font-medium">{label}</span>
-        <span className="font-heading text-base tracking-[0.03em] text-text-secondary">
+        <span className="font-heading text-sm tracking-[0.03em] text-text-secondary">
           {Math.round(current)}/{displayTarget}
         </span>
       </div>
