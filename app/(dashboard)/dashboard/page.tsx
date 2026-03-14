@@ -545,7 +545,7 @@ function MacroCol({
     <div className="flex flex-col">
       <div className="mb-2 flex justify-between text-sm text-text-muted">
         <span className="font-body font-medium">{label}</span>
-        <span className="font-heading text-base tracking-[0.03em] text-text-secondary">
+        <span className="font-heading text-sm tracking-[0.03em] text-text-secondary">
           {Math.round(current)}/{displayTarget}
         </span>
       </div>
