@@ -4,16 +4,23 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-const BUBBLE_COUNT = 15;
-const MICRO_BUBBLE_COUNT = 10;
-const SPLASH_COUNT = 13;
-const BURST_BUBBLE_COUNT = 10;
-
 interface WaterGlassProps {
   percent: number;
   isPouring: boolean;
   amount?: number;
   className?: string;
+  size?: 'default' | 'compact';
+  textColor?: string;
+  labelColor?: string;
+  glowIntensity?: number;
+  showLabel?: boolean;
+}
+
+function getDynamicColor(percent: number): string {
+  if (percent >= 100) return '#34d399';
+  if (percent >= 70) return '#67e8f9';
+  if (percent >= 30) return '#22d3ee';
+  return '#94A3B8';
 }
 
 // Stable random-ish values per index for bubbles/particles
@@ -26,8 +33,23 @@ export default function WaterGlass({
   percent,
   isPouring,
   className,
+  size = 'default',
+  textColor,
+  labelColor,
+  glowIntensity,
+  showLabel = true,
 }: WaterGlassProps) {
   const fillPercent = Math.min(percent, 100);
+  const compact = size === 'compact';
+
+  const BUBBLE_COUNT = compact ? 8 : 15;
+  const MICRO_BUBBLE_COUNT = compact ? 5 : 10;
+  const SPLASH_COUNT = 13;
+  const BURST_BUBBLE_COUNT = 10;
+
+  const resolvedTextColor = textColor ?? getDynamicColor(percent);
+  const resolvedLabelColor = labelColor ?? getDynamicColor(percent);
+  const resolvedGlow = glowIntensity ?? 0;
 
   // Bubbles with varied positions and animation params (stronger motion: more travel, wobble, scale pulse)
   const bubbles = useMemo(
@@ -39,10 +61,10 @@ export default function WaterGlass({
         size: 1.5 + seeded(i + 2, 3.5),
         duration: 3 + seeded(i + 3, 3),
         delay: seeded(i + 4, 4),
-        wobble: 5 + seeded(i + 5, 5),
+        wobble: compact ? 3 + seeded(i + 5, 3) : 5 + seeded(i + 5, 5),
         repeatDelay: 0.3 + seeded(i + 6, 1.2),
       })),
-    []
+    [BUBBLE_COUNT, compact]
   );
 
   // Micro bubbles: smaller, faster rise, shorter repeat
@@ -55,10 +77,10 @@ export default function WaterGlass({
         size: 0.8 + seeded(i + 52, 1),
         duration: 1.5 + seeded(i + 53, 1.5),
         delay: seeded(i + 54, 2),
-        wobble: 2 + seeded(i + 55, 3),
+        wobble: compact ? 1.5 + seeded(i + 55, 2) : 2 + seeded(i + 55, 3),
         repeatDelay: 0.2 + seeded(i + 56, 0.6),
       })),
-    []
+    [MICRO_BUBBLE_COUNT, compact]
   );
 
   // Splash particles: more and splashier (higher yUp, more spread)
@@ -91,11 +113,24 @@ export default function WaterGlass({
   );
 
   return (
-    <div className={cn('relative h-64 w-40', className)}>
+    <div className={cn('relative', compact ? 'h-[160px] w-[100px]' : 'h-64 w-40', className)}>
+      {/* Radial glow behind beaker */}
+      {resolvedGlow > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at 50% 60%, rgba(34,211,238,${0.15 * resolvedGlow}) 0%, transparent 70%)`,
+            filter: `blur(${20 * resolvedGlow}px)`,
+            transform: 'scale(1.4)',
+          }}
+          aria-hidden
+        />
+      )}
       {/* Glass outline: bump scale when pouring */}
       <div
         className={cn(
-          'absolute inset-0 rounded-b-3xl rounded-t-lg border-2 border-white/[0.05] bg-white/[0.015] overflow-hidden',
+          'absolute inset-0 rounded-b-3xl rounded-t-lg border-2 overflow-hidden',
+          compact ? 'border-white/[0.08] bg-white/[0.02]' : 'border-white/[0.05] bg-white/[0.015]',
           isPouring && 'water-glass-bump'
         )}
       >
@@ -103,7 +138,9 @@ export default function WaterGlass({
         <div
           className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg pointer-events-none"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 50%, transparent 100%)',
+            background: compact
+              ? 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 50%, transparent 100%)'
+              : 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 50%, transparent 100%)',
           }}
         />
 
@@ -246,7 +283,7 @@ export default function WaterGlass({
                   height: b.size,
                 }}
                 animate={{
-                  y: [0, -35],
+                  y: [0, compact ? -20 : -35],
                   x: [0, b.wobble, -b.wobble, 0],
                   scale: [0.85, 1, 0.9],
                   opacity: [0.25, 0.18, 0],
@@ -273,7 +310,7 @@ export default function WaterGlass({
                   height: b.size,
                 }}
                 animate={{
-                  y: [0, -25],
+                  y: [0, compact ? -15 : -25],
                   x: [0, b.wobble, -b.wobble * 0.5, 0],
                   opacity: [0.18, 0.1, 0],
                 }}
@@ -323,10 +360,12 @@ export default function WaterGlass({
           />
 
         {/* Percentage text in center of glass */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-3xl font-bold text-[#A3A3A3]">{Math.round(percent)}%</span>
-          <span className="text-xs text-[#A3A3A3]">hydrated</span>
-        </div>
+        {showLabel && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className={cn('font-bold', compact ? 'text-xl' : 'text-3xl')} style={{ color: resolvedTextColor }}>{Math.round(percent)}%</span>
+            <span className="text-xs" style={{ color: resolvedLabelColor }}>hydrated</span>
+          </div>
+        )}
       </div>
     </div>
   );
