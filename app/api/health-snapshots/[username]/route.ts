@@ -81,9 +81,6 @@ export async function POST(
     records = [];
   }
 
-  console.error('[health-snapshots POST] raw body:', JSON.stringify(body, null, 2));
-  console.error('[health-snapshots POST] records extracted:', records.length, JSON.stringify(records, null, 2));
-
   if (records.length === 0) {
     return NextResponse.json({ error: 'No records provided' }, { status: 400 });
   }
@@ -99,8 +96,6 @@ export async function POST(
   }
 
   await HealthSnapshot.insertMany(docs, { ordered: false });
-
-  console.error('[health-snapshots POST] stored', docs.length, 'docs for userId', userId);
   return NextResponse.json({ ok: true, count: docs.length });
 }
 
