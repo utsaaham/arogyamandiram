@@ -133,8 +133,11 @@ export interface WaterCustomizationSettings {
   quickAmountsMl?: number[];
 }
 
+export type MascotChoice = 'red-panda' | 'kiki';
+
 export interface UserCustomizations {
   water?: WaterCustomizationSettings;
+  mascot?: MascotChoice;
 }
 
 export interface UserSettings {

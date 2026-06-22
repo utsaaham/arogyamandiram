@@ -139,6 +139,7 @@ const UserSchema = new Schema<IUserDocument>(
             },
           },
         },
+        mascot: { type: String, enum: ['red-panda', 'kiki'], default: 'red-panda' },
       },
       foodPreferences: {
         dietaryPreference: {

@@ -2,17 +2,23 @@
 
 import { useRouter } from 'next/navigation';
 import { useOrchestratorSidebar } from '@/contexts/OrchestratorSidebarContext';
+import { useUserContext } from '@/contexts/UserContext';
+import type { MascotChoice } from '@/types';
 
-function CuteRedPandaFace() {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src="/red-panda.png" alt="AI assistant" width={84} height={84} style={{ objectFit: 'contain', width: '100%', height: '100%' }} />
-  );
-}
+const MASCOT: Record<MascotChoice, { src: string; scale: number }> = {
+  'red-panda': { src: '/red-panda.png', scale: 1 },
+  'kiki':      { src: '/kiki.png',      scale: 1.3 },
+};
 
 export default function OrchestratorToggleButton() {
   const { isOpen, toggleSidebar } = useOrchestratorSidebar();
+  const { user } = useUserContext();
   const router = useRouter();
+
+  const mascotKey: MascotChoice =
+    (user?.settings as { customizations?: { mascot?: MascotChoice } } | undefined)
+      ?.customizations?.mascot ?? 'red-panda';
+  const { src, scale } = MASCOT[mascotKey];
 
   if (isOpen) return null;
 
@@ -81,7 +87,14 @@ export default function OrchestratorToggleButton() {
         className="flex items-center justify-center w-[56px] h-[56px] lg:w-[84px] lg:h-[84px] cursor-pointer bg-transparent border-none p-0"
         style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' }}
       >
-        <CuteRedPandaFace />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt="AI assistant"
+          width={84}
+          height={84}
+          style={{ objectFit: 'contain', width: '100%', height: '100%', transform: mascotKey === 'kiki' ? `scale(${scale}) translateY(-8px)` : undefined }}
+        />
       </button>
     </div>
   );
