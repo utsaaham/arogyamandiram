@@ -1687,37 +1687,38 @@ function SettingsInner() {
               </div>
             </div>
 
-            {/* AI companion / mascot picker */}
-            <div className="glass-card rounded-2xl p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Smile className="h-4 w-4 text-accent-violet" />
-                  <h2 className="text-base font-semibold text-text-primary">AI companion</h2>
-                </div>
-                <button onClick={saveCustomizations} disabled={customizationsSaving}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
-                  {customizationsSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                  Save
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-text-muted">Choose who greets you from the corner of your dashboard.</p>
-              <div className="mt-4 grid grid-cols-2 gap-3 max-w-xs">
-                {([
-                  { value: 'red-panda' as const, label: 'Red panda', src: '/red-panda.png' },
-                  { value: 'kiki'      as const, label: 'Kiki',      src: '/kiki.png' },
-                ]).map((m) => (
-                  <button key={m.value} type="button" onClick={() => setMascot(m.value)}
-                    className={cn('rounded-2xl border p-3 flex flex-col items-center gap-2 transition-all',
-                      mascot === m.value
-                        ? 'border-accent-violet/40 bg-accent-violet/10'
-                        : 'border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05]')}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={m.src} alt={m.label} className="w-20 h-20 object-contain" />
-                    <span className={cn('text-xs font-medium', mascot === m.value ? 'text-accent-violet' : 'text-text-muted')}>{m.label}</span>
+            {aiEnabled && (
+              <div className="glass-card rounded-2xl p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Smile className="h-4 w-4 text-accent-violet" />
+                    <h2 className="text-base font-semibold text-text-primary">AI companion</h2>
+                  </div>
+                  <button onClick={saveCustomizations} disabled={customizationsSaving}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
+                    {customizationsSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                    Save
                   </button>
-                ))}
+                </div>
+                <p className="mt-1 text-xs text-text-muted">Choose who greets you from the corner of your dashboard.</p>
+                <div className="mt-4 grid grid-cols-2 gap-3 max-w-xs">
+                  {([
+                    { value: 'red-panda' as const, label: 'Red panda', src: '/red-panda.png' },
+                    { value: 'kiki'      as const, label: 'Kiki',      src: '/kiki.png' },
+                  ]).map((m) => (
+                    <button key={m.value} type="button" onClick={() => setMascot(m.value)}
+                      className={cn('rounded-2xl border p-3 flex flex-col items-center gap-2 transition-all',
+                        mascot === m.value
+                          ? 'border-accent-violet/40 bg-accent-violet/10'
+                          : 'border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05]')}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={m.src} alt={m.label} className="w-20 h-20 object-contain" />
+                      <span className={cn('text-xs font-medium', mascot === m.value ? 'text-accent-violet' : 'text-text-muted')}>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Units */}
             <div className="glass-card rounded-2xl p-6">

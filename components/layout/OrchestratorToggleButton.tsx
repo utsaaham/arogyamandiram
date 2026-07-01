@@ -14,13 +14,14 @@ export default function OrchestratorToggleButton() {
   const { isOpen, toggleSidebar } = useOrchestratorSidebar();
   const { user } = useUserContext();
   const router = useRouter();
+  const aiEnabled = user?.settings?.aiEnabled !== false;
 
   const mascotKey: MascotChoice =
     (user?.settings as { customizations?: { mascot?: MascotChoice } } | undefined)
       ?.customizations?.mascot ?? 'red-panda';
   const { src, scale } = MASCOT[mascotKey];
 
-  if (isOpen) return null;
+  if (!aiEnabled || isOpen) return null;
 
   const handleClick = () => {
     if (window.innerWidth < 1024) {

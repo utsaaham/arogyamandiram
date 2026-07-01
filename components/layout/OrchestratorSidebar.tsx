@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Maximize2, X, Sparkles } from 'lucide-react';
 import { useOrchestratorSidebar } from '@/contexts/OrchestratorSidebarContext';
+import { useUserContext } from '@/contexts/UserContext';
 import CommandInput from '@/components/orchestrator/CommandInput';
 import ConversationHistory from '@/components/orchestrator/ConversationHistory';
 
@@ -18,7 +19,11 @@ export default function OrchestratorSidebar() {
     confirmWorkoutEntry,
     cancelEntry,
   } = useOrchestratorSidebar();
+  const { user } = useUserContext();
   const router = useRouter();
+  const aiEnabled = user?.settings?.aiEnabled !== false;
+
+  if (!aiEnabled) return null;
 
   return (
     <>

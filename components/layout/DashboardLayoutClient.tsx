@@ -27,6 +27,7 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
   const [isXl, setIsXl] = useState(false);
   const { isOpen: rightOpen, sidebarWidth, setSidebarWidth, closeSidebar } = useOrchestratorSidebar();
   const wasCollapsedRef = useRef<boolean | null>(null);
+  const aiEnabled = user?.settings?.aiEnabled !== false;
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1280px)');
@@ -102,6 +103,10 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
     closeSidebar();
   }, [pathname, closeSidebar]);
 
+  useEffect(() => {
+    if (!aiEnabled) closeSidebar();
+  }, [aiEnabled, closeSidebar]);
+
   if (status === 'loading' || userLoading) {
     return (
       <div
@@ -133,7 +138,7 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
           isFullViewport ? 'h-full flex flex-col' : 'min-h-full pb-[max(3.25rem,calc(var(--sab,env(safe-area-inset-bottom,0px))+2.5rem))] lg:pb-0 lg:pt-0',
           sidebarCollapsed ? 'lg:pl-[64px] sidebar-collapsed' : 'lg:pl-[232px]',
         )}
-        style={{ paddingRight: !isFullViewport && rightOpen ? `${sidebarWidth}px` : undefined }}
+        style={{ paddingRight: !isFullViewport && aiEnabled && rightOpen ? `${sidebarWidth}px` : undefined }}
       >
         {isFullViewport ? (
           children
@@ -148,8 +153,8 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
           </div>
         )}
       </main>
-      {!isFullViewport && <OrchestratorToggleButton />}
-      {!isFullViewport && <OrchestratorSidebar />}
+      {!isFullViewport && aiEnabled && <OrchestratorToggleButton />}
+      {!isFullViewport && aiEnabled && <OrchestratorSidebar />}
     </div>
   );
 }
