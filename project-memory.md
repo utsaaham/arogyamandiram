@@ -1,9 +1,9 @@
 ---
 state: populated
 created: 2026-03-26
-last_updated: 2026-05-02
-last_read: 2026-04-15
-updated_by: codex-5.3
+last_updated: 2026-07-01
+last_read: 2026-07-01
+updated_by: claude-opus-4-8
 staleness_days: 3
 ---
 
@@ -19,7 +19,7 @@ staleness_days: 3
 
 | Section | Last Updated | Updated By | Stale After | Status |
 |---------|-------------|------------|-------------|--------|
-| context/ | 2026-05-02 | codex-5.3 | 3 days | Current |
+| context/ | 2026-07-01 | claude-opus-4-8 | 3 days | Current |
 | agents/ | 2026-04-15 | codex-gpt-5 | 7 days | Current |
 | skills/ | 2026-04-15 | codex-gpt-5 | 10 days | Current |
 | rules/ | 2026-03-26 | claude-sonnet-4-6 | 14 days | Current |
@@ -43,7 +43,7 @@ staleness_days: 3
 - AI flows use **OpenAI Responses API** and power the orchestrator, daily plans, meal ideas, recommendations, and loggers
 - Dashboard styling is driven by **`app/globals.css`**, `glass-card`, and the bento/mobile dashboard patterns
 - Local dev port is **env-driven** via `PORT`; `.env.example` currently defaults to **3000**
-- Current branch: `feature/dev-01-minor-updates-sprint-mar-26`
+- Current branch: `feature/dev-01-minmial-changes-sprint-apr-22-26`
 
 ## After Significant Work
 

@@ -15,6 +15,9 @@ out/
 # TypeScript incremental build cache
 *.tsbuildinfo
 
+# Local Python virtual environments / image generation scratch
+.venv-img/
+
 # IDE
 .idea/
 

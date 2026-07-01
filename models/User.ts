@@ -83,6 +83,7 @@ const UserSchema = new Schema<IUserDocument>(
     settings: {
       theme: { type: String, enum: ['dark', 'light'], default: 'dark' },
       units: { type: String, enum: ['metric', 'imperial'], default: 'metric' },
+      aiEnabled: { type: Boolean, default: true },
       notifications: {
         water: { type: Boolean, default: true },
         meals: { type: Boolean, default: true },
@@ -139,6 +140,7 @@ const UserSchema = new Schema<IUserDocument>(
             },
           },
         },
+        mascot: { type: String, enum: ['red-panda', 'kiki'], default: 'red-panda' },
       },
       foodPreferences: {
         dietaryPreference: {
@@ -158,7 +160,7 @@ const UserSchema = new Schema<IUserDocument>(
             title:     { type: String, required: true },
             note:      { type: String, default: '' },
             time:      { type: String, default: '' },
-            category:  { type: String, enum: ['food', 'supplement', 'medicine', 'habit', 'other'], default: 'other' },
+            category:  { type: String, enum: ['food', 'supplement', 'medicine', 'habit', 'care', 'other'], default: 'other' },
             enabled:   { type: Boolean, default: true },
             frequency: { type: Number, default: 1, min: 1, max: 5 }, // how many times per day (for supplements/medicines)
             baseItems: { type: [Schema.Types.Mixed], default: [] }, // pre-parsed food items for food category

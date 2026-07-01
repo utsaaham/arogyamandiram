@@ -1,8 +1,8 @@
 ---
 name: active-context
 type: context
-last_updated: 2026-05-02
-updated_by: codex-5.3
+last_updated: 2026-07-01
+updated_by: claude-opus-4-8
 staleness_days: 3
 ---
 
@@ -10,9 +10,27 @@ staleness_days: 3
 
 ## Current Branch
 
-`feature/dev-01-minor-updates-sprint-mar-26`
+`feature/dev-01-minmial-changes-sprint-apr-22-26`
 
-## What's Being Worked On (as of 2026-04-15)
+## What's Being Worked On (as of 2026-07-01)
+
+**Minimal Changes Sprint (Apr 22 – 26 line)** — Dashboard analytics/visualization, gamification (streaks + badge sharing), health-data sync hardening, expanded nutrient tracking, and AI insight/projection refinements.
+
+Recent changes since the 2026-05-02 refresh (branch `feature/dev-01-minmial-changes-sprint-apr-22-26`):
+- **Dashboard analytics + charts**: Period filters across health/sleep/water/food/weight modules with period-specific data fetching and goal tracking; `ActivityRings` and `Sparkline` components; redesigned health card layout with metric summaries (`7f20eaf`, `7d4098d`)
+- **AI page + conversation UX**: Flex-column AI page layout and container-based scrolling (`scrollTop` instead of `scrollIntoView`) for accurate/mobile scroll (`61fe081`, `76fbcab`)
+- **Goal sync**: `syncGoalForUser` auto-updates `profile.goal` from weight vs. target weight; workout AI uses readiness signals + derived goals; schema expanded for workouts/daily plans (`03ef426`)
+- **Streak tracking expansion**: Added Steps and Water(-goal) habit streaks; simplified logging predicates; renamed labels ("Food log"→"Food", "Water goal"→"Water") for consistency (`0ae59ac`, `5866d65`, `d56e8aa`, `30a9fb4`)
+- **Water page redesign**: SVG-based `WaterGlass` visuals replacing animated water effects, removed amount display, simplified pouring logic (`35f57fc`, `9418bfe`)
+- **Manual logging modals**: Add-Workout flow (button + modal + API) and restyled food/workout modals for visual consistency (`3dbd27c`, `38b038f`)
+- **Health-data sync hardening**: Normalized input with sleep/workout/metrics handlers, date-based batching limits, improved workout reconciliation, and off-by-one fix for `YYYY-MM-DD` records (`5589838`, `b2ee5f1`)
+- **Daily projections framework**: Migrated predictions → per-metric projections (sleep, food, water, workouts, steps, heart rate, weight) with actionable suggestions; split AI insights into a dedicated "Today's Focus" card (`bfde78b`, `299668c`)
+- **Workout planner**: Reduced analysis window to last 2 days; added user-defined free-text equipment notes that override location defaults across plan logic/API/model/UI (`3f5e635`, `56244ff`)
+- **Badge system**: Replaced `BadgeIcon`/`BadgeIcons` with SVG badge assets; social sharing (Twitter/LinkedIn/Instagram/WhatsApp) + download; flip-animation modal with QR code; badge ID cleanup (`03870b7`, `8aad89f`, `89bfebb`)
+- **Expanded nutrient tracking**: Added fiber/sugar/sodium to food entries and the `useDailyLog` nutrient model with flexible nutrient display (`b8b65b0`, `87775ce`)
+- **HealthSnapshot + settings**: New `HealthSnapshot` model + `/api/health-snapshots` sync routes; per-section save buttons in Settings; mascot customization in user settings (`95c5db0`, `89bfebb`)
+
+## Prior Sprint Work (as of 2026-04-15 → 2026-05-02)
 
 **Minor Updates Sprint** — Email reminders, AI daily plans, cleanup, recommendations, and repo-shape alignment.
 
@@ -50,7 +68,8 @@ Recent changes since the last broad memory refresh:
 
 | Sprint | Branch | Focus |
 |--------|--------|-------|
-| Mar 26 (current) | `feature/dev-01-minor-updates-sprint-mar-26` | Email reminders, AI daily plans, cleanup |
+| Apr 22–26 (current) | `feature/dev-01-minmial-changes-sprint-apr-22-26` | Dashboard analytics/charts, streaks + badge sharing, health-sync hardening, nutrient tracking, projections |
+| Mar 26 | `feature/dev-01-minor-updates-sprint-mar-26` | Email reminders, AI daily plans, cleanup |
 | Mar 8 (merged #93) | `feature/dev-01-uiux-sprint-march-8th` | UI/UX standardization — MERGED |
 | Mar 5 | `feature/dev-01-ai-improvements-sprint-march-5` | AI feature improvements |
 | Mar 5 | `feature/dev-01-minor-fixes-sprint-march-5` | Bug fixes |
@@ -59,8 +78,8 @@ Recent changes since the last broad memory refresh:
 
 ## What's Next (likely)
 
-- Wire up AI daily plan to dashboard UI
-- Test email reminder delivery end-to-end
+- Consume `HealthSnapshot` data in dashboard analytics/projection surfaces
+- Extend period-filter charts + projections to any remaining metric modules
 - Decide whether dashboard protection should remain client-layout based or move back to middleware/server redirects
 - Reconcile outdated README claims (port, Next.js version, food provider wording) with the implementation
 - Merge this sprint to main

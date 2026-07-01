@@ -7,7 +7,7 @@ import {
   Shield, Eye, EyeOff, CheckCircle2, Sparkles, Utensils,
   Loader2, RefreshCw, Flame,
   Mail, Plus, ListChecks, Pill, Zap, Trash2, Pencil, CheckSquare,
-  Smartphone, RotateCcw, AlertCircle, SlidersHorizontal,
+  Link2, RotateCcw, AlertCircle, SlidersHorizontal, Smile, Scissors,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
@@ -32,8 +32,8 @@ const NAV_ITEMS: { key: Tab; label: string; icon: React.ElementType; desc: strin
   { key: 'targets',       label: 'Targets',        icon: Target,        desc: 'Daily goals & macros' },
   { key: 'customizations', label: 'Customizations', icon: SlidersHorizontal, desc: 'Tracker-specific defaults' },
   { key: 'notifications', label: 'Notifications',  icon: Bell,          desc: 'Reminders, email & schedule' },
-  { key: 'todos',         label: 'Daily Todos',    icon: CheckSquare,   desc: 'Recurring checklist' },
-  { key: 'health-data',   label: 'Health Data',    icon: Smartphone,    desc: 'External health sync' },
+  { key: 'todos',         label: 'Checklist',      icon: CheckSquare,   desc: 'Todos and care' },
+  { key: 'health-data',   label: 'Connectors',     icon: Link2,         desc: 'Device integrations' },
 ];
 
 const MAX_CUSTOM_WATER_GLASS_ML = 5000;
@@ -227,9 +227,12 @@ function SettingsInner() {
   // ── Customizations state ───────────────────────────────────────────────────
   const [customizationsSaving, setCustomizationsSaving] = useState(false);
   const [customWaterAmounts, setCustomWaterAmounts] = useState<string[]>(DEFAULT_WATER_QUICK_AMOUNTS.map(String));
+  const [mascot, setMascot] = useState<'red-panda' | 'kiki'>('red-panda');
 
   // ── API Keys state ─────────────────────────────────────────────────────────
   const [apiKeysSaving, setApiKeysSaving] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiSaving, setAiSaving] = useState(false);
   const [openaiKey, setOpenaiKey] = useState('');
   const [fdcKey, setFdcKey] = useState('');
   const [showOpenai, setShowOpenai] = useState(false);
@@ -275,7 +278,7 @@ function SettingsInner() {
   const [imapConfigured, setImapConfigured] = useState(false);
   const imapPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Health Data state ──────────────────────────────────────────────────────
+  // ── Connectors state ───────────────────────────────────────────────────────
   const [hdEndpoint, setHdEndpoint] = useState('');
   const [hdApiKey, setHdApiKey] = useState('');
   const [hdShowApiKey, setHdShowApiKey] = useState(false);
@@ -342,6 +345,7 @@ function SettingsInner() {
     if (user.settings) {
       const s = user.settings;
       setUnits(s.units || 'metric');
+      setAiEnabled(s.aiEnabled ?? true);
       setWaterNotif(s.notifications?.water ?? true);
       setMealNotif(s.notifications?.meals ?? true);
       setWeighInNotif(s.notifications?.weighIn ?? true);
@@ -368,6 +372,7 @@ function SettingsInner() {
       setSleepTime(s.reminderSchedule?.sleepTime || '');
       setWorkoutTime(s.reminderSchedule?.workoutTime || '');
       setWeighInTime(s.reminderSchedule?.weighInTime || '');
+      setMascot(s.customizations?.mascot === 'kiki' ? 'kiki' : 'red-panda');
       const savedQuickAmounts = s.customizations?.water?.quickAmountsMl;
       const normalizedQuickAmounts = Array.isArray(savedQuickAmounts) && savedQuickAmounts.length === 4
         ? savedQuickAmounts
@@ -590,9 +595,8 @@ function SettingsInner() {
       const res = await api.updateSettings({
         units,
         customizations: {
-          water: {
-            quickAmountsMl: parsedAmounts,
-          },
+          water: { quickAmountsMl: parsedAmounts },
+          mascot,
         },
         foodPreferences: {
           dietaryPreference,
@@ -628,6 +632,27 @@ function SettingsInner() {
       } else showToast(res.error || 'Failed to save keys', 'error');
     } catch { showToast('Failed to save API keys', 'error'); }
     finally { setApiKeysSaving(false); }
+  };
+
+  const toggleAiEnabled = async () => {
+    const nextValue = !aiEnabled;
+    setAiEnabled(nextValue);
+    setAiSaving(true);
+    try {
+      const res = await api.updateSettings({ aiEnabled: nextValue });
+      if (res.success) {
+        showToast(nextValue ? 'AI features enabled' : 'AI features disabled across ArogyaMandiram', 'success');
+        await refetch();
+      } else {
+        setAiEnabled(!nextValue);
+        showToast(res.error || 'Failed to update AI setting', 'error');
+      }
+    } catch {
+      setAiEnabled(!nextValue);
+      showToast('Failed to update AI setting', 'error');
+    } finally {
+      setAiSaving(false);
+    }
   };
 
   // ── Preferences save ───────────────────────────────────────────────────────
@@ -681,25 +706,34 @@ function SettingsInner() {
     finally { setPrefSaving(false); }
   };
 
-  // ── Health Data save & sync ────────────────────────────────────────────────
+  // ── Connector save & sync ──────────────────────────────────────────────────
   const saveHealthDataConfig = async () => {
+    if (!hdEndpoint.trim()) {
+      showToast('Enter the connector endpoint URL first', 'error');
+      return;
+    }
+    if (!hdApiKey.trim() && !hdHasApiKey) {
+      showToast('Enter the connector API token first', 'error');
+      return;
+    }
+
     setHdSaving(true);
     try {
       const res = await api.saveHealthDataConfig({
-        endpoint: hdEndpoint,
+        endpoint: hdEndpoint.trim(),
         ...(hdApiKey ? { apiKey: hdApiKey } : {}),
         enabled: hdEnabled,
         syncIntervalMinutes: hdInterval,
       });
       if (res.success) {
-        showToast('Health data settings saved', 'success');
+        showToast('Mobile app connector saved', 'success');
         setHdApiKey('');
         if (hdApiKey) setHdHasApiKey(true);
-        setHdLoaded(false); // reload on next visit
+        setHdLoaded(false);
       } else {
         showToast(res.error || 'Failed to save', 'error');
       }
-    } catch { showToast('Failed to save health data settings', 'error'); }
+    } catch { showToast('Failed to save mobile app connector', 'error'); }
     finally { setHdSaving(false); }
   };
 
@@ -885,6 +919,7 @@ function SettingsInner() {
   const fdcActive = !!user?.hasFdcKey;
   const hasSmtp = smtpConfigured || (user?.hasSmtp ?? false);
   const hasImap = imapConfigured || (user?.hasImap ?? false);
+  const connectorConfigured = Boolean(hdEndpoint.trim()) && hdHasApiKey;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -1362,6 +1397,41 @@ function SettingsInner() {
         {activeTab === 'customizations' && (
           <>
             <div className="glass-card rounded-2xl p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    'mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg',
+                    aiEnabled ? 'bg-accent-emerald/10 text-accent-emerald' : 'bg-zinc-800 text-zinc-400'
+                  )}>
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-text-primary">Use AI features</h2>
+                    <p className="mt-1 text-xs text-text-muted">
+                      {aiEnabled
+                        ? 'AI logging, plans, insights, coaching, and auto-generation can run.'
+                        : 'No AI calls will run anywhere in ArogyaMandiram.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={aiEnabled}
+                  onClick={toggleAiEnabled}
+                  disabled={aiSaving}
+                  className={cn(
+                    'flex h-7 w-12 shrink-0 items-center rounded-full border p-0.5 transition-colors disabled:opacity-60',
+                    aiEnabled ? 'justify-end border-accent-emerald/50 bg-accent-emerald/80' : 'justify-start border-zinc-700 bg-zinc-800'
+                  )}
+                >
+                  <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+                  <span className="sr-only">{aiEnabled ? 'Disable AI features' : 'Enable AI features'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4 text-accent-cyan" />
@@ -1609,11 +1679,46 @@ function SettingsInner() {
                         {k.show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                    <p className="mt-1 text-[11px] text-text-muted">{k.hint}</p>
+                    <div className="mt-1">
+                      <p className="text-[11px] text-text-muted">{k.hint}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {aiEnabled && (
+              <div className="glass-card rounded-2xl p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Smile className="h-4 w-4 text-accent-violet" />
+                    <h2 className="text-base font-semibold text-text-primary">AI companion</h2>
+                  </div>
+                  <button onClick={saveCustomizations} disabled={customizationsSaving}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
+                    {customizationsSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                    Save
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-text-muted">Choose who greets you from the corner of your dashboard.</p>
+                <div className="mt-4 grid grid-cols-2 gap-3 max-w-xs">
+                  {([
+                    { value: 'red-panda' as const, label: 'Red panda', src: '/red-panda.png' },
+                    { value: 'kiki'      as const, label: 'Kiki',      src: '/kiki.png' },
+                  ]).map((m) => (
+                    <button key={m.value} type="button" onClick={() => setMascot(m.value)}
+                      className={cn('rounded-2xl border p-3 flex flex-col items-center gap-2 transition-all',
+                        mascot === m.value
+                          ? 'border-accent-violet/40 bg-accent-violet/10'
+                          : 'border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05]')}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={m.src} alt={m.label} className="w-20 h-20 object-contain" />
+                      <span className={cn('text-xs font-medium', mascot === m.value ? 'text-accent-violet' : 'text-text-muted')}>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Units */}
             <div className="glass-card rounded-2xl p-6">
@@ -1784,34 +1889,72 @@ function SettingsInner() {
         {/* ══════ TODOS ══════ */}
         {activeTab === 'todos' && <TodosSettingsTab />}
 
-        {/* ══════ HEALTH DATA ══════ */}
+        {/* ══════ CONNECTORS ══════ */}
         {activeTab === 'health-data' && (
           <>
-            {/* Endpoint */}
-            <div className="glass-card rounded-2xl p-6">
-              <div className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4 text-emerald-400" />
-                <h2 className="text-base font-semibold text-text-primary">Health Data Source</h2>
-              </div>
+            <div>
+              <h2 className="text-base font-semibold text-text-primary">Connectors</h2>
               <p className="mt-1 text-xs text-text-muted">
-                Connect an external health data endpoint (mobile app, wearable, or custom API). The fetched data will be sent to the orchestrator to automatically update your health logs.
+                Connect the ArogyaM mobile app to sync health snapshots into your account.
               </p>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-semibold text-text-primary">ArogyaM Mobile App Connector</h2>
+                    <span className={cn(
+                      'inline-flex w-fit items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                      connectorConfigured
+                        ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400'
+                        : 'border-zinc-800 bg-zinc-900/70 text-zinc-500'
+                    )}>
+                      <span className={cn('h-1.5 w-1.5 rounded-full', connectorConfigured ? 'bg-emerald-400' : 'bg-zinc-500')} />
+                      {connectorConfigured ? 'Enabled' : 'Not enabled'}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-text-muted">
+                    Use our iOS companion app to send Apple Health snapshots to ArogyaMandiram.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href="https://github.com/utsaaham/ArogyaM-iOS-v1/blob/main/HOW_TO_CONNECT.md"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-fit items-center justify-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
+                  >
+                    How to connect
+                  </a>
+                  <button
+                    type="button"
+                    onClick={saveHealthDataConfig}
+                    disabled={hdSaving}
+                    className="inline-flex w-fit items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+                  >
+                    {hdSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                    Save
+                  </button>
+                </div>
+              </div>
 
               <div className="mt-5 space-y-4">
                 <div>
-                  <label className="text-xs font-medium text-text-muted">Endpoint URL</label>
+                  <label className="text-xs font-medium text-text-muted">Connector endpoint URL</label>
                   <input
                     type="url"
                     value={hdEndpoint}
                     onChange={(e) => setHdEndpoint(e.target.value)}
-                    placeholder="https://your-health-api.example.com/data"
+                    placeholder="https://your-arogyamandiram.app/api/health-snapshots/your-username"
                     className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="text-xs font-medium text-text-muted">
-                    API Token / Bearer Key
+                    Connector API token
                     {hdHasApiKey && !hdApiKey && (
                       <span className="ml-2 text-emerald-400">● Saved</span>
                     )}
@@ -1821,7 +1964,7 @@ function SettingsInner() {
                       type={hdShowApiKey ? 'text' : 'password'}
                       value={hdApiKey}
                       onChange={(e) => setHdApiKey(e.target.value)}
-                      placeholder={hdHasApiKey ? '••••••••  (leave blank to keep existing)' : 'Optional — sent as Bearer token'}
+                      placeholder={hdHasApiKey ? '••••••••  (leave blank to keep existing)' : 'Bearer token for the mobile app connector'}
                       className="glass-input w-full rounded-xl px-3 py-2 pr-10 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                     />
                     <button
@@ -1834,113 +1977,103 @@ function SettingsInner() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <label className="text-xs font-medium text-text-muted">Auto-sync interval</label>
-                    <select
-                      value={hdInterval}
-                      onChange={(e) => setHdInterval(Number(e.target.value))}
-                      className="glass-input mt-1 rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 outline-none"
-                    >
-                      <option value={15}>Every 15 minutes</option>
-                      <option value={30}>Every 30 minutes</option>
-                      <option value={60}>Every hour</option>
-                      <option value={180}>Every 3 hours</option>
-                      <option value={360}>Every 6 hours</option>
-                      <option value={720}>Every 12 hours</option>
-                      <option value={1440}>Once a day</option>
-                    </select>
-                  </div>
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]">
+                  <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/45 p-4">
+                    <p className="text-sm font-semibold text-text-primary">Sync settings</p>
+                    <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                      <div className="w-full sm:max-w-xs">
+                        <label className="text-xs font-medium text-text-muted">Auto-sync interval</label>
+                        <select
+                          value={hdInterval}
+                          onChange={(e) => setHdInterval(Number(e.target.value))}
+                          className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 outline-none"
+                        >
+                          <option value={15}>Every 15 minutes</option>
+                          <option value={30}>Every 30 minutes</option>
+                          <option value={60}>Every hour</option>
+                          <option value={180}>Every 3 hours</option>
+                          <option value={360}>Every 6 hours</option>
+                          <option value={720}>Every 12 hours</option>
+                          <option value={1440}>Once a day</option>
+                        </select>
+                      </div>
 
-                  <div className="flex items-center gap-2 pt-5">
-                    <span className="text-xs text-text-muted">Auto-sync</span>
-                    <button
-                      type="button"
-                      onClick={() => setHdEnabled((v) => !v)}
-                      className={cn(
-                        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors',
-                        hdEnabled ? 'bg-emerald-500' : 'bg-zinc-700'
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out',
-                          hdEnabled ? 'translate-x-4' : 'translate-x-0'
-                        )}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={saveHealthDataConfig}
-                  disabled={hdSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
-                >
-                  {hdSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={triggerHealthSync}
-                  disabled={hdSyncing || !hdEndpoint.trim()}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-text-primary hover:bg-white/[0.06] disabled:opacity-50"
-                >
-                  {hdSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-                  Sync Now
-                </button>
-              </div>
-            </div>
-
-            {/* Last sync status */}
-            {(hdLastSyncAt || hdLastStatus) && (
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-text-muted" />
-                  <h2 className="text-base font-semibold text-text-primary">Last Sync</h2>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {hdLastSyncAt && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-zinc-500">Time</span>
-                      <span className="text-sm text-zinc-300">{new Date(hdLastSyncAt).toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">Type</span>
-                    <span className="text-sm text-zinc-300">
-                      {hdLastSyncSource === 'auto'
-                        ? 'Auto-sync (interval)'
-                        : hdLastSyncSource === 'manual'
-                          ? 'Manual (Sync Now)'
-                          : 'Unknown (older sync record)'}
-                    </span>
-                  </div>
-                  {hdLastStatus && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-zinc-500">Status</span>
-                      <div className="flex items-center gap-1.5">
-                        {hdLastStatus === 'ok' ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                        ) : (
-                          <AlertCircle className="h-3.5 w-3.5 text-rose-400" />
-                        )}
-                        <span className={cn('text-sm font-medium', hdLastStatus === 'ok' ? 'text-emerald-400' : 'text-rose-400')}>
-                          {hdLastStatus === 'ok' ? 'Success' : 'Error'}
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-text-muted">Auto-sync</span>
+                        <button
+                          type="button"
+                          onClick={() => setHdEnabled((v) => !v)}
+                          className={cn(
+                            'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors',
+                            hdEnabled ? 'bg-emerald-500' : 'bg-zinc-700'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out',
+                              hdEnabled ? 'translate-x-4' : 'translate-x-0'
+                            )}
+                          />
+                        </button>
                       </div>
                     </div>
-                  )}
-                  {hdLastStatus === 'error' && hdLastError && (
-                    <p className="text-xs text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{hdLastError}</p>
-                  )}
+
+                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={triggerHealthSync}
+                        disabled={hdSyncing || !hdEndpoint.trim()}
+                        className="inline-flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-text-primary hover:bg-white/[0.06] disabled:opacity-50"
+                      >
+                        {hdSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                        Sync Now
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/45 p-4">
+                    <p className="text-sm font-semibold text-text-primary">Last sync</p>
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-xs text-zinc-500">Time</span>
+                        <span className="text-right text-sm text-zinc-300">
+                          {hdLastSyncAt ? new Date(hdLastSyncAt).toLocaleString() : 'Not synced yet'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-xs text-zinc-500">Type</span>
+                        <span className="text-right text-sm text-zinc-300">
+                          {hdLastSyncSource === 'auto'
+                            ? 'Auto-sync'
+                            : hdLastSyncSource === 'manual'
+                              ? 'Manual'
+                              : 'None'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-xs text-zinc-500">Status</span>
+                        <div className="flex items-center gap-1.5">
+                          {hdLastStatus === 'ok' ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : hdLastStatus === 'error' ? (
+                            <AlertCircle className="h-3.5 w-3.5 text-rose-400" />
+                          ) : null}
+                          <span className={cn(
+                            'text-sm font-medium',
+                            hdLastStatus === 'ok' ? 'text-emerald-400' : hdLastStatus === 'error' ? 'text-rose-400' : 'text-zinc-500'
+                          )}>
+                            {hdLastStatus === 'ok' ? 'Success' : hdLastStatus === 'error' ? 'Error' : 'Waiting'}
+                          </span>
+                        </div>
+                      </div>
+                      {hdLastStatus === 'error' && hdLastError && (
+                        <p className="text-xs text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{hdLastError}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
-
+            </div>
           </>
         )}
 
@@ -1956,6 +2089,7 @@ const TODO_CATEGORIES = [
   { value: 'supplement', label: 'Supplement', icon: Zap,          color: 'text-emerald-400', bgColor: 'bg-emerald-400/15', barColor: 'bg-emerald-500' },
   { value: 'medicine',   label: 'Medicine',   icon: Pill,         color: 'text-rose-400',    bgColor: 'bg-rose-400/15',    barColor: 'bg-rose-500' },
   { value: 'habit',      label: 'Habit',      icon: Flame,        color: 'text-amber-400',   bgColor: 'bg-amber-400/15',   barColor: 'bg-amber-500' },
+  { value: 'care',       label: 'Care',       icon: Scissors,     color: 'text-fuchsia-300', bgColor: 'bg-fuchsia-400/15', barColor: 'bg-fuchsia-500' },
   { value: 'other',      label: 'Other',      icon: ListChecks,   color: 'text-zinc-400',    bgColor: 'bg-zinc-400/15',    barColor: 'bg-zinc-500' },
 ];
 
@@ -2011,7 +2145,7 @@ function TodoForm({
       {/* Category */}
       <div className="space-y-1.5">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Category</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           {TODO_CATEGORIES.map((c) => {
             const CatIcon = c.icon;
             const active = values.category === c.value;
@@ -2183,9 +2317,9 @@ function TodosSettingsTab() {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <CheckSquare className="h-4 w-4 text-emerald-400" />
-            <h2 className="text-base font-semibold text-text-primary">Daily Todos</h2>
+            <h2 className="text-base font-semibold text-text-primary">Checklist</h2>
           </div>
-          <p className="mt-1 text-xs text-text-muted">Recurring checklist — resets fresh every day.</p>
+          <p className="mt-1 text-xs text-text-muted">Recurring todos and care routines — resets fresh every day.</p>
         </div>
         {!showForm && (
           <button type="button" onClick={() => setShowForm(true)}
@@ -2220,7 +2354,7 @@ function TodosSettingsTab() {
               <CheckSquare className="h-6 w-6 text-zinc-600" />
             </div>
             <p className="mt-3 text-sm font-medium text-zinc-400">No items yet</p>
-            <p className="mt-1 text-xs text-zinc-600">Add supplements, medicines, habits, or food routines.</p>
+            <p className="mt-1 text-xs text-zinc-600">Add supplements, medicines, habits, care, or food routines.</p>
           </div>
         ) : (
           templates.map((t) => {

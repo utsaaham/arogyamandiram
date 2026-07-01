@@ -133,13 +133,18 @@ export interface WaterCustomizationSettings {
   quickAmountsMl?: number[];
 }
 
+export type MascotChoice = 'red-panda' | 'kiki';
+
 export interface UserCustomizations {
   water?: WaterCustomizationSettings;
+  mascot?: MascotChoice;
 }
 
 export interface UserSettings {
   theme: 'dark' | 'light';
   units: UnitSystem;
+  /** Master switch for every OpenAI-backed feature in the app. */
+  aiEnabled?: boolean;
   notifications: {
     water: boolean;
     meals: boolean;

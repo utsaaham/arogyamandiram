@@ -27,7 +27,6 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   { id: 'streak_any_100', name: 'Century Club', description: '100 consecutive healthy days. Elite.', icon: '💎', category: 'streak' },
 
   // ----- Water streaks -----
-  { id: 'streak_water_7', name: 'Hydration Hero', description: 'Hit your water goal 7 days in a row.', icon: '🚰', category: 'milestone' },
   { id: 'streak_water_14', name: 'Hydration Champion', description: 'Hit your water goal 14 days in a row.', icon: '🌊', category: 'milestone' },
   { id: 'streak_water_30', name: 'Hydration Master', description: 'Hit your water goal 30 days in a row.', icon: '💧', category: 'milestone' },
   { id: 'streak_water_50', name: 'Ocean Soul', description: 'Hit your water goal 50 days in a row.', icon: '🐋', category: 'milestone' },

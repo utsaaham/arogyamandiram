@@ -98,7 +98,7 @@ export default function ProjectPage() {
               <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
                   { href: '/home', label: 'Home' },
-                  { href: '/todays-plan', label: "Today's Plan" },
+                  { href: '/todays-plan', label: 'Checklist' },
                   { href: '/achievements', label: 'Achievements' },
                   { href: '/settings?tab=api-keys', label: 'API Keys' },
                   { href: '/settings?tab=targets', label: 'Targets' },

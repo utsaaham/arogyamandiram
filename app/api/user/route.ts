@@ -155,7 +155,10 @@ export async function PUT(req: NextRequest) {
           updateData['settings.emailSetupChecklist.lastUpdatedAt'] = new Date();
           continue;
         }
-        if (key === 'notifications' && typeof value === 'object') {
+        if (key === 'aiEnabled') {
+          if (typeof value !== 'boolean') return errorResponse('AI setting must be true or false', 400);
+          updateData['settings.aiEnabled'] = value;
+        } else if (key === 'notifications' && typeof value === 'object') {
           for (const [nKey, nVal] of Object.entries(value as Record<string, boolean>)) {
             updateData[`settings.notifications.${nKey}`] = nVal;
           }
@@ -200,6 +203,10 @@ export async function PUT(req: NextRequest) {
             }
 
             updateData['settings.customizations.water.quickAmountsMl'] = parsedQuickAmounts;
+          }
+
+          if (customizations.mascot === 'kiki' || customizations.mascot === 'red-panda') {
+            updateData['settings.customizations.mascot'] = customizations.mascot;
           }
         } else if (key === 'reminderSchedule' && typeof value === 'object' && value !== null) {
           const schedule = value as Record<string, unknown>;

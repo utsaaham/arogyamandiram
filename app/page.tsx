@@ -535,7 +535,6 @@ a{color:inherit;text-decoration:none}
                     { label: "Water", d: ["M12 22a7 7 0 007-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 007 7z"] },
                     { label: "Food", d: ["M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2","M7 2v20","M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3z","M21 15v7"] },
                     { label: "Workout", d: ["M22 12h-4l-3 9L9 3l-3 9H2"] },
-                    { label: "Health Data", d: ["M4.5 12.5l3 3 5-7M20 7l-8.5 9L9 14"] },
                     { label: "Weight", d: ["M8 21h8M12 17v4M7 4h10M4 8l8 9 8-9"] },
                     { label: "Achievements", d: ["M12 15a3 3 0 100-6 3 3 0 000 6z","M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"] },
                   ].map(({ label, active, d }) => (

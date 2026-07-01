@@ -790,13 +790,15 @@ export async function calculateAchievements(
   })();
   if (weekendWarriorFound) awardBadge('challenge_weekend_warrior', existingBadgeIds, newBadges, nowIso);
 
-  const mergedBadges = [...existingAchievements.badges, ...newBadges].map((badge) => {
-    const first = badgeFirstEarned[badge.id];
-    if (first) {
-      return { ...badge, firstEarnedAt: first };
-    }
-    return badge;
-  });
+  const mergedBadges = [...existingAchievements.badges, ...newBadges]
+    .filter((badge) => !!getBadgeDefinition(badge.id))
+    .map((badge) => {
+      const first = badgeFirstEarned[badge.id];
+      if (first) {
+        return { ...badge, firstEarnedAt: first };
+      }
+      return badge;
+    });
 
   // Lifetime XP:
   // - Start from existing total if present

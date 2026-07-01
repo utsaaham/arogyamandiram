@@ -30,7 +30,7 @@ const moreItems: { href: string; icon: LucideIcon; label: string; theme: MoreIte
   { href: '/weight', icon: Scale, label: 'Weight', theme: 'weight' },
   { href: '/sleep', icon: Moon, label: 'Sleep', theme: 'sleep' },
   { href: '/achievements', icon: Trophy, label: 'Achievements', theme: 'achievements' },
-  { href: '/todays-plan', icon: Sparkles, label: "Today's Plan", theme: 'insights' },
+  { href: '/todays-plan', icon: Sparkles, label: 'Checklist', theme: 'insights' },
   { href: '/project', icon: Code2, label: 'Project', theme: 'project' },
   { href: '/settings', icon: Settings, label: 'Settings', theme: 'settings' },
 ];

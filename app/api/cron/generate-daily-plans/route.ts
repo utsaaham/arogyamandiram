@@ -216,8 +216,11 @@ export async function POST(req: NextRequest) {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowDate = tomorrow.toISOString().split('T')[0];
 
-  // Find all users with OpenAI keys
-  const users = await User.find({ 'apiKeys.openai': { $exists: true, $ne: '' } })
+  // Find all users with OpenAI keys who have not disabled AI globally.
+  const users = await User.find({
+    'apiKeys.openai': { $exists: true, $ne: '' },
+    'settings.aiEnabled': { $ne: false },
+  })
     .select('+apiKeys.openai')
     .select('_id')
     .lean() as { _id: { toString(): string }; apiKeys?: { openai?: string } }[];
