@@ -83,6 +83,7 @@ const UserSchema = new Schema<IUserDocument>(
     settings: {
       theme: { type: String, enum: ['dark', 'light'], default: 'dark' },
       units: { type: String, enum: ['metric', 'imperial'], default: 'metric' },
+      aiEnabled: { type: Boolean, default: true },
       notifications: {
         water: { type: Boolean, default: true },
         meals: { type: Boolean, default: true },

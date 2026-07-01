@@ -18,7 +18,6 @@ import {
   LogOut,
   ChevronLeft,
   Bug,
-  Activity,
 } from 'lucide-react';
 import type React from 'react';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,6 @@ const mainNavItems = [
   { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
-  { href: '/health-data', icon: Activity, label: 'Health Data' },
   { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/achievements', icon: Star, label: 'Achievements' },
   { href: '/todays-plan', icon: CalendarDays, label: "Today's Plan" },

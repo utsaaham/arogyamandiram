@@ -31,7 +31,6 @@ const DEBUG_TREE: { page: string; agents: string[] }[] = [
   { page: 'today-plan', agents: ['overview', 'food', 'workout'] },
   { page: 'targets', agents: ['health-plan'] },
   { page: 'settings', agents: ['todos-food-parser'] },
-  { page: 'health-data', agents: ['sync'] },
   { page: 'email', agents: ['smtp', 'imap'] },
 ];
 

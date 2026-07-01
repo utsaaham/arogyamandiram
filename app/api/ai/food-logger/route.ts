@@ -22,6 +22,9 @@ export const dynamic = 'force-dynamic';
 async function getOpenAIKey(userId: string): Promise<string | null> {
   await connectDB();
   const user = await User.findById(userId).select('+apiKeys.openai').lean();
+  const settings = user?.settings as { aiEnabled?: boolean } | undefined;
+  if (settings?.aiEnabled === false) return null;
+
   const apiKeys = user?.apiKeys as { openai?: string } | undefined;
 
   if (apiKeys?.openai) {

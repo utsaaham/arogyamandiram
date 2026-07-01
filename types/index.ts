@@ -143,6 +143,8 @@ export interface UserCustomizations {
 export interface UserSettings {
   theme: 'dark' | 'light';
   units: UnitSystem;
+  /** Master switch for every OpenAI-backed feature in the app. */
+  aiEnabled?: boolean;
   notifications: {
     water: boolean;
     meals: boolean;
