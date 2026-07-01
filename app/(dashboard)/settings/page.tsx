@@ -7,7 +7,7 @@ import {
   Shield, Eye, EyeOff, CheckCircle2, Sparkles, Utensils,
   Loader2, RefreshCw, Flame,
   Mail, Plus, ListChecks, Pill, Zap, Trash2, Pencil, CheckSquare,
-  Link2, RotateCcw, AlertCircle, SlidersHorizontal, Smile,
+  Link2, RotateCcw, AlertCircle, SlidersHorizontal, Smile, Scissors,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
@@ -32,7 +32,7 @@ const NAV_ITEMS: { key: Tab; label: string; icon: React.ElementType; desc: strin
   { key: 'targets',       label: 'Targets',        icon: Target,        desc: 'Daily goals & macros' },
   { key: 'customizations', label: 'Customizations', icon: SlidersHorizontal, desc: 'Tracker-specific defaults' },
   { key: 'notifications', label: 'Notifications',  icon: Bell,          desc: 'Reminders, email & schedule' },
-  { key: 'todos',         label: 'Daily Todos',    icon: CheckSquare,   desc: 'Recurring checklist' },
+  { key: 'todos',         label: 'Checklist',      icon: CheckSquare,   desc: 'Todos and care' },
   { key: 'health-data',   label: 'Connectors',     icon: Link2,         desc: 'Device integrations' },
 ];
 
@@ -2089,6 +2089,7 @@ const TODO_CATEGORIES = [
   { value: 'supplement', label: 'Supplement', icon: Zap,          color: 'text-emerald-400', bgColor: 'bg-emerald-400/15', barColor: 'bg-emerald-500' },
   { value: 'medicine',   label: 'Medicine',   icon: Pill,         color: 'text-rose-400',    bgColor: 'bg-rose-400/15',    barColor: 'bg-rose-500' },
   { value: 'habit',      label: 'Habit',      icon: Flame,        color: 'text-amber-400',   bgColor: 'bg-amber-400/15',   barColor: 'bg-amber-500' },
+  { value: 'care',       label: 'Care',       icon: Scissors,     color: 'text-fuchsia-300', bgColor: 'bg-fuchsia-400/15', barColor: 'bg-fuchsia-500' },
   { value: 'other',      label: 'Other',      icon: ListChecks,   color: 'text-zinc-400',    bgColor: 'bg-zinc-400/15',    barColor: 'bg-zinc-500' },
 ];
 
@@ -2144,7 +2145,7 @@ function TodoForm({
       {/* Category */}
       <div className="space-y-1.5">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Category</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           {TODO_CATEGORIES.map((c) => {
             const CatIcon = c.icon;
             const active = values.category === c.value;
@@ -2316,9 +2317,9 @@ function TodosSettingsTab() {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <CheckSquare className="h-4 w-4 text-emerald-400" />
-            <h2 className="text-base font-semibold text-text-primary">Daily Todos</h2>
+            <h2 className="text-base font-semibold text-text-primary">Checklist</h2>
           </div>
-          <p className="mt-1 text-xs text-text-muted">Recurring checklist — resets fresh every day.</p>
+          <p className="mt-1 text-xs text-text-muted">Recurring todos and care routines — resets fresh every day.</p>
         </div>
         {!showForm && (
           <button type="button" onClick={() => setShowForm(true)}
@@ -2353,7 +2354,7 @@ function TodosSettingsTab() {
               <CheckSquare className="h-6 w-6 text-zinc-600" />
             </div>
             <p className="mt-3 text-sm font-medium text-zinc-400">No items yet</p>
-            <p className="mt-1 text-xs text-zinc-600">Add supplements, medicines, habits, or food routines.</p>
+            <p className="mt-1 text-xs text-zinc-600">Add supplements, medicines, habits, care, or food routines.</p>
           </div>
         ) : (
           templates.map((t) => {

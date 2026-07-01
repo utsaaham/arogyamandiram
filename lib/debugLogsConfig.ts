@@ -13,12 +13,12 @@ export const PAGE_LABELS: Record<string, string> = {
   email: 'Email',
   settings: 'Settings',
   orchestrator: 'Orchestrator',
-  'today-plan': "Today's Plan",
+  'today-plan': 'Checklist',
 };
 
 export const AGENT_LABELS: Record<string, string> = {
   'meal-ideas': 'Meal Ideas',
-  'todays-plan': "Today's Plan",
+  'todays-plan': 'Checklist',
   'workout-planner': 'Workout Planner',
   'ai-logger': 'AI Logger',
   'food-logger': 'Food Logger',
@@ -28,7 +28,7 @@ export const AGENT_LABELS: Record<string, string> = {
   'weekly': 'Weekly insights',
   'monthly': 'Monthly insights',
   'yearly': 'Yearly insights',
-  'today-plan': "Today's Plan",
+  'today-plan': 'Checklist',
   'orchestrator': 'AI Commands',
   'overview': 'Overview',
   'food': 'Food Plan',

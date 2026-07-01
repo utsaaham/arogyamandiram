@@ -12,6 +12,7 @@ import {
   Utensils,
   Loader2,
   MoreHorizontal,
+  Scissors,
 } from 'lucide-react';
 import Link from 'next/link';
 import { showToast } from '@/components/ui/Toast';
@@ -27,7 +28,7 @@ interface TodoTemplate {
   title: string;
   note: string;
   time: string;
-  category: 'food' | 'supplement' | 'medicine' | 'habit' | 'other';
+  category: 'food' | 'supplement' | 'medicine' | 'habit' | 'care' | 'other';
   enabled: boolean;
   frequency?: number;
   baseItems?: Record<string, unknown>[];
@@ -50,6 +51,7 @@ const CATEGORY_CONFIG = {
   supplement: { label: 'Supplement', icon: Zap,         textCls: 'text-emerald-400', bgCls: 'bg-emerald-400/15', barCls: 'bg-emerald-500' },
   medicine:   { label: 'Medicine',   icon: Pill,        textCls: 'text-rose-400',    bgCls: 'bg-rose-400/15',    barCls: 'bg-rose-500' },
   habit:      { label: 'Habit',      icon: Flame,       textCls: 'text-amber-400',   bgCls: 'bg-amber-400/15',   barCls: 'bg-amber-500' },
+  care:       { label: 'Care',       icon: Scissors,    textCls: 'text-fuchsia-300', bgCls: 'bg-fuchsia-400/15', barCls: 'bg-fuchsia-500' },
   other:      { label: 'Other',      icon: MoreHorizontal,  textCls: 'text-zinc-400',    bgCls: 'bg-zinc-400/15',    barCls: 'bg-zinc-500' },
 };
 
@@ -157,7 +159,7 @@ export default function TodosPage() {
   return (
     <div className="animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop">
       <DashboardPageShell
-        title="Daily Todos"
+        title="Checklist"
         subtitle={today}
         icon={CheckSquare}
         mobileVariant="card"
@@ -189,16 +191,16 @@ export default function TodosPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800/60">
               <CheckSquare className="h-8 w-8 text-zinc-600" />
             </div>
-            <p className="mt-4 text-base font-semibold text-zinc-300">No daily todos yet</p>
+            <p className="mt-4 text-base font-semibold text-zinc-300">No checklist items yet</p>
             <p className="mt-1.5 text-sm text-zinc-500 max-w-[260px] mx-auto">
-              Set up recurring items like supplements, medicines, and habits.
+              Set up recurring items like supplements, medicines, care, and habits.
             </p>
             <Link
               href="/settings?tab=todos"
               className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/18 transition-colors ring-1 ring-emerald-500/20"
             >
               <Settings className="h-4 w-4" />
-              Set up Todos
+              Set up Checklist
             </Link>
           </div>
         ) : (
@@ -289,7 +291,7 @@ export default function TodosPage() {
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.04] transition-all"
             >
               <Settings className="h-3.5 w-3.5" />
-              Manage todos
+              Manage checklist
             </Link>
           </div>
         )}

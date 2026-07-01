@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { href: '/workout',      icon: Dumbbell,      label: 'Workout' },
   { href: '/weight',       icon: Scale,         label: 'Weight' },
   { href: '/achievements', icon: Star,          label: 'Achievements' },
-  { href: '/todays-plan',  icon: CalendarDays,  label: "Today's Plan" },
+  { href: '/todays-plan',  icon: CalendarDays,  label: 'Checklist' },
   { href: '/todos',        icon: CheckSquare,   label: 'Todos' },
   { href: '/debug',        icon: Bug,           label: 'Debugger' },
 ];

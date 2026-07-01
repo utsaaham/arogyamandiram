@@ -31,7 +31,7 @@ const moreNav = [
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/achievements', icon: Star, label: 'Achievements' },
-  { href: '/todays-plan', icon: CalendarDays, label: "Today's Plan" },
+  { href: '/todays-plan', icon: CalendarDays, label: 'Checklist' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
