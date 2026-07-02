@@ -416,7 +416,7 @@ export default function OverviewTab() {
               <CalendarDays className="h-10 w-10 text-zinc-600" />
               <p className="text-sm font-medium text-zinc-300">No overview generated yet</p>
               <p className="text-xs text-zinc-500">
-                Generate your daily overview — AI will pick your #1 focus and predict your weight trend.
+                Generate your daily overview and we&apos;ll pick your #1 focus and predict your weight trend.
               </p>
               {hasApiKey && (
                 <button

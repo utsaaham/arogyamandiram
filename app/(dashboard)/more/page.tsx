@@ -2,51 +2,45 @@
 
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
 import {
   Scale,
   Dumbbell,
   Moon,
+  Droplets,
+  Utensils,
   Trophy,
   Settings,
   Code2,
+  Link2,
   LogOut,
-  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type MoreItemTheme =
+  | 'sleep'
+  | 'water'
+  | 'food'
   | 'workout'
   | 'weight'
-  | 'sleep'
   | 'achievements'
-  | 'insights'
+  | 'healthsync'
   | 'project'
   | 'settings';
 
 const moreItems: { href: string; icon: LucideIcon; label: string; theme: MoreItemTheme }[] = [
+  { href: '/sleep', icon: Moon, label: 'Sleep', theme: 'sleep' },
+  { href: '/water', icon: Droplets, label: 'Water', theme: 'water' },
+  { href: '/food', icon: Utensils, label: 'Food', theme: 'food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout', theme: 'workout' },
   { href: '/weight', icon: Scale, label: 'Weight', theme: 'weight' },
-  { href: '/sleep', icon: Moon, label: 'Sleep', theme: 'sleep' },
   { href: '/achievements', icon: Trophy, label: 'Achievements', theme: 'achievements' },
-  { href: '/todays-plan', icon: Sparkles, label: 'Checklist', theme: 'insights' },
+  { href: '/settings?tab=health-data', icon: Link2, label: 'Health Sync', theme: 'healthsync' },
   { href: '/project', icon: Code2, label: 'Project', theme: 'project' },
   { href: '/settings', icon: Settings, label: 'Settings', theme: 'settings' },
 ];
 
 export default function MorePage() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
-    setIsMobile(mq.matches);
-    const fn = () => setIsMobile(mq.matches);
-    mq.addEventListener('change', fn);
-    return () => mq.removeEventListener('change', fn);
-  }, []);
-
-  const hiddenOnMobile = ['/sleep'];
-  const items = isMobile ? moreItems.filter((item) => !hiddenOnMobile.includes(item.href)) : moreItems;
 
   return (
     <div className="space-y-3 pb-24 lg:space-y-6 lg:pb-8">
@@ -56,17 +50,19 @@ export default function MorePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {items.map((item) => (
+        {moreItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
               'flex flex-col items-center justify-center gap-3 rounded-xl border p-6 text-text-muted transition-colors more-card',
+              item.theme === 'sleep' && 'more-card-sleep',
+              item.theme === 'water' && 'more-card-water',
+              item.theme === 'food' && 'more-card-food',
               item.theme === 'workout' && 'more-card-workout',
               item.theme === 'weight' && 'more-card-weight',
-              item.theme === 'sleep' && 'more-card-sleep',
               item.theme === 'achievements' && 'more-card-achievements',
-              item.theme === 'insights' && 'more-card-insights',
+              item.theme === 'healthsync' && 'more-card-healthsync',
               item.theme === 'project' && 'more-card-project',
               item.theme === 'settings' && 'more-card-settings',
               'hover:text-text-primary focus:outline-none'

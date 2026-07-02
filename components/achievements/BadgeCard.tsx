@@ -16,7 +16,7 @@ export function BadgeCard({ badge, locked, onClick }: BadgeCardProps) {
     <button
       type="button"
       onClick={() => !isLocked && onClick?.(badge)}
-      aria-label={isLocked ? 'Locked badge' : `${badge.name} — ${badge.description}`}
+      aria-label={isLocked ? 'Locked badge' : `${badge.name}: ${badge.description}`}
       className={cn(
         'block aspect-square w-full overflow-hidden rounded-full outline-none transition-transform duration-200',
         isLocked

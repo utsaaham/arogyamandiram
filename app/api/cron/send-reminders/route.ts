@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     'settings.emailSettings.smtp.user': { $exists: true, $ne: '' },
     'settings.emailSettings.smtp.pass': { $exists: true, $ne: '' },
   })
-    .select('email profile.name settings.notifications settings.emailSettings.smtp.host settings.reminderSchedule')
+    .select('email profile.name settings.notifications settings.emailRemindersEnabled settings.emailSettings.smtp.host settings.reminderSchedule')
     .lean();
 
   let sent = 0;
@@ -152,6 +152,10 @@ export async function POST(req: NextRequest) {
   for (const user of users) {
     const userId = String(user._id);
     const settings = (user.settings as Record<string, unknown>) ?? {};
+
+    // Master switch: user turned off all reminder emails
+    if ((settings.emailRemindersEnabled as boolean | undefined) === false) continue;
+
     const notifications = settings.notifications as Record<string, boolean> | undefined;
     const reminderSchedule = (settings.reminderSchedule as Record<string, unknown> | undefined) ?? {};
 

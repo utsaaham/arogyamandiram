@@ -7,7 +7,7 @@ import MessageBubble from './MessageBubble';
 interface ConversationHistoryProps {
   entries: ConversationEntry[];
   onConfirmSimple: (id: string) => Promise<string | undefined>;
-  onConfirmFood: (id: string, mealType: string) => Promise<string | undefined>;
+  onConfirmFood: (id: string, mealType: string, time: string) => Promise<string | undefined>;
   onConfirmWorkout: (id: string) => Promise<string | undefined>;
   onCancel: (id: string) => void;
   onConfirmSuccess?: (route: string) => void;
@@ -51,8 +51,8 @@ export default function ConversationHistory({
               const route = await onConfirmSimple(entry.id);
               if (route) onConfirmSuccess?.(route);
             }}
-            onConfirmFood={async (mealType) => {
-              const route = await onConfirmFood(entry.id, mealType);
+            onConfirmFood={async (mealType, time) => {
+              const route = await onConfirmFood(entry.id, mealType, time);
               if (route) onConfirmSuccess?.(route);
             }}
             onConfirmWorkout={async () => {

@@ -17,9 +17,9 @@ const GITHUB_URL = 'https://github.com/utsaaham/arogyamandiram';
 
 function buildShareText(badge: UserBadge): string {
   return [
-    `🏅 Earned "${badge.name}" on Arogyamandiram — ${badge.description}`,
+    `🏅 Earned "${badge.name}" on Arogyamandiram: ${badge.description}`,
     '',
-    'Arogyamandiram is an open-source health & wellness tracker (food, water, workouts, sleep, weight, AI insights). We welcome contributors — come help build it with us!',
+    'Arogyamandiram is an open-source health & wellness tracker (food, water, workouts, sleep, weight, smart insights). We welcome contributors. Come help build it with us!',
     '',
     `🌐 Try it: ${SITE_URL}`,
     `⭐ Contribute on GitHub: ${GITHUB_URL}`,
@@ -30,7 +30,7 @@ function buildShareText(badge: UserBadge): string {
 
 function shareToTwitter(badge: UserBadge) {
   const text =
-    `🏅 Earned "${badge.name}" on Arogyamandiram — an open-source health & wellness tracker.\n\n` +
+    `🏅 Earned "${badge.name}" on Arogyamandiram, an open-source health & wellness tracker.\n\n` +
     `Try it or contribute (we welcome PRs!):\n${GITHUB_URL}`;
   const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SITE_URL)}`;
   window.open(url, '_blank', 'noopener,noreferrer');
@@ -275,7 +275,7 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
       if (navAny.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
-            title: `${badge.name} — Arogyamandiram`,
+            title: `${badge.name} · Arogyamandiram`,
             text: caption,
             files: [file],
           });
@@ -306,7 +306,7 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
         await navigator.clipboard.writeText(caption);
         return 'Badge downloaded · caption copied to clipboard';
       } catch {
-        return 'Badge downloaded — paste it to Instagram Stories from your phone';
+        return 'Badge downloaded. Paste it to Instagram Stories from your phone.';
       }
     });
   }
@@ -320,7 +320,7 @@ export function BadgeDetailModal({ badge, onClose }: BadgeDetailModalProps) {
         '_blank',
         'noopener,noreferrer',
       );
-      return 'Badge downloaded · WhatsApp opened — attach the image manually';
+      return 'Badge downloaded and WhatsApp opened. Attach the image manually.';
     });
   }
 

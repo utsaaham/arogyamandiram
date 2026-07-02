@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { ArrowRight, Check, User } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Arogyamandiram — Open-source Health & Wellness',
+  title: 'Arogyamandiram: Open-source Health & Wellness',
   description:
-    'Open-source health & wellness tracker. Food, water, workouts, sleep, weight, and AI insights — built by the community.',
+    'Open-source health & wellness tracker. Food, water, workouts, sleep, weight, and smart insights, built by the community.',
 };
 
 const GITHUB_URL = 'https://github.com/utsaaham/arogyamandiram';

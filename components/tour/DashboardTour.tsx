@@ -12,7 +12,7 @@ const steps = [
   {
     id: 'dashboard',
     title: 'Your health command center',
-    body: 'Welcome! Your Home shows a bento-style overview — calorie ring, today\'s macros, water intake, sleep quality, workout burns, streak counter, and recent badges. Everything at a glance, the moment you open the app.',
+    body: 'Welcome! Your Home shows a bento-style overview: calorie ring, today\'s macros, water intake, sleep quality, workout burns, streak counter, and recent badges. Everything at a glance, the moment you open the app.',
   },
   {
     id: 'sleep',
@@ -27,27 +27,27 @@ const steps = [
   {
     id: 'food',
     title: 'Log meals from 150+ built-in foods',
-    body: 'Search across the built-in catalog, then log entries under Breakfast, Lunch, Dinner, or Snacks. Your calorie ring and macro bars — protein, carbs, fat, fiber — update instantly with each meal.',
+    body: 'Search across the built-in catalog, then log entries under Breakfast, Lunch, Dinner, or Snacks. Your calorie ring and macro bars (protein, carbs, fat, fiber) update instantly with each meal.',
   },
   {
     id: 'workout',
     title: 'Track every workout session',
-    body: 'Log any activity — cardio, strength, flexibility, sports, or other. See your calorie burn ring, a 7-day burn chart, and a breakdown by category. Use AI Logger to describe your workout in plain words and let it log for you.',
+    body: 'Log any activity: cardio, strength, flexibility, sports, or anything else. See your calorie burn ring, a 7-day burn chart, and a breakdown by category. Or just describe your workout in plain words and we\'ll log it for you.',
   },
   {
     id: 'weight',
     title: 'Monitor your weight trend',
-    body: 'Enter your weight in kg or lbs and pick any timeframe — 7 days, 1 month, up to 1 year. Trend arrows show direction at a glance, and a chart makes your progress undeniable over time.',
+    body: 'Enter your weight in kg or lbs and pick any timeframe, from 7 days up to a full year. Trend arrows show direction at a glance, and a chart makes your progress undeniable over time.',
   },
   {
     id: 'achievements',
     title: 'Level up with every habit',
-    body: 'Every logging streak, goal hit, and hydration milestone earns you a badge and XP. See your current streak, all-time best streak, your level, and all unlocked badges — a reward system built into your daily health routine.',
+    body: 'Every logging streak, goal hit, and hydration milestone earns you a badge and XP. See your current streak, all-time best streak, your level, and all unlocked badges. It\'s a little reward system built into your daily routine.',
   },
   {
     id: 'insights',
-    title: 'AI insights from your real data',
-    body: 'Choose Yesterday, Week, Month, or Year to get AI-generated insights from your actual logs. See what\'s working, what needs attention, and personalized coaching tips — no guesswork, just your data.',
+    title: 'Insights from your real data',
+    body: 'Choose Yesterday, Week, Month, or Year and get insights drawn from your actual logs. See what\'s working, what needs attention, and coaching tips made for you. No guesswork, just your data.',
   },
   {
     id: 'api-keys',
@@ -76,7 +76,7 @@ const steps = [
   },
   {
     id: 'closing',
-    title: 'You are all set — start logging',
+    title: 'You are all set. Start logging!',
     body: "You've toured the full platform. Start today by logging a meal, your morning water, and last night's sleep. Small daily habits compound into big results. Your home is ready.",
   },
 ];

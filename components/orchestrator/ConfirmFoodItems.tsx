@@ -16,21 +16,27 @@ function guessMealType(): MealType {
   return 'dinner';
 }
 
+function nowTimeValue(): string {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 interface ConfirmFoodItemsProps {
   items: ParsedFoodItem[];
   total?: Record<string, number>;
-  onConfirm: (mealType: string) => Promise<void>;
+  onConfirm: (mealType: string, time: string) => Promise<void>;
   onCancel: () => void;
 }
 
 export default function ConfirmFoodItems({ items, total, onConfirm, onCancel }: ConfirmFoodItemsProps) {
   const [mealType, setMealType] = useState<MealType>(guessMealType());
+  const [time, setTime] = useState<string>(nowTimeValue());
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      await onConfirm(mealType);
+      await onConfirm(mealType, time || nowTimeValue());
     } finally {
       setLoading(false);
     }
@@ -104,6 +110,17 @@ export default function ConfirmFoodItems({ items, total, onConfirm, onCancel }: 
           ) : null}
         </div>
       )}
+
+      {/* When did you have it? */}
+      <div className="mb-3">
+        <p className="mb-1.5 text-[10px] text-neutral-500 uppercase tracking-wide">When did you have it?</p>
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-xs text-neutral-300 focus:border-emerald-500/40 focus:outline-none"
+        />
+      </div>
 
       {/* Meal type selector */}
       <div className="mb-3">

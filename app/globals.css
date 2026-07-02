@@ -425,6 +425,21 @@ body {
     border-color: var(--border-subtle);
     box-shadow: none;
   }
+  .more-card-water {
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.22) 0%, rgba(8, 28, 46, 0.96) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-food {
+    background: linear-gradient(145deg, rgba(249, 115, 22, 0.2) 0%, rgba(30, 15, 6, 0.95) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+  .more-card-healthsync {
+    background: linear-gradient(145deg, rgba(20, 184, 166, 0.22) 0%, rgba(6, 38, 35, 0.96) 65%);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
   .more-card-insights {
     background: linear-gradient(145deg, rgba(34, 211, 238, 0.26) 0%, rgba(15, 23, 42, 0.94) 65%);
     border-color: var(--border-subtle);

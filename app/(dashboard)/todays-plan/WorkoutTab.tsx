@@ -368,7 +368,7 @@ export default function WorkoutTab() {
         ...(workoutDifficulty ? { workoutDifficulty } : {}),
         ...(skippedWorkoutReason ? { skippedWorkoutReason } : {}),
       });
-      if (res.success) { setFeedbackSaved(true); showToast('Feedback saved — your next plan will adapt!', 'success'); }
+      if (res.success) { setFeedbackSaved(true); showToast('Feedback saved! Your next plan will adapt.', 'success'); }
       else showToast(res.error || 'Failed to save feedback', 'error');
     } catch { showToast('Failed to save feedback', 'error'); }
     finally { setFeedbackSaving(false); }
@@ -424,7 +424,7 @@ export default function WorkoutTab() {
               <p className="truncate text-xs text-emerald-200">
                 <span className="font-semibold">Why this plan today</span>
                 {currentWorkoutPlan.whyToday && (
-                  <span className="ml-2 text-emerald-300/70">— {currentWorkoutPlan.whyToday}</span>
+                  <span className="ml-2 text-emerald-300/70">· {currentWorkoutPlan.whyToday}</span>
                 )}
               </p>
             </div>

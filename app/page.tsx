@@ -777,7 +777,7 @@ a{color:inherit;text-decoration:none}
                   { icon: Ic.fork, t: "Food & Calories", d: "150+ built-in foods with precise macros. Search, log by meal, watch your ring fill.", c: "var(--g)" },
                   { icon: Ic.drop, t: "Water Intake", d: "One-tap presets. Animated glass fill. Daily progress toward your target.", c: "var(--g)" },
                   { icon: Ic.moon, t: "Sleep Journal", d: "Log bedtime, wake time, quality. 7-day chart reveals your patterns.", c: "#8B7EC8" },
-                  { icon: Ic.zap, t: "Workouts", d: "Log any activity. Or describe it in plain text — AI parses the rest.", c: "#C4724E" },
+                  { icon: Ic.zap, t: "Workouts", d: "Log any activity. Or describe it in plain words and we take it from there.", c: "#C4724E" },
                   { icon: Ic.scale, t: "Weight Tracking", d: "Daily weigh-ins with trend arrows. Charts from one week to a year.", c: "#D4A853" },
                   { icon: Ic.spark, t: "AI Insights", d: "Personalized coaching from your actual data. Day, week, month, or year.", c: "var(--g)" },
                 ].map((x, i) => (
@@ -837,9 +837,9 @@ a{color:inherit;text-decoration:none}
               </div>
               <div className="lp-sp-grid">
                 {[
-                  { n: "01", t: "Log daily", d: "Meals, water, sleep, workouts — each takes seconds. Smart search finds 150+ built-in foods." },
+                  { n: "01", t: "Log daily", d: "Meals, water, sleep, workouts. Each takes seconds. Smart search finds 150+ built-in foods." },
                   { n: "02", t: "See patterns", d: "Progress rings, macro bars, trend charts. Visualise a week to a full year at a glance." },
-                  { n: "03", t: "Get smarter", d: "AI reads your data, surfaces what's working. No generic tips — just your patterns." },
+                  { n: "03", t: "Get smarter", d: "Your data does the talking: see what's working, skip the generic tips, follow your own patterns." },
                 ].map((x, i) => (
                     <div key={x.n} className={`lp-sp ${rv(spv, `lp-d${i + 1}`)}`}>
                       <div style={{ position: "absolute", top: 0, left: 24, width: 28, height: 2, background: "var(--g)", borderRadius: 1 }} />

@@ -19,7 +19,7 @@ staleness_days: 3
 
 | Section | Last Updated | Updated By | Stale After | Status |
 |---------|-------------|------------|-------------|--------|
-| context/ | 2026-07-01 | claude-opus-4-8 | 3 days | Current |
+| context/ | 2026-07-01 | claude-fable-5 | 3 days | Current |
 | agents/ | 2026-04-15 | codex-gpt-5 | 7 days | Current |
 | skills/ | 2026-04-15 | codex-gpt-5 | 10 days | Current |
 | rules/ | 2026-03-26 | claude-sonnet-4-6 | 14 days | Current |

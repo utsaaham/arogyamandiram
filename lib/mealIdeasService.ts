@@ -341,7 +341,7 @@ function buildPayload(
 
 // ---------- System prompt (compressed for latency) ----------
 
-const SYSTEM_PROMPT = `Suggest meals based on the user's recent meal history and today's remaining calorie budget.
+const SYSTEM_PROMPT = `Suggest meals based on the user's recent meal history and today's remaining calorie budget. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes.
 
 Rules:
 - Use userProfile (height, weight, age, activity level, goal) to estimate appropriate calorie ranges and portion sizes.
@@ -350,7 +350,7 @@ Rules:
 - Improve nutrition slightly (more vegetables, fewer processed snacks).
 - Respect todayIntake.remainingCalories so suggestions fit the day realistically.
 - Descriptions must be under 12 words and include one practical cue (time-saving, prep style, or nutrition focus).
-- Infer cuisine from foods — do not assume.
+- Infer cuisine from the foods themselves; do not assume.
 - Keep suggestions culturally relevant to the user's recent patterns unless preferences ask otherwise.
 - Include estimated prepTimeMinutes and difficulty.
 

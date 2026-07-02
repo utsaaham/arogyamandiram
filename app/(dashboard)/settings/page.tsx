@@ -13,6 +13,7 @@ import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
+import { CARE_CADENCES, cadenceInfo } from '@/lib/careCadence';
 import { cn } from '@/lib/utils';
 import { getTargetsForUser } from '@/lib/health';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
@@ -20,7 +21,7 @@ import Image from 'next/image';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface TodoTemplate { id: string; title: string; note: string; time: string; category: string; enabled: boolean; frequency?: number; baseItems?: Record<string, unknown>[]; }
+interface TodoTemplate { id: string; title: string; note: string; time: string; category: string; enabled: boolean; frequency?: number; times?: string[]; cadence?: string; lastDone?: string | null; baseItems?: Record<string, unknown>[]; }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -112,7 +113,7 @@ function migrateWorkoutLocation(raw: string | undefined): { location: string; no
 }
 
 const equipmentNotesPlaceholder: Record<string, string> = {
-  full_gym:     'e.g. "No cable machine, no leg press — use free weights instead."',
+  full_gym:     'e.g. "No cable machine, no leg press. Use free weights instead."',
   home:         'e.g. "I have dumbbells up to 20kg, a pull-up bar, and resistance bands. No bench."',
   outdoors:     'e.g. "Park has parallel bars, monkey bars, and a 200m running track."',
   hotel_travel: 'e.g. "Just a mat and a couple of resistance bands."',
@@ -233,6 +234,8 @@ function SettingsInner() {
   const [apiKeysSaving, setApiKeysSaving] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [aiSaving, setAiSaving] = useState(false);
+  const [emailRemindersEnabled, setEmailRemindersEnabled] = useState(true);
+  const [emailRemindersSaving, setEmailRemindersSaving] = useState(false);
   const [openaiKey, setOpenaiKey] = useState('');
   const [fdcKey, setFdcKey] = useState('');
   const [showOpenai, setShowOpenai] = useState(false);
@@ -346,6 +349,7 @@ function SettingsInner() {
       const s = user.settings;
       setUnits(s.units || 'metric');
       setAiEnabled(s.aiEnabled ?? true);
+      setEmailRemindersEnabled(s.emailRemindersEnabled ?? true);
       setWaterNotif(s.notifications?.water ?? true);
       setMealNotif(s.notifications?.meals ?? true);
       setWeighInNotif(s.notifications?.weighIn ?? true);
@@ -652,6 +656,27 @@ function SettingsInner() {
       showToast('Failed to update AI setting', 'error');
     } finally {
       setAiSaving(false);
+    }
+  };
+
+  const toggleEmailReminders = async () => {
+    const nextValue = !emailRemindersEnabled;
+    setEmailRemindersEnabled(nextValue);
+    setEmailRemindersSaving(true);
+    try {
+      const res = await api.updateSettings({ emailRemindersEnabled: nextValue });
+      if (res.success) {
+        showToast(nextValue ? 'Email reminders turned on' : 'All reminder emails stopped', 'success');
+        await refetch();
+      } else {
+        setEmailRemindersEnabled(!nextValue);
+        showToast(res.error || 'Failed to update email reminders', 'error');
+      }
+    } catch {
+      setEmailRemindersEnabled(!nextValue);
+      showToast('Failed to update email reminders', 'error');
+    } finally {
+      setEmailRemindersSaving(false);
     }
   };
 
@@ -1432,6 +1457,41 @@ function SettingsInner() {
             </div>
 
             <div className="glass-card rounded-2xl p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    'mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg',
+                    emailRemindersEnabled ? 'bg-accent-emerald/10 text-accent-emerald' : 'bg-zinc-800 text-zinc-400'
+                  )}>
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-text-primary">Email reminders</h2>
+                    <p className="mt-1 text-xs text-text-muted">
+                      {emailRemindersEnabled
+                        ? 'Water, meal, workout, sleep and weigh-in reminder emails can be sent.'
+                        : 'All reminder emails are stopped. Nothing will land in your inbox.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={emailRemindersEnabled}
+                  onClick={toggleEmailReminders}
+                  disabled={emailRemindersSaving}
+                  className={cn(
+                    'flex h-7 w-12 shrink-0 items-center rounded-full border p-0.5 transition-colors disabled:opacity-60',
+                    emailRemindersEnabled ? 'justify-end border-accent-emerald/50 bg-accent-emerald/80' : 'justify-start border-zinc-700 bg-zinc-800'
+                  )}
+                >
+                  <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+                  <span className="sr-only">{emailRemindersEnabled ? 'Stop all reminder emails' : 'Enable reminder emails'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4 text-accent-cyan" />
@@ -1644,7 +1704,7 @@ function SettingsInner() {
                 </button>
               </div>
               <p className="mt-1 flex items-center gap-1.5 text-xs text-text-muted">
-                <Shield className="h-3 w-3 text-accent-cyan shrink-0" /> AES-256 encrypted — never exposed to the browser.
+                <Shield className="h-3 w-3 text-accent-cyan shrink-0" /> AES-256 encrypted, never exposed to the browser.
               </p>
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[
@@ -2101,17 +2161,39 @@ const todoInputCls = [
   '[&:focus-visible]:outline-none',
 ].join(' ');
 
+/**
+ * Coerce a stored time string into the strict HH:mm a time input expects.
+ * Older templates saved free text ("9 AM", "12:30 PM"); Safari's time input
+ * is unforgiving about anything but HH:mm.
+ */
+function toTimeInputValue(raw: string): string {
+  const m = (raw || '').trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp])?\.?[Mm]?\.?$/);
+  if (!m) return '';
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const ap = m[3]?.toLowerCase();
+  if (ap === 'p' && h < 12) h += 12;
+  if (ap === 'a' && h === 12) h = 0;
+  if (h > 23 || min > 59) return '';
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+type TodoFormValues = { title: string; note: string; time: string; category: string; frequency: number; times: string[]; cadence: string; lastDone: string };
+
 function TodoForm({
-  values, onChange, onSubmit, onCancel, saving, submitLabel,
+  values, onChange, onSubmit, onCancel, saving, submitLabel, mode,
 }: {
-  values: { title: string; note: string; time: string; category: string; frequency: number };
-  onChange: (f: { title: string; note: string; time: string; category: string; frequency: number }) => void;
+  values: TodoFormValues;
+  onChange: (f: TodoFormValues) => void;
   onSubmit: () => void;
   onCancel: () => void;
   saving: boolean;
   submitLabel: string;
+  mode: 'todos' | 'care';
 }) {
   const showFrequency = values.category === 'supplement' || values.category === 'medicine';
+  const isCare = mode === 'care';
+  const categoryOptions = TODO_CATEGORIES.filter((c) => c.value !== 'care');
   return (
     <div className="mt-3 rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-5 space-y-4">
       {/* Title */}
@@ -2120,7 +2202,7 @@ function TodoForm({
         <input
           type="text" value={values.title} maxLength={80}
           onChange={(e) => onChange({ ...values, title: e.target.value })}
-          placeholder="e.g. Vitamin D capsule"
+          placeholder={isCare ? 'e.g. Haircut' : 'e.g. Vitamin D capsule'}
           className={todoInputCls}
           autoComplete="off"
           style={{ outline: 'none', boxShadow: 'none' }}
@@ -2135,39 +2217,152 @@ function TodoForm({
         <input
           type="text" value={values.note} maxLength={160}
           onChange={(e) => onChange({ ...values, note: e.target.value })}
-          placeholder="e.g. Take with water after meal"
+          placeholder={isCare ? 'e.g. Book the usual salon' : 'e.g. Take with water after meal'}
           className={todoInputCls}
           autoComplete="off"
           style={{ outline: 'none', boxShadow: 'none' }}
         />
       </div>
 
-      {/* Category */}
-      <div className="space-y-1.5">
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Category</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-          {TODO_CATEGORIES.map((c) => {
-            const CatIcon = c.icon;
-            const active = values.category === c.value;
-            return (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => onChange({ ...values, category: c.value, frequency: 1 })}
-                className={cn(
-                  'flex flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-medium transition-all',
-                  active
-                    ? `border-transparent ${c.bgColor} ${c.color}`
-                    : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
-                )}
-              >
-                <CatIcon className={cn('h-4 w-4 shrink-0', active ? c.color : 'text-zinc-600')} />
-                {c.label}
-              </button>
-            );
-          })}
+      {/* Category (care items are always care, so no picker there) */}
+      {!isCare && (
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Category</label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+            {categoryOptions.map((c) => {
+              const CatIcon = c.icon;
+              const active = values.category === c.value;
+              return (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => onChange({ ...values, category: c.value, frequency: 1 })}
+                  className={cn(
+                    'flex flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-medium transition-all',
+                    active
+                      ? `border-transparent ${c.bgColor} ${c.color}`
+                      : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                  )}
+                >
+                  <CatIcon className={cn('h-4 w-4 shrink-0', active ? c.color : 'text-zinc-600')} />
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Reminder cadence for care items */}
+      {isCare && (
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            When should we remind you?
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {CARE_CADENCES.map((opt) => {
+              const active = values.cadence === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onChange({ ...values, cadence: opt.value })}
+                  className={cn(
+                    'rounded-lg border px-3 py-2 text-xs font-medium transition-all',
+                    active
+                      ? 'border-emerald-600 bg-emerald-500/10 text-emerald-300'
+                      : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-zinc-600">
+            When it comes due, we&apos;ll bring it back to your Care list. Skip it too long and we&apos;ll give you a gentle poke.
+          </p>
+        </div>
+      )}
+
+      {/* When was it last done? Anchors the care cycle to a real date. */}
+      {isCare && (
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            When did you last do this? <span className="normal-case font-normal text-zinc-600">(optional)</span>
+          </label>
+          <input
+            type="date"
+            value={values.lastDone}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => onChange({ ...values, lastDone: e.target.value })}
+            className={todoInputCls}
+            style={{ outline: 'none', boxShadow: 'none', colorScheme: 'dark' }}
+          />
+          <p className="text-[11px] text-zinc-600">
+            {values.lastDone
+              ? (() => {
+                  const next = new Date(`${values.lastDone}T00:00:00`);
+                  next.setDate(next.getDate() + cadenceInfo(values.cadence).days);
+                  const label = next.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+                  return next.getTime() <= Date.now()
+                    ? `That makes it due already — it'll show up in your Care list right away.`
+                    : `Next one comes due around ${label}.`;
+                })()
+              : 'Tell us and the cycle starts from that day instead of today.'}
+          </p>
+        </div>
+      )}
+
+      {/* Time of day for daily items (single dose) */}
+      {!isCare && values.frequency <= 1 && (
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            Around what time? <span className="normal-case font-normal text-zinc-600">(optional)</span>
+          </label>
+          <input
+            type="time"
+            value={toTimeInputValue(values.time)}
+            onChange={(e) => onChange({ ...values, time: e.target.value, times: [e.target.value] })}
+            className={todoInputCls}
+            style={{ outline: 'none', boxShadow: 'none', colorScheme: 'dark' }}
+          />
+          <p className="text-[11px] text-zinc-600">
+            If it&apos;s still unchecked past this time, your checklist will remind you.
+          </p>
+        </div>
+      )}
+
+      {/* Per-dose times when taken more than once a day */}
+      {!isCare && values.frequency > 1 && (
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            When is each dose? <span className="normal-case font-normal text-zinc-600">(optional)</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {Array.from({ length: values.frequency }, (_, i) => (
+              <div key={i} className="space-y-1">
+                <span className="text-[10px] text-zinc-600">Dose {i + 1}</span>
+                <input
+                  type="time"
+                  value={toTimeInputValue(values.times[i] ?? (i === 0 ? values.time : ''))}
+                  onChange={(e) => {
+                    const times = Array.from({ length: values.frequency }, (_, j) =>
+                      j === i ? e.target.value : (values.times[j] ?? (j === 0 ? values.time : ''))
+                    );
+                    onChange({ ...values, times, time: times[0] || values.time });
+                  }}
+                  className={todoInputCls}
+                  style={{ outline: 'none', boxShadow: 'none', colorScheme: 'dark' }}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-zinc-600">
+            Each dose gets its own checkbox and its own reminder if you run late.
+          </p>
+        </div>
+      )}
 
       {/* Frequency — only for supplement / medicine */}
       {showFrequency && (
@@ -2198,7 +2393,7 @@ function TodoForm({
           </div>
           {values.frequency > 1 && (
             <p className="text-[11px] text-zinc-600">
-              This will show {values.frequency} checkboxes on your daily todos — one per dose.
+              You&apos;ll get {values.frequency} checkboxes on your daily to-dos, one per dose.
             </p>
           )}
         </div>
@@ -2223,7 +2418,7 @@ function TodoForm({
   );
 }
 
-const EMPTY_FORM = { title: '', note: '', time: '', category: 'other', frequency: 1 };
+const EMPTY_FORM: TodoFormValues = { title: '', note: '', time: '', category: 'other', frequency: 1, times: [], cadence: 'monthly', lastDone: '' };
 
 const FREQUENCY_OPTIONS = [
   { value: 1, label: '1×', desc: 'Once' },
@@ -2236,11 +2431,13 @@ const FREQUENCY_OPTIONS = [
 function TodosSettingsTab() {
   const [templates, setTemplates] = useState<TodoTemplate[]>([]);
   const [loading, setLoading] = useState(false);
+  const [section, setSection] = useState<'todos' | 'care'>('todos');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<typeof EMPTY_FORM>(EMPTY_FORM);
+  const [form, setForm] = useState<TodoFormValues>(EMPTY_FORM);
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<typeof EMPTY_FORM>(EMPTY_FORM);
+  const [editForm, setEditForm] = useState<TodoFormValues>(EMPTY_FORM);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2254,28 +2451,40 @@ function TodosSettingsTab() {
 
   useEffect(() => { void load(); }, [load]);
 
+  const visibleTemplates = templates.filter((t) =>
+    section === 'care' ? t.category === 'care' : t.category !== 'care'
+  );
+
+  const switchSection = (next: 'todos' | 'care') => {
+    setSection(next);
+    setShowForm(false);
+    setEditId(null);
+    setForm(next === 'care' ? { ...EMPTY_FORM, category: 'care' } : EMPTY_FORM);
+  };
+
   const handleAdd = async () => {
-    if (!form.title.trim()) { showToast('Title is required', 'error'); return; }
+    if (!form.title.trim()) { showToast('Give it a title first', 'error'); return; }
     setAdding(true);
     try {
+      const category = section === 'care' ? 'care' : form.category;
       let baseItems: Record<string, unknown>[] = [];
-      if (form.category === 'food') {
+      if (category === 'food') {
         const foodText = [form.title, form.note].filter(Boolean).join(': ');
         const foodRes = await api.logFoodText(foodText, 'settings-todos');
         if (foodRes.success && foodRes.data?.items?.length) {
           baseItems = foodRes.data.items as Record<string, unknown>[];
-          showToast(`Parsed ${baseItems.length} food item${baseItems.length !== 1 ? 's' : ''} — nutrition auto-saved`, 'success');
+          showToast(`Got it! ${baseItems.length} food item${baseItems.length !== 1 ? 's' : ''} parsed, nutrition saved.`, 'success');
         }
-        // food parse failure is non-blocking — save template without baseItems
+        // food parse failure is non-blocking; the template still saves
       }
-      const res = await api.createTodoTemplate({ ...form, baseItems });
+      const res = await api.createTodoTemplate({ ...form, category, baseItems });
       if (res.success) {
-        showToast('Todo added', 'success');
-        setForm(EMPTY_FORM);
+        showToast(section === 'care' ? 'Care item added. We will keep an eye on it.' : 'To-do added. See you tomorrow morning!', 'success');
+        setForm(section === 'care' ? { ...EMPTY_FORM, category: 'care' } : EMPTY_FORM);
         setShowForm(false);
         await load();
       } else {
-        showToast(res.error || 'Failed to add', 'error');
+        showToast(res.error || 'Could not add that. Try again?', 'error');
       }
     } finally {
       setAdding(false);
@@ -2284,14 +2493,38 @@ function TodosSettingsTab() {
 
   const handleSaveEdit = async () => {
     if (!editId) return;
-    if (!editForm.title.trim()) { showToast('Title is required', 'error'); return; }
-    const res = await api.updateTodoTemplate({ id: editId, ...editForm });
-    if (res.success) {
-      showToast('Saved', 'success');
-      setEditId(null);
-      await load();
-    } else {
-      showToast(res.error || 'Failed to update', 'error');
+    if (!editForm.title.trim()) { showToast('Give it a title first', 'error'); return; }
+    setSavingEdit(true);
+    try {
+      const original = templates.find((t) => t.id === editId);
+      const payload: Parameters<typeof api.updateTodoTemplate>[0] = { id: editId, ...editForm };
+
+      // Food items carry pre-parsed nutrition; if the description changed,
+      // ask the food logger again so the numbers match the new meal.
+      const descriptionChanged =
+        original &&
+        (original.title !== editForm.title.trim() || original.note !== editForm.note.trim());
+      if (editForm.category === 'food' && descriptionChanged) {
+        const foodText = [editForm.title, editForm.note].filter(Boolean).join(': ');
+        const foodRes = await api.logFoodText(foodText, 'settings-todos');
+        if (foodRes.success && foodRes.data?.items?.length) {
+          payload.baseItems = foodRes.data.items as Record<string, unknown>[];
+          showToast('Meal changed, so we recalculated the nutrition for you.', 'success');
+        } else {
+          showToast('Saved, but we could not re-read the nutrition. The old numbers stay for now.', 'info');
+        }
+      }
+
+      const res = await api.updateTodoTemplate(payload);
+      if (res.success) {
+        showToast('Saved!', 'success');
+        setEditId(null);
+        await load();
+      } else {
+        showToast(res.error || 'That did not save. Try again?', 'error');
+      }
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -2301,7 +2534,7 @@ function TodosSettingsTab() {
       showToast('Deleted', 'success');
       setTemplates((prev) => prev.filter((t) => t.id !== id));
     } else {
-      showToast(res.error || 'Failed to delete', 'error');
+      showToast(res.error || 'Could not delete that. Try again?', 'error');
     }
   };
 
@@ -2309,6 +2542,8 @@ function TodosSettingsTab() {
     setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, enabled } : t));
     await api.updateTodoTemplate({ id, enabled });
   };
+
+  const isCareSection = section === 'care';
 
   return (
     <div className="glass-card rounded-2xl p-6">
@@ -2319,15 +2554,42 @@ function TodosSettingsTab() {
             <CheckSquare className="h-4 w-4 text-emerald-400" />
             <h2 className="text-base font-semibold text-text-primary">Checklist</h2>
           </div>
-          <p className="mt-1 text-xs text-text-muted">Recurring todos and care routines — resets fresh every day.</p>
+          <p className="mt-1 text-xs text-text-muted">
+            {isCareSection
+              ? 'Haircuts, dentist visits, that kind of thing. Set a rhythm and we will remember for you.'
+              : 'Daily to-dos start fresh every morning. Add a time and we will nudge you if you run late.'}
+          </p>
         </div>
         {!showForm && (
           <button type="button" onClick={() => setShowForm(true)}
             className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors">
             <Plus className="h-3 w-3" />
-            Add item
+            {isCareSection ? 'Add care item' : 'Add to-do'}
           </button>
         )}
+      </div>
+
+      {/* To-dos / Care switcher */}
+      <div className="mt-4 flex gap-2">
+        {([
+          { key: 'todos', label: 'To-dos', icon: CheckSquare },
+          { key: 'care', label: 'Care', icon: Scissors },
+        ] as const).map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => switchSection(s.key)}
+            className={cn(
+              'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors',
+              section === s.key
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : 'bg-zinc-900/60 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'
+            )}
+          >
+            <s.icon className="h-3.5 w-3.5" />
+            {s.label}
+          </button>
+        ))}
       </div>
 
       {/* Add form */}
@@ -2336,9 +2598,10 @@ function TodosSettingsTab() {
           values={form}
           onChange={setForm}
           onSubmit={handleAdd}
-          onCancel={() => { setShowForm(false); setForm(EMPTY_FORM); }}
+          onCancel={() => { setShowForm(false); setForm(isCareSection ? { ...EMPTY_FORM, category: 'care' } : EMPTY_FORM); }}
           saving={adding}
           submitLabel="Add"
+          mode={section}
         />
       )}
 
@@ -2348,16 +2611,22 @@ function TodosSettingsTab() {
           <div className="py-8 text-center">
             <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-emerald-400" />
           </div>
-        ) : templates.length === 0 ? (
+        ) : visibleTemplates.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-800 py-10 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-800/60">
-              <CheckSquare className="h-6 w-6 text-zinc-600" />
+              {isCareSection ? <Scissors className="h-6 w-6 text-zinc-600" /> : <CheckSquare className="h-6 w-6 text-zinc-600" />}
             </div>
-            <p className="mt-3 text-sm font-medium text-zinc-400">No items yet</p>
-            <p className="mt-1 text-xs text-zinc-600">Add supplements, medicines, habits, care, or food routines.</p>
+            <p className="mt-3 text-sm font-medium text-zinc-400">
+              {isCareSection ? 'No care items yet' : 'No to-dos yet'}
+            </p>
+            <p className="mt-1 text-xs text-zinc-600">
+              {isCareSection
+                ? 'Add the things you always forget: haircut, dentist, filter change...'
+                : 'Add supplements, medicines, habits, or food routines.'}
+            </p>
           </div>
         ) : (
-          templates.map((t) => {
+          visibleTemplates.map((t) => {
             const cfg = TODO_CATEGORIES.find((c) => c.value === t.category) ?? TODO_CATEGORIES[4];
             const CatIcon = cfg.icon;
             const isEditing = editId === t.id;
@@ -2370,8 +2639,9 @@ function TodosSettingsTab() {
                       onChange={setEditForm}
                       onSubmit={handleSaveEdit}
                       onCancel={() => setEditId(null)}
-                      saving={false}
+                      saving={savingEdit}
                       submitLabel="Save"
+                      mode={t.category === 'care' ? 'care' : 'todos'}
                     />
                   </div>
                 ) : (
@@ -2395,7 +2665,17 @@ function TodosSettingsTab() {
                           </span>
                           {(t.category === 'supplement' || t.category === 'medicine') && (t.frequency ?? 1) > 1 && (
                             <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bgColor, cfg.color)}>
-                              {t.frequency}× daily
+                              {t.frequency}\u00d7 daily
+                            </span>
+                          )}
+                          {t.category === 'care' && (
+                            <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bgColor, cfg.color)}>
+                              {cadenceInfo(t.cadence).label}
+                            </span>
+                          )}
+                          {t.category !== 'care' && toTimeInputValue(t.time) && (
+                            <span className="rounded-full bg-zinc-800/80 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+                              {toTimeInputValue(t.time)}
                             </span>
                           )}
                           {t.category === 'food' && Array.isArray(t.baseItems) && t.baseItems.length > 0 && (
@@ -2424,7 +2704,7 @@ function TodosSettingsTab() {
                         </button>
                         <button type="button"
                           title="Edit"
-                          onClick={() => { setEditId(t.id); setEditForm({ title: t.title, note: t.note, time: t.time, category: t.category, frequency: t.frequency ?? 1 }); }}
+                          onClick={() => { setEditId(t.id); setEditForm({ title: t.title, note: t.note, time: toTimeInputValue(t.time), category: t.category, frequency: t.frequency ?? 1, times: (t.times ?? []).map(toTimeInputValue), cadence: t.cadence ?? 'monthly', lastDone: t.lastDone ?? '' }); }}
                           className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>

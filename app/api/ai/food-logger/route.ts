@@ -12,9 +12,11 @@
 import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
+import DailyLog from '@/models/DailyLog';
 import { decrypt } from '@/lib/encryption';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserIdWithBypass, isUserId } from '@/lib/session';
+import { getToday } from '@/lib/utils';
 import { writeDebugLog } from '@/lib/debugLogWriter';
 
 export const dynamic = 'force-dynamic';
@@ -88,6 +90,30 @@ Rules:
 Return JSON only using tool: parse_meal_foods
 `;
 
+// Vision variant of Step 1: the meal arrives as a photo instead of (or alongside) text.
+const IMAGE_PARSE_INSTRUCTIONS = `
+You are a precision food recognition engine for a global nutrition tracking app.
+
+Look carefully at the attached photo and identify EVERY distinct food and drink item visible.
+If the user also provided text, use it to disambiguate (e.g. brand names, portion sizes,
+items hidden from view) — the text always wins over the image when they conflict.
+
+Rules:
+- Identify each dish/side/drink as its own item ("burger with fries and a coke" → 3 items).
+- Keep ingredients that are part of one dish as a single item
+  ("rice bowl with chicken and avocado" → 1 item, named with its key ingredients).
+- Estimate realistic portion quantities from visual cues (plate size, container, count of pieces).
+  Prefer weight/volume units when the portion is clear (g, ml, cup, bowl), otherwise use
+  piece counts or quantity = 1 with unit = "serving".
+- Include visible brand names in item names (e.g. McDonald's, Amul, Dunkin, Haldiram's).
+- If the photo contains NO food or drink at all, return an empty items array.
+- Units: piece, bowl, serving, cup, g, ml, tbsp, tsp.
+- Always include "each_weight_g": the estimated weight of ONE piece in grams for piece-count
+  items when you can estimate it; otherwise set it to 0.
+
+Return JSON only using tool: parse_meal_foods
+`;
+
 const PARSE_MEAL_TOOL = {
   type: 'function' as const,
   name: 'parse_meal_foods',
@@ -149,7 +175,7 @@ For any item whose name matches a key in external_nutrition_data:
    output_value = label_value × scale
    ALWAYS apply this scaling. Never skip it or return label values unscaled.
 3. Set sourceType = "brand_label" and confidence = "high".
-4. Preserve the item name exactly — do NOT generalize or strip the brand.
+4. Preserve the item name exactly. Do NOT generalize or strip the brand.
 
 Only use estimation rules below for items NOT present in external_nutrition_data.
 
@@ -188,11 +214,11 @@ Units will already be normalized to one of: piece, bowl, serving, cup, g, ml, tb
    "whole grain bread").
 
 2. Estimate macros and micros using this priority order:
-   1. Brand-specific label data — if a known brand is present, use that brand's
+   1. Brand-specific label data: if a known brand is present, use that brand's
       published nutrition facts. Set sourceType = "brand_label".
-   2. Restaurant chain data — if a restaurant chain is named, use chain-specific
+   2. Restaurant chain data: if a restaurant chain is named, use chain-specific
       nutrition data. Set sourceType = "restaurant_db".
-   3. USDA / regional food composition tables (IFCT, etc.) — fallback only.
+   3. USDA / regional food composition tables (IFCT, etc.) as fallback only.
       Set sourceType = "ifct_usda_estimate".
    NEVER downgrade a brand_label item to a generic estimate.
 
@@ -229,7 +255,7 @@ Units will already be normalized to one of: piece, bowl, serving, cup, g, ml, tb
 ━━━ OUTPUT RULES ━━━
 6. Return protein, carbs, fat rounded to 2 decimal places.
 7. Return sodium and cholesterol as whole numbers (mg).
-8. Return the same quantity and unit as the input — no exceptions.
+8. Return the same quantity and unit as the input. No exceptions.
 9. Units in your output must be one of: piece, bowl, serving, cup, g, ml, tbsp, tsp.
 10. Add:
    - confidence: "high" | "medium" | "low"
@@ -417,7 +443,7 @@ Rules:
    Return that serving string exactly in the "serving" field.
 5. Set found = true whenever calories AND carbs are found from any credible source.
    Only set found = false if absolutely nothing usable is returned.
-6. NEVER guess or estimate — only return values present in search results.
+6. NEVER guess or estimate. Only return values present in search results.
 
 Return JSON using tool: extract_brand_nutrition
 `;
@@ -776,16 +802,123 @@ function enforceAlmondMilkSanity(item: NormalizedItem): NormalizedItem {
   };
 }
 
+// ============================================
+// STEP 3 — Personalized Feedback (health-aware)
+// ============================================
+// Uses the user's targets and today's log so the feedback reflects where they
+// actually stand for the day, not generic advice. Non-fatal: any failure here
+// simply omits the feedback from the response.
+
+const FEEDBACK_INSTRUCTIONS = `
+You are Kiki, the user's warm, playful, slightly flirty health buddy inside a
+health tracking app. You talk like a sweet friend who happens to know nutrition,
+never like a bot or a clinical coach.
+
+You get: the meal the user just logged (items + totals), their daily targets,
+their goal, and what they have already eaten today BEFORE this meal.
+
+Write feedback about this meal in 2-3 short sentences:
+1. One concrete, specific observation about the meal itself (what's lovely
+   about it, or what's a bit heavy: protein, sodium, fiber, sugar).
+2. How it fits their day: roughly how many calories or how much protein they
+   have left after this meal given their targets, or a gentle heads-up if it
+   nudges them over.
+3. Optionally one small, doable suggestion for the rest of the day.
+
+Voice rules:
+- Warm, cheesy, a little flirty, always kind. Think "so proud of you" energy.
+- Never judgmental, alarmist, or preachy.
+- Sound human: contractions, casual phrasing, no corporate or robotic wording.
+- Never use hyphens or dashes in the text. No bullet points, no markdown, no
+  headers, no greetings, and don't recite all the numbers back.
+- At most one emoji, and only if it feels natural.
+`;
+
+async function generateMealFeedback(
+  userId: string,
+  apiKey: string,
+  items: NormalizedItem[],
+  total: ReturnType<typeof computeTotal>
+): Promise<string | null> {
+  try {
+    await connectDB();
+    const [user, todayLog] = await Promise.all([
+      User.findById(userId).select('profile.goal targets').lean(),
+      DailyLog.findOne({ userId, date: getToday() })
+        .select('totalCalories totalProtein totalCarbs totalFat')
+        .lean(),
+    ]);
+
+    const targets = (user?.targets ?? {}) as Record<string, number | undefined>;
+    const profile = (user?.profile ?? {}) as { goal?: string };
+    const log = (todayLog ?? {}) as Record<string, number | undefined>;
+
+    const context = {
+      meal: {
+        items: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, calories: i.calories })),
+        total,
+      },
+      goal: profile.goal ?? 'maintain',
+      daily_targets: {
+        calories: targets.dailyCalories ?? 2000,
+        protein_g: targets.protein ?? 150,
+        carbs_g: targets.carbs,
+        fat_g: targets.fat,
+      },
+      eaten_today_before_this_meal: {
+        calories: log.totalCalories ?? 0,
+        protein_g: log.totalProtein ?? 0,
+        carbs_g: log.totalCarbs ?? 0,
+        fat_g: log.totalFat ?? 0,
+      },
+    };
+
+    const res = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        instructions: FEEDBACK_INSTRUCTIONS,
+        input: JSON.stringify(context, null, 2),
+        temperature: 0.5,
+        max_output_tokens: 200,
+      }),
+    });
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as {
+      output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
+    };
+    const message = (data.output ?? []).find((o) => o.type === 'message');
+    const text = message?.content?.find((c) => c.type === 'output_text')?.text?.trim();
+    return text && text.length > 0 ? text : null;
+  } catch (err) {
+    console.error('[AI Food Logger] Feedback generation failed:', err);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const userId = await getAuthUserIdWithBypass(req);
     if (!isUserId(userId)) return userId;
 
-    const body = await req.json().catch(() => ({})) as { text?: unknown; source?: unknown };
+    const body = await req.json().catch(() => ({})) as {
+      text?: unknown;
+      source?: unknown;
+      imageBase64?: unknown;
+      imageMimeType?: unknown;
+    };
     const text = typeof body.text === 'string' ? body.text : '';
     const source = typeof body.source === 'string' ? body.source : '';
-    if (!text || typeof text !== 'string' || !text.trim()) {
-      return errorResponse('Text description of the meal is required', 400);
+    const imageBase64 = typeof body.imageBase64 === 'string' && body.imageBase64.length > 0
+      ? body.imageBase64
+      : null;
+    const imageMimeType = typeof body.imageMimeType === 'string' && body.imageMimeType.length > 0
+      ? body.imageMimeType
+      : 'image/jpeg';
+    if (!text.trim() && !imageBase64) {
+      return errorResponse('A meal description or a food photo is required', 400);
     }
 
     const apiKey = await getOpenAIKey(userId);
@@ -800,7 +933,20 @@ export async function POST(req: NextRequest) {
     const requestedAt = new Date().toISOString();
     const startMs = Date.now();
 
-    // ——— STEP 1: Parse meal text → structured food items only ———
+    // ——— STEP 1: Parse meal text and/or photo → structured food items only ———
+    const parseInstructions = imageBase64 ? IMAGE_PARSE_INSTRUCTIONS : PARSE_INSTRUCTIONS;
+    const parseInput = imageBase64
+      ? [
+          {
+            role: 'user' as const,
+            content: [
+              { type: 'input_text', text: mealText ? `User text: ${mealText}` : 'Identify the food in this photo.' },
+              { type: 'input_image', image_url: `data:${imageMimeType};base64,${imageBase64}` },
+            ],
+          },
+        ]
+      : `User text: ${mealText}`;
+
     const parseRes = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -809,8 +955,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        instructions: PARSE_INSTRUCTIONS,
-        input: `User text: ${mealText}`,
+        instructions: parseInstructions,
+        input: parseInput,
         tools: [PARSE_MEAL_TOOL],
         tool_choice: { type: 'function', name: 'parse_meal_foods' },
         temperature: 0.2,
@@ -865,7 +1011,9 @@ export async function POST(req: NextRequest) {
     const parsedArgs = extractJsonFromText(parseToolCall.arguments);
     if (!parsedArgs || !Array.isArray(parsedArgs.items) || parsedArgs.items.length === 0) {
       return errorResponse(
-        'Could not extract food items from the description. Try listing each item (e.g. "100g rice, 2 tortillas").',
+        imageBase64
+          ? "I squinted real hard but couldn't find any food in that photo 🙈 try a clearer shot, or just tell me what you ate."
+          : 'Could not extract food items from the description. Try listing each item (e.g. "100g rice, 2 tortillas").',
         422
       );
     }
@@ -1175,11 +1323,21 @@ export async function POST(req: NextRequest) {
     }
 
     const total = computeTotal(items);
+
+    // ——— STEP 3: Personalized feedback using the user's targets + today's log ———
+    const feedback = await generateMealFeedback(userId, apiKey, items, total);
+
     const latencyMs = Date.now() - startMs;
 
-    const payload: { items: NormalizedItem[]; total: ReturnType<typeof computeTotal>; debugLog?: unknown } = {
+    const payload: {
+      items: NormalizedItem[];
+      total: ReturnType<typeof computeTotal>;
+      feedback?: string;
+      debugLog?: unknown;
+    } = {
       items,
       total,
+      ...(feedback ? { feedback } : {}),
     };
     if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
       const step1Usage = parseData.usage;

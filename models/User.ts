@@ -84,6 +84,8 @@ const UserSchema = new Schema<IUserDocument>(
       theme: { type: String, enum: ['dark', 'light'], default: 'dark' },
       units: { type: String, enum: ['metric', 'imperial'], default: 'metric' },
       aiEnabled: { type: Boolean, default: true },
+      // Master switch for all reminder emails; false stops every scheduled email.
+      emailRemindersEnabled: { type: Boolean, default: true },
       notifications: {
         water: { type: Boolean, default: true },
         meals: { type: Boolean, default: true },
@@ -163,6 +165,8 @@ const UserSchema = new Schema<IUserDocument>(
             category:  { type: String, enum: ['food', 'supplement', 'medicine', 'habit', 'care', 'other'], default: 'other' },
             enabled:   { type: Boolean, default: true },
             frequency: { type: Number, default: 1, min: 1, max: 5 }, // how many times per day (for supplements/medicines)
+            times:     { type: [String], default: [] }, // per-dose times ("HH:mm"), index-aligned with dose number
+            cadence:   { type: String, enum: ['weekly', 'biweekly', 'monthly', 'quarterly', 'yearly'] }, // reminder cadence for care items
             baseItems: { type: [Schema.Types.Mixed], default: [] }, // pre-parsed food items for food category
           },
         ],

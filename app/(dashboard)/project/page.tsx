@@ -22,7 +22,7 @@ export default function ProjectPage() {
           <div className="glass-card relative overflow-hidden rounded-2xl p-6">
             <div className="relative z-10">
               <h2 className="font-heading text-lg font-semibold text-text-primary">
-                Arogyamandiram — Open source health & wellness
+                Arogyamandiram: open source health & wellness
               </h2>
               <p className="mt-2 text-sm text-zinc-400">
                 A holistic health and fitness platform to track water, calories, weight, workouts, and sleep in one place,
@@ -70,7 +70,7 @@ export default function ProjectPage() {
           <div className="glass-card relative overflow-hidden rounded-2xl p-6 col-span-full">
             <div className="relative z-10">
               <h2 className="font-heading text-xl font-semibold text-text-primary">
-                Arogyamandiram — Open source health & wellness
+                Arogyamandiram: open source health & wellness
               </h2>
               <p className="mt-3 text-sm text-zinc-400 max-w-3xl">
                 A holistic health and fitness platform to track water, calories, weight, workouts, and sleep in one place,
@@ -133,17 +133,17 @@ export default function ProjectPage() {
                 </p>
                 <p className="mt-3 text-xs leading-relaxed text-zinc-400">
                   Star the repo, open issues for bugs or ideas, and submit pull requests. The codebase is Next.js with
-                  TypeScript — clone, install, and run locally to contribute or customize for your own use.
+                  TypeScript. Clone, install, and run locally to contribute or customize for your own use.
                 </p>
                 <ul className="mt-3 space-y-1 text-xs text-zinc-400">
                   <li>
-                    • <strong className="text-zinc-300">Issues</strong> — Report bugs or request features
+                    • <strong className="text-zinc-300">Issues</strong>: report bugs or request features
                   </li>
                   <li>
-                    • <strong className="text-zinc-300">Discussions</strong> — Ask questions and share ideas
+                    • <strong className="text-zinc-300">Discussions</strong>: ask questions and share ideas
                   </li>
                   <li>
-                    • <strong className="text-zinc-300">Pull requests</strong> — Propose code changes
+                    • <strong className="text-zinc-300">Pull requests</strong>: propose code changes
                   </li>
                 </ul>
               </div>

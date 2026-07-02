@@ -10,28 +10,35 @@ import {
   Dumbbell,
   Scale,
   Star,
-  CalendarDays,
+  CheckSquare,
   Settings,
+  Link2,
+  Code2,
   MoreHorizontal,
   X,
   LogOut,
 } from 'lucide-react';
+import VitalsIcon from '@/components/ui/VitalsIcon';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 
 const mobileNav = [
   { href: '/home', icon: LayoutDashboard, label: 'Home' },
-  { href: '/sleep', icon: Moon, label: 'Sleep' },
+  { href: '/vitals', icon: VitalsIcon, label: 'Vitals' },
+  { href: '/todays-plan', icon: CheckSquare, label: 'Checklist' },
   { href: '/water', icon: Droplets, label: 'Water' },
-  { href: '/food', icon: Utensils, label: 'Food' },
 ];
 
 const moreNav = [
+  { href: '/sleep', icon: Moon, label: 'Sleep' },
+  { href: '/water', icon: Droplets, label: 'Water' },
+  { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/achievements', icon: Star, label: 'Achievements' },
-  { href: '/todays-plan', icon: CalendarDays, label: 'Checklist' },
+  { href: '/settings?tab=health-data', icon: Link2, label: 'Health Sync' },
+  { href: '/project', icon: Code2, label: 'Project' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 

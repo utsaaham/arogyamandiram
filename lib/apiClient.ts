@@ -60,20 +60,38 @@ async function apiFetch<T>(
       body,
     });
 
-    const json = await res.json();
+    // Read as text first: Safari's res.json() throws cryptic errors
+    // ("The string did not match the expected pattern.") on empty or
+    // non-JSON bodies, and those messages used to leak into toasts.
+    const text = await res.text();
+    let json: Record<string, unknown> | null = null;
+    if (text) {
+      try {
+        json = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        json = null;
+      }
+    }
 
     if (!res.ok) {
       return {
         success: false,
-        error: json.error || `Request failed with status ${res.status}`,
+        error: (json?.error as string) || `Request failed with status ${res.status}`,
       };
     }
 
-    return json as ApiResponse<T>;
-  } catch (err) {
+    if (!json) {
+      return {
+        success: false,
+        error: 'The server sent back something we could not read. Give it another try?',
+      };
+    }
+
+    return json as unknown as ApiResponse<T>;
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Network error',
+      error: 'Could not reach the server. Check your connection and try again.',
     };
   }
 }
@@ -239,6 +257,16 @@ export const api = {
   getSleepHistory: (days: number = 30) =>
     apiFetch(`/sleep?days=${days}`),
 
+  // Vitals scores
+  getScores: () =>
+    apiFetch('/scores'),
+
+  logScoresJournal: (data: { habits: string[]; mood?: number; date?: string }) =>
+    apiFetch('/scores/journal', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   // AI
   getInsightsEligibility: () =>
     apiFetch('/ai/insights-eligibility'),
@@ -298,13 +326,13 @@ export const api = {
   getTodoTemplates: () =>
     apiFetch<{ templates: unknown[] }>('/todos/templates'),
 
-  createTodoTemplate: (t: { title: string; note?: string; time?: string; category?: string; frequency?: number; baseItems?: Record<string, unknown>[] }) =>
+  createTodoTemplate: (t: { title: string; note?: string; time?: string; category?: string; frequency?: number; cadence?: string; baseItems?: Record<string, unknown>[] }) =>
     apiFetch('/todos/templates', {
       method: 'POST',
       body: JSON.stringify(t),
     }),
 
-  updateTodoTemplate: (t: { id: string; title?: string; note?: string; time?: string; category?: string; enabled?: boolean; frequency?: number }) =>
+  updateTodoTemplate: (t: { id: string; title?: string; note?: string; time?: string; category?: string; enabled?: boolean; frequency?: number; cadence?: string; baseItems?: Record<string, unknown>[] }) =>
     apiFetch('/todos/templates', {
       method: 'PUT',
       body: JSON.stringify(t),
