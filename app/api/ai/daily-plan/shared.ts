@@ -730,7 +730,7 @@ export function buildWorkoutPrompt(
   // The model gets a structured JSON object preceded by a one-line directive so
   // it knows how to interpret it.
   return [
-    'Inputs are provided as a JSON object below. Decide today\'s session structure and per-exercise prescription. Use lastWeekSplit + today\'s workouts in recentLogs to avoid repeating body parts already trained in the last 1–2 days. Only days with logged data are included — absent days are unknown, not confirmed rest.',
+    'Inputs are provided as a JSON object below. Decide today\'s session structure and per-exercise prescription. Use lastWeekSplit + today\'s workouts in recentLogs to avoid repeating body parts already trained in the last 1–2 days. Only days with logged data are included; absent days are unknown, not confirmed rest.',
     JSON.stringify({ inputs }, null, 2),
   ].join('\n');
 }

@@ -156,10 +156,20 @@ async function applySleep(
       : new Date(safeWake.getTime() - sleepHours * 60 * 60 * 1000);
     const wakeTime = to24hTime(safeWake);
     const bedtime = to24hTime(safeBed);
+
+    const stages = sleepBlock?.stages && typeof sleepBlock.stages === 'object'
+      ? (sleepBlock.stages as Record<string, unknown>)
+      : null;
+    const stageFields: Record<string, number> = {};
+    if (stages && typeof stages.deepHours === 'number') stageFields.deepHours = stages.deepHours;
+    if (stages && typeof stages.remHours === 'number') stageFields.remHours = stages.remHours;
+    if (stages && typeof stages.coreHours === 'number') stageFields.coreHours = stages.coreHours;
+    if (stages && typeof stages.awakeHours === 'number') stageFields.awakeHours = stages.awakeHours;
+
     await DailyLog.findOneAndUpdate(
       { userId, date: logDate },
       {
-        $set: { sleep: { bedtime, wakeTime, duration: sleepHours, quality: 3, notes: '' } },
+        $set: { sleep: { bedtime, wakeTime, duration: sleepHours, quality: 3, notes: '', ...stageFields } },
         $setOnInsert: { userId, date: logDate },
       },
       { new: true, upsert: true }
@@ -197,6 +207,7 @@ async function applyDeviceWorkouts(
         caloriesBurned: typeof dw.calories === 'number' ? dw.calories : 0,
         category: deriveWorkoutCategory(typeof dw.type === 'string' ? dw.type : ''),
         source: 'device' as const,
+        ...(typeof dw.avgHeartRate === 'number' ? { avgHeartRate: dw.avgHeartRate } : {}),
       };
     })
     .filter((w) => w.exercise && w.duration > 0);
@@ -248,12 +259,18 @@ async function applyMetrics(
   const actions: HealthSyncAction[] = [];
   const heartBlock = record.heart && typeof record.heart === 'object' ? (record.heart as Record<string, unknown>) : null;
   const activityBlock = record.activity && typeof record.activity === 'object' ? (record.activity as Record<string, unknown>) : null;
+  const vitalsBlock = record.vitals && typeof record.vitals === 'object' ? (record.vitals as Record<string, unknown>) : null;
 
   const metricsUpdate: Record<string, number> = {};
   if (heartBlock && typeof heartBlock.avgBpm === 'number') metricsUpdate.heartRate = heartBlock.avgBpm;
+  if (heartBlock && typeof heartBlock.restingBpm === 'number') metricsUpdate.restingHeartRate = heartBlock.restingBpm;
+  if (heartBlock && typeof heartBlock.hrvSdnnMs === 'number') metricsUpdate.hrvSdnnMs = heartBlock.hrvSdnnMs;
   if (activityBlock && typeof activityBlock.steps === 'number') metricsUpdate.steps = activityBlock.steps;
   if (activityBlock && typeof activityBlock.activeCalories === 'number') metricsUpdate.activeCalories = activityBlock.activeCalories;
   if (activityBlock && typeof activityBlock.distanceKm === 'number') metricsUpdate.distanceKm = activityBlock.distanceKm;
+  if (vitalsBlock && typeof vitalsBlock.respiratoryRate === 'number') metricsUpdate.respiratoryRate = vitalsBlock.respiratoryRate;
+  if (vitalsBlock && typeof vitalsBlock.wristTempC === 'number') metricsUpdate.wristTempC = vitalsBlock.wristTempC;
+  if (vitalsBlock && typeof vitalsBlock.vo2Max === 'number') metricsUpdate.vo2Max = vitalsBlock.vo2Max;
 
   if (Object.keys(metricsUpdate).length === 0) {
     return { mutated: false, actions };
@@ -330,9 +347,9 @@ export async function runHealthDataSync(input: {
     const base = err instanceof Error ? err.message : String(err);
     const cause = err instanceof Error && (err as NodeJS.ErrnoException & { cause?: unknown }).cause;
     const causeMsg = cause instanceof Error
-      ? ` — cause: ${cause.message}`
+      ? ` (cause: ${cause.message})`
       : cause
-        ? ` — cause: ${String(cause)}`
+        ? ` (cause: ${String(cause)})`
         : '';
     const detail = `${base}${causeMsg} [endpoint: ${endpoint}]`;
     console.error('[healthDataSync] fetch error:', detail);
@@ -376,7 +393,7 @@ export async function runHealthDataSync(input: {
       syncActions.push({
         field: 'record',
         status: 'error',
-        detail: `Duplicate ${logDate} in batch — later entry overwrites earlier`,
+        detail: `Duplicate ${logDate} in batch; later entry overwrites earlier`,
       });
     }
     seenDates.add(logDate);

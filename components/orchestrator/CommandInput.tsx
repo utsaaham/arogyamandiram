@@ -95,13 +95,26 @@ export default function CommandInput({ onSubmit, disabled, open }: CommandInputP
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(',')[1];
-      setImage({ base64, mimeType: file.type, preview: URL.createObjectURL(file) });
+    // Downscale + JPEG-encode so phone photos stay well under request limits.
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      const maxDim = 1280;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      setImage({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg', preview: objectUrl });
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => URL.revokeObjectURL(objectUrl);
+    img.src = objectUrl;
     e.target.value = '';
   }, []);
 

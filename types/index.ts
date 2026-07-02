@@ -145,6 +145,8 @@ export interface UserSettings {
   units: UnitSystem;
   /** Master switch for every OpenAI-backed feature in the app. */
   aiEnabled?: boolean;
+  /** Master switch for all reminder emails; false stops every scheduled email. */
+  emailRemindersEnabled?: boolean;
   notifications: {
     water: boolean;
     meals: boolean;
@@ -316,6 +318,8 @@ export interface WorkoutEntry {
   weight?: number;        // kg or lbs
   /** 'device' = from health-data sync; 'manual' = user-entered (default) */
   source?: 'manual' | 'device';
+  /** Average heart rate during the workout (device-sourced, bpm) */
+  avgHeartRate?: number;
   notes?: string;
   /** When this log entry corresponds to a planned exercise from DailyPlan.workoutPlan.exercises[].name */
   planExerciseName?: string;
@@ -330,6 +334,11 @@ export interface SleepEntry {
   duration: number;       // hours (decimal, e.g. 7.5)
   quality: SleepQuality;  // 1-5 star rating
   notes?: string;
+  // Sleep stages (device-sourced, hours) — used by the Vitals sleep score
+  deepHours?:  number;
+  remHours?:   number;
+  coreHours?:  number;
+  awakeHours?: number;
 }
 
 export interface WaterLogEntry {
@@ -337,6 +346,34 @@ export interface WaterLogEntry {
   amount: number;         // ml
   time: string;           // HH:mm format
 }
+
+/** Behaviors the user can log in the Vitals habit journal. */
+export type HabitKey =
+  | 'alcohol'
+  | 'caffeine_late'
+  | 'late_meal'
+  | 'screen_before_bed'
+  | 'meditation'
+  | 'stretching'
+  | 'supplements'
+  | 'soreness'
+  | 'high_stress_day'
+  | 'travel'
+  | 'illness';
+
+export const HABIT_LABELS: Record<HabitKey, string> = {
+  alcohol: 'Alcohol',
+  caffeine_late: 'Caffeine after 2pm',
+  late_meal: 'Late meal',
+  screen_before_bed: 'Screen before bed',
+  meditation: 'Meditation',
+  stretching: 'Stretching',
+  supplements: 'Supplements',
+  soreness: 'Muscle soreness',
+  high_stress_day: 'Stressful day',
+  travel: 'Travel',
+  illness: 'Feeling sick',
+};
 
 export interface IDailyLog {
   _id: Types.ObjectId;
@@ -361,6 +398,15 @@ export interface IDailyLog {
   steps?:          number;
   activeCalories?: number;
   distanceKm?:     number;
+  // Recovery vitals (device-sourced, used by the Vitals scores)
+  restingHeartRate?: number;  // bpm
+  hrvSdnnMs?:        number;  // ms
+  respiratoryRate?:  number;  // breaths/min
+  wristTempC?:       number;  // °C, sleeping wrist temperature
+  vo2Max?:           number;  // mL/(kg·min)
+  // Habit journal (user-logged, correlated against scores)
+  habits?: HabitKey[];
+  mood?: number;              // 1-5 subjective rating
   notes?: string;
   todoCompletions?: Array<{ templateId: string; completedAt: string }>;
   /** XP already awarded for this specific date (0–50). */

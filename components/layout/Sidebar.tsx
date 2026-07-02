@@ -12,7 +12,7 @@ import {
   Scale,
   Dumbbell,
   Star,
-  CalendarDays,
+  CheckSquare,
   Settings,
   Code2,
   LogOut,
@@ -20,18 +20,20 @@ import {
   Bug,
 } from 'lucide-react';
 import type React from 'react';
+import VitalsIcon from '@/components/ui/VitalsIcon';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 const mainNavItems = [
   { href: '/home', icon: LayoutGrid, label: 'Home' },
+  { href: '/vitals', icon: VitalsIcon, label: 'Vitals' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/weight', icon: Scale, label: 'Weight' },
   { href: '/achievements', icon: Star, label: 'Achievements' },
-  { href: '/todays-plan', icon: CalendarDays, label: 'Checklist' },
+  { href: '/todays-plan', icon: CheckSquare, label: 'Checklist' },
 ];
 
 const extraNavItems: { href: string; icon: React.ElementType; label: string }[] = [];

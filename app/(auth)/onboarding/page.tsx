@@ -215,7 +215,7 @@ export default function OnboardingPage() {
                   placeholder="70" step={0.1} />
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Target Weight (kg) — optional</label>
+                <label className="text-xs font-medium text-text-muted">Target Weight (kg) <span className="text-text-muted/70">(optional)</span></label>
                 <input type="number" value={targetWeight} onChange={(e) => setTargetWeight(e.target.value)}
                   className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
                   placeholder={weight || '65'} step={0.1} />

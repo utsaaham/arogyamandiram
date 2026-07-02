@@ -63,6 +63,13 @@ export async function POST(req: NextRequest) {
 
     if (!user) return errorResponse('User not found', 404);
 
+    // Master switch: user turned off all reminder emails. Test emails from the
+    // settings page are still allowed so SMTP setup can be verified.
+    const remindersEnabled = ((user.settings as Record<string, unknown>)?.emailRemindersEnabled as boolean | undefined) ?? true;
+    if (!testMode && !remindersEnabled) {
+      return maskedResponse({ sent: false, skipped: true }, { message: 'Email reminders are turned off' });
+    }
+
     const smtpSettings = (user.settings as Record<string, unknown>)?.emailSettings as
       | { smtp?: Record<string, unknown> }
       | undefined;
@@ -104,11 +111,12 @@ export async function POST(req: NextRequest) {
       .filter((email) => email.includes('@'));
     const sendTo = recipientEmails.length ? recipientEmails.join(', ') : toEmail;
 
+    const userGender = (user.profile as Record<string, unknown>)?.gender as string | undefined;
     const { subject, html } = testMode === 'smtp_test'
       ? getSmtpTestTemplate(userName)
       : testMode === 'imap_test'
         ? getImapTestTemplate(userName)
-        : getReminderTemplate(reminderType as ReminderType, userName);
+        : getReminderTemplate(reminderType as ReminderType, userName, userGender);
 
     const { messageId } = await sendEmail(smtpConfig, {
       to: sendTo,

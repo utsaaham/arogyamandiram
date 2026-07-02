@@ -2,7 +2,7 @@
 name: active-context
 type: context
 last_updated: 2026-07-01
-updated_by: claude-opus-4-8
+updated_by: claude-fable-5
 staleness_days: 3
 ---
 
@@ -13,6 +13,59 @@ staleness_days: 3
 `feature/dev-01-minmial-changes-sprint-apr-22-26`
 
 ## What's Being Worked On (as of 2026-07-01)
+
+**Vitals feature (WHOOP-style daily scores)** — plan in `docs/arogyam-scores-plan.md` (renamed from `whoop-life-feature-analysis.md`). Built in one pass across both repos:
+- **iOS** (`../ArogyaM-iOS-v1`): HealthKit now also reads HRV SDNN, resting HR, respiratory rate, sleeping wrist temperature, VO2 max; payload gained `heart.restingBpm`/`heart.hrvSdnnMs`, optional `vitals` block, per-workout `avgHeartRate`; build verified
+- **Sync + schema**: `DailyLog` gained `restingHeartRate`, `hrvSdnnMs`, `respiratoryRate`, `wristTempC`, `vo2Max`, `habits` (HabitKey[]), `mood`, sleep stage hours, workout `avgHeartRate`; `lib/healthDataSync.ts` maps all of it
+- **Score engine**: `lib/scores/` — pure functions computing Readiness / Strain (+HR zones) / Sleep / Stress vs. 14-day personal baselines, Push/Maintain/Recover/Rest guidance, habit-correlation insights; weights renormalize when signals are missing
+- **API**: `GET /api/scores`, `POST /api/scores/journal`; client methods `api.getScores()` / `api.logScoresJournal()`
+- **Page**: `/vitals` (nav in Sidebar + MobileNav; Water moved to mobile "more" sheet) — readiness hero ring, guidance band, score grid, habit journal modal, trends, insights, non-diagnostic disclaimer
+- **AI wiring**: `/api/ai/recommendations` context includes rhr/hrv/habits/mood rows + today's computed Vitals summary
+- Later phases: Wellness Age, BP log, labs, native iOS scores
+
+**UX pass (2026-07-01, claude-fable-5)** — habits moved to Food, checklist cadences, humanized copy:
+- **Vitals icon**: new custom `components/ui/VitalsIcon.tsx` (heart + contained pulse, lucide-compatible props) used in Sidebar, MobileNav, and the /vitals header; `HeartPulse` removed there
+- **Habits relocated**: the habit journal (chips + mood) moved off /vitals into `components/food/HabitsCard.tsx` on /food (right column, replacing the old "Logged Meals" panel — meals remain under the left "Logged" tab). Card also shows auto-tracked rows (water / sleep / meals / movement) from `useDailyLog` + `getTargetsForUser`; movement combines watch `activeCalories` with non-device workout calories. /vitals now shows today's habits read-only with a link to /food; same `POST /api/scores/journal` API
+- **Strain fix**: `lib/scores/strain.ts` active-energy component now uses watch activeCalories + hand-logged (source !== 'device') workout calories, baseline computed on the combined series; `DayInput.workouts[].source` added
+- **Checklist cadences**: care-category todo templates gained `cadence` (weekly/biweekly/monthly/quarterly/yearly; `lib/careCadence.ts`, User schema + templates API updated). `GET /api/todos` returns `lastDone` per care item (scans recent DailyLog completions). `TodosTab` is cycle-aware for Care (due/overdue/done states, amber "you forgot" nudge banners) and daily to-dos support a time-of-day with past-time nudges; settings TodoForm gained cadence picker + time input. Standalone /todos page (unlinked) filters care items out
+- **Copy pass**: removed em dashes from user-visible strings app-wide and softened "AI"-flavored phrasing (tour, landing, toasts, share text, metadata)
+
+**UX pass round 2 (2026-07-01, claude-fable-5)** — settings checklist split, Safari save fix, backend tone:
+- **Settings Checklist tab** now has To-dos / Care sub-tabs (`TodosSettingsTab` `section` state); Care add-form is fixed to category care with the cadence picker (no category grid), To-dos form has the category grid minus care plus the time input. `TodoForm` takes a `mode` prop
+- **Safari save bug fixed**: `apiFetch` now reads response as text and JSON.parses defensively (Safari's `res.json()` threw "The string did not match the expected pattern." on odd bodies and the raw message leaked into toasts); network errors return friendly copy instead of `err.message`. `toTimeInputValue()` in settings normalizes legacy freetext times to strict HH:mm for the time input
+- **Food todo edits re-parse nutrition**: `handleSaveEdit` re-runs `api.logFoodText` when a food template's title/note changed and sends fresh `baseItems`; templates PUT accepts `baseItems`. Verified end-to-end against the running dev server (port 30000) with a curl session
+- **Backend tone pass**: `lib/scores/guidance.ts` reasons rewritten warm/no-em-dash; AI system prompts (recommendations ×4, health-check, daily-plan overview/food/workout, aiHealthPlan, mealIdeasService) now carry a "write like a warm human coach, never use em dashes" rule and dash-free examples; orchestrator confirm summaries and checklist API error messages humanized
+- Note: a test user `claude-test-todo@example.com` was created in the dev DB for API verification
+
+**iOS nav restructure + new native screens (2026-07-01, claude-fable-5)** — the user's "mobile" nav request was about the iOS app (`../ArogyaM-iOS-v1`); built natively with existing web APIs only (no backend changes), build verified:
+- **Tab bar**: `AppShell.swift`/`FloatingTabBar.swift` — water tab replaced by checklist (`checklist` SF symbol, purple); tabs now Home, Vitals, Checklist, More
+- **New `Features/Checklist/ChecklistView.swift`**: segmented To-dos / Care / Overview / Food / Workout. To-dos+Care use `GET/POST /api/todos` (optimistic toggle; care cadence status mirrors `lib/careCadence.ts`); Overview/Food/Workout render the AI daily plan read-only via `/api/ai/daily-plan/{overview,food,workout}` with "Kiki writes one overnight" empty states
+- **New screens** (all styled like WaterView, store-per-view pattern, Swift Charts): `Sleep/SleepView` (log bedtime/wake/quality → POST /api/sleep, 14-day bars), `Workout/WorkoutView` (log via POST /api/workouts, strength fields conditional, 7-day bars), `Weight/WeightView` (POST /api/weight, 90-day line + goal rule), `Achievements/AchievementsView` (level ring, streak grid, badges from /api/achievements), `Project/ProjectView` (static GitHub card), `Settings/SettingsView` (profile/targets read-only + Reminders link + server URL)
+- **MoreView order**: Sleep, Water, Food, Workout, Weight, Achievements, Health Sync, Project, Settings, Log Out (Reminders now lives inside Settings)
+
+**Mobile web nav restructure (2026-07-01, claude-fable-5)** — per user's requested mobile layout (web app):
+- Bottom bar is 5 slots: Home, Vitals, Checklist (`/todays-plan`), Water, More (user later asked to add Water back)
+- **Bottom tabs** (`components/layout/MobileNav.tsx`): Home, Vitals, Checklist (`/todays-plan`), More. Sleep/Food/Water moved out of the bottom bar
+- **More sheet + `/more` page** now share the same list/order: Sleep, Water, Food, Workout, Weight, Achievements, Health Sync (`/settings?tab=health-data`), Project, Settings, Sign Out. `/more` page's Checklist card and hide-sleep-on-mobile filter removed; new `more-card-water/food/healthsync` themes in `app/globals.css`
+- Desktop Sidebar intentionally untouched
+
+**UX pass round 3 (2026-07-01, claude-fable-5)** — food photo logging, Kiki chat composer, email reminders master switch:
+- **Food photos → nutrition**: `/api/ai/food-logger` now accepts `imageBase64`/`imageMimeType`; Step 1 uses a vision parse (`IMAGE_PARSE_INSTRUCTIONS`, gpt-4o multimodal input) when a photo is attached, Step 2 nutrition pipeline unchanged. New Step 3 `generateMealFeedback` pulls the user's targets + today's DailyLog and returns a short personalized `feedback` string (Kiki voice, non-fatal on failure). Orchestrator forwards the image to food-logger (base64 kept out of debug logs via `imageAttached` flag) and surfaces `feedback` in the result
+- **iOS composer redesign** (`Features/AI/AIAssistantView.swift`): ChatGPT-style card with "Log your steps?" placeholder, + button = PhotosPicker (no permission string needed), mic = live dictation via new `Features/AI/SpeechRecognizer.swift` (SFSpeechRecognizer + AVAudioEngine; NSMicrophone/NSSpeechRecognition strings added to Info.plist), send arrow replaces mic when there's content, disclaimer caption below. Attached image previews in the composer and renders in the user bubble
+- **iOS food confirm card**: `PendingFoodLog`/`PendingFoodItem` parsed from orchestrator `foodItems`/`foodTotal`; card shows per-item macros + total, meal-type chips (hour-based default), confirm posts each item to `/api/daily-log/meal`. Kiki mascot kept (user explicitly said do not remove)
+- **Copy humanized** (user asked for cheesy/flirty Kiki voice, no dashes): orchestrator summaries (water/weight/sleep/food/meal-ideas/workouts/plan/unknown), feedback prompt tone rules, iOS chat strings (header "Kiki", empty state, thinking, confirm buttons, logged/error messages, disclaimer "Kiki tries her best…")
+- **Email reminders master toggle**: `settings.emailRemindersEnabled` (User model + types + PUT /api/user whitelist); gates in `/api/email/send-reminder` (test emails still allowed) and early-continue in `/api/cron/send-reminders`; toggle bar styled like "Use AI features" added below it on Settings → Customizations
+- Verified: `tsc --noEmit` clean, iOS simulator build succeeded
+
+**UX pass round 4 (2026-07-01, claude-fable-5)** — camera, meal times, gendered Kiki, dose times, care anchoring:
+- **iOS + button**: confirmation dialog with Take Photo (new `Features/AI/CameraPicker.swift`, UIImagePickerController, NSCameraUsageDescription added) or Choose from Library (`.photosPicker` modifier)
+- **Meal time question**: orchestrator food summary now asks "what time did you have it?"; iOS FoodConfirmCard gained an hourAndMinute DatePicker and web ConfirmFoodItems a time input; `time` ("HH:mm") threads through confirmFood → `/api/daily-log/meal` on both platforms (context/ConversationHistory/MessageBubble/sidebar/ai-page signatures updated)
+- **Web image chat fixes**: orchestrator vision input wrapped in `{role:'user', content:[...]}` (bare content-part array was 400ing → "AI classification failed"); CommandInput downscales photos to 1280px JPEG 0.7 client side; user's photo now renders in the chat bubble (`ConversationEntry.userImage` data URL)
+- **Gender-aware Kiki** (`profile.gender` → male/female/neutral): iOS `KikiAudience` in NotificationService (fetched from /api/user at reschedule, cached in UserDefaults) with flirty per-audience line sets for water/meals/todos; web email reminders get a flirty gendered opener (FLIRTY_OPENERS in lib/email/templates.ts, gender param threaded from send-reminder route)
+- **Per-dose times**: todoTemplates schema + templates API gained `times: [String]` (dose-indexed, dose 1 synced to legacy `time`); settings TodoForm shows one time input per dose when frequency > 1; TodosTab and /todos expand doses with their own time so late-nudges are per dose
+- **Hourly forgot nudges (iOS)**: scheduleTodoNudges rewritten — per unchecked dose: on-time nudge + hourly flirty "you forgot" pokes (max 5, until 22:00, budget-capped at 32 requests to respect iOS's 64 pending limit)
+- **Care items**: form asks "When did you last do this?" (date, optional) with next-due preview; API records a completion on that date so the existing lastDone/careStatus pipeline anchors the cycle; iOS schedules a daily 10:00 flirty reminder while a care item is due/overdue (careIsDue mirrors lib/careCadence windows)
+- Verified: `tsc --noEmit` clean, iOS simulator build succeeded
 
 **Minimal Changes Sprint (Apr 22 – 26 line)** — Dashboard analytics/visualization, gamification (streaks + badge sharing), health-data sync hardening, expanded nutrient tracking, and AI insight/projection refinements.
 

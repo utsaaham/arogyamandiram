@@ -5,14 +5,7 @@ import {
   Search,
   Utensils,
   Trash2,
-  Coffee,
-  Sun,
-  Moon,
-  Cookie,
-  PlusCircle,
   X,
-  ChevronDown,
-  ChevronUp,
   BarChart3,
 } from 'lucide-react';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
@@ -22,6 +15,7 @@ import MetricChart from '@/components/ui/MetricChart';
 import FoodResultCard from '@/components/food/FoodResultCard';
 import RecentFoodCard from '@/components/food/RecentFoodCard';
 import AddMealModal from '@/components/food/AddMealModal';
+import HabitsCard from '@/components/food/HabitsCard';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { showToast } from '@/components/ui/Toast';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -50,13 +44,6 @@ interface FoodItem {
   fiber?: number;
   isVegetarian: boolean;
 }
-
-const mealIcons: Record<string, typeof Coffee> = {
-  breakfast: Coffee,
-  lunch: Sun,
-  dinner: Moon,
-  snack: Cookie,
-};
 
 const mealLabels: Record<string, string> = {
   breakfast: 'Breakfast',
@@ -91,7 +78,6 @@ export default function FoodLogPage() {
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [addingMeal, setAddingMeal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedMealType, setExpandedMealType] = useState<string | null>(null);
   const [calorieHistory, setCalorieHistory] = useState<{ date: string; totalCalories: number }[]>([]);
   const [calorieHistoryLoading, setCalorieHistoryLoading] = useState(true);
   const [caloriePeriod, setCaloriePeriod] = useState(7);
@@ -250,14 +236,6 @@ export default function FoodLogPage() {
   const calPercent = calcPercent(totalCal, targets.dailyCalories);
   const meals = log?.meals || [];
 
-  // Group meals
-  const mealGroups = meals.reduce<Record<string, typeof meals>>((acc, meal) => {
-    const type = meal.mealType || 'snack';
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(meal);
-    return acc;
-  }, {});
-
   return (
     <div className="food-page animate-fade-in flex flex-col max-lg:mobile-dash cards-stack-desktop min-h-screen">
       <DashboardPageShell
@@ -322,8 +300,8 @@ export default function FoodLogPage() {
               meals.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
                   <Utensils className="h-8 w-8 text-neutral-400" />
-                  <p className="text-sm text-neutral-400">Nothing logged today yet</p>
-                  <p className="text-xs text-neutral-500">Use search or AI Logger to add meals.</p>
+                  <p className="text-sm text-neutral-400">Nothing on your plate yet</p>
+                  <p className="text-xs text-neutral-500">Search above, or just tell the assistant what you ate.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -448,7 +426,7 @@ export default function FoodLogPage() {
                 <Utensils className="h-8 w-8 text-neutral-600" />
                 <p className="text-sm text-neutral-400">No foods found</p>
                 <p className="text-xs text-neutral-500">
-                  Use the AI Assistant to log custom meals
+                  Can&apos;t find it? Tell the assistant what you ate and we&apos;ll log it for you.
                 </p>
               </div>
             ) : (
@@ -526,114 +504,8 @@ export default function FoodLogPage() {
             </div>
           </div>
 
-          {/* Logged Meals */}
-          <div className="dashboard-unified-card flex-1 min-h-0 flex flex-col rounded-2xl border p-4 sm:p-5">
-            <div className="mb-3 flex shrink-0 items-center justify-between">
-              <h3 className="text-sm font-semibold text-neutral-400">Logged Meals</h3>
-              <span className="text-xs text-neutral-400">{meals.length} items</span>
-            </div>
-
-            <div className="flex-1 min-h-0 overflow-y-auto pr-1 hide-scrollbar">
-            {meals.length === 0 ? (
-            <div className="py-6 text-center">
-                <Utensils className="mx-auto h-6 w-6 text-neutral-400" />
-                <p className="mt-2 text-xs text-neutral-400">No meals logged yet</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => {
-                  const items = mealGroups[type];
-                  if (!items || items.length === 0) return null;
-                  const MealIcon = mealIcons[type] || Utensils;
-                  const groupCals = items.reduce((s, m) => s + m.calories, 0);
-                  const isExpanded = expandedMealType === type;
-
-                  return (
-                    <div key={type} className="rounded-2xl border border-neutral-800 bg-neutral-900/60">
-                      <button
-                        onClick={() => setExpandedMealType(isExpanded ? null : type)}
-                        className="flex w-full items-center gap-3 px-3 py-2.5"
-                      >
-                        <MealIcon className="h-4 w-4 text-neutral-400" />
-                        <span className="flex-1 text-left text-xs font-medium text-neutral-400">
-                          {mealLabels[type]}
-                          <span className="ml-1 text-neutral-400">({items.length})</span>
-                        </span>
-                        <span className="text-xs font-semibold text-neutral-400">
-                          {Math.round(groupCals)} kcal
-                        </span>
-                        {isExpanded ? (
-                          <ChevronUp className="h-3.5 w-3.5 text-neutral-500" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5 text-neutral-500" />
-                        )}
-                      </button>
-
-                      {isExpanded && (
-                        <div className="space-y-1 border-t border-neutral-800 px-3 py-2">
-                          {items.map((meal, idxInGroup) => {
-                            const mealId = meal._id ?? (meal as { id?: string }).id;
-                            const globalIndex = meals.indexOf(meal);
-                            const deleteKey = mealId ?? `index-${globalIndex}`;
-                            return (
-                              <div
-                                key={mealId ?? `${type}-${idxInGroup}`}
-                                className="group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-neutral-800/80"
-                              >
-                                {meal.isCustom ? (
-                                  <PlusCircle className="h-3 w-3 shrink-0 text-neutral-400" />
-                                ) : (
-                                  <div
-                                    className={cn(
-                                      'h-1.5 w-1.5 shrink-0 rounded-full',
-                                      'bg-neutral-400'
-                                    )}
-                                  />
-                                )}
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs text-neutral-400">{meal.name}</p>
-                                  <p className="text-[10px] text-neutral-500">
-                                    {meal.quantity}{meal.unit}{meal.time ? ` · ${formatTime(meal.time)}` : ''}
-                                  </p>
-                                  <div className="flex flex-wrap gap-2 mt-0.5">
-                                    <span className="text-[10px] text-violet-400">{Math.round(meal.protein)}g P</span>
-                                    <span className="text-[10px] text-emerald-400">{Math.round(meal.carbs)}g C</span>
-                                    <span className="text-[10px] text-rose-400">{Math.round(meal.fat)}g F</span>
-                                    <span className="text-[10px] text-emerald-300">{Math.round(meal.fiber ?? 0)}g Fi</span>
-                                    <span className="text-[10px] text-yellow-400">{Math.round(meal.sugar ?? 0)}g S</span>
-                                    <span className="text-[10px] text-sky-400">{Math.round(meal.sodium ?? 0)}mg Na</span>
-                                  </div>
-                                </div>
-                                <span className="shrink-0 text-xs text-neutral-400">
-                                  {Math.round(meal.calories)}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveMeal(mealId, globalIndex);
-                                  }}
-                                  disabled={deletingId === deleteKey}
-                                  title="Remove meal"
-                                  className="ml-1 shrink-0 rounded p-1 text-neutral-500 opacity-100 transition-all hover:bg-red-500/10 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
-                                >
-                                  {deletingId === deleteKey ? (
-                                    <div className="h-3 w-3 animate-spin rounded-full border border-accent-rose border-t-transparent" />
-                                  ) : (
-                                    <Trash2 className="h-3 w-3" />
-                                  )}
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            </div>
-          </div>
+          {/* Today's habits (meals stay under the Logged tab on the left) */}
+          <HabitsCard log={log} targets={targets} onSaved={refetch} />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ConversationEntry, MealSuggestion, WorkoutPlan } from '@/contexts/OrchestratorSidebarContext';
 import ConfirmSimpleItem from './ConfirmSimpleItem';
 import ConfirmFoodItems from './ConfirmFoodItems';
@@ -56,7 +57,7 @@ function WorkoutPlanResult({ plan }: { plan: WorkoutPlan }) {
 interface MessageBubbleProps {
   entry: ConversationEntry;
   onConfirmSimple: () => Promise<void>;
-  onConfirmFood: (mealType: string) => Promise<void>;
+  onConfirmFood: (mealType: string, time: string) => Promise<void>;
   onConfirmWorkout: () => Promise<void>;
   onCancel: () => void;
 }
@@ -67,6 +68,14 @@ export default function MessageBubble({ entry, onConfirmSimple, onConfirmFood, o
       {/* User message */}
       <div className="flex justify-end">
         <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-neutral-800 px-3 py-2 text-xs text-neutral-200 select-text cursor-text">
+          {entry.userImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={entry.userImage}
+              alt="Attached food photo"
+              className={cn('max-h-40 w-auto rounded-xl object-cover', entry.userText && 'mb-1.5')}
+            />
+          )}
           {entry.userText}
         </div>
       </div>

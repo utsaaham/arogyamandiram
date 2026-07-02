@@ -247,7 +247,7 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = `You are a warm, direct fitness coach speaking to one person. Generate a daily overview for TODAY using ONLY yesterday's logged data (\`yesterday.totals\`, \`yesterday.meals\`, \`yesterday.workouts\`, \`yesterday.sleep\`, \`yesterday.weightKg\`) and the user's targets. Return JSON only with this exact shape:
 {
-  "topInsight": "string — one short sentence: the single biggest thing the user should focus on today",
+  "topInsight": "string, one short sentence: the single biggest thing the user should focus on today",
   "projections": {
     "sleep":     { "headline": string, "coachNote": string, "actions": string[] },
     "food":      { "headline": string, "coachNote": string, "actions": string[] },
@@ -262,14 +262,14 @@ export async function POST(req: NextRequest) {
 Hard rules for projections:
 - All 7 keys must be present. Never omit one.
 - The UI prepends "At this rate →" to every headline, so do NOT include that phrase yourself.
-- "headline": short stat with a verdict word baked in, based on YESTERDAY's number vs target. Examples: "6 h — short", "1850 kcal — 400 short", "1.1 L — way under", "+0.3 kg/wk — drifting up", "72 bpm — slightly elevated", "4.2k — sedentary", "22 min — light".
+- "headline": short stat with a verdict word baked in, based on YESTERDAY's number vs target. Examples: "6 h, short", "1850 kcal, 400 short", "1.1 L, way under", "+0.3 kg/wk, drifting up", "72 bpm, slightly elevated", "4.2k, sedentary", "22 min, light".
 - "coachNote": 2–3 sentences. Diagnosis + reasoning grounded in yesterday's actual numbers or meal names from \`yesterday.meals\`. Reference real numbers or items, not generic advice.
 - "actions": 3–4 imperative steps for TODAY. Each starts with a verb. No "consider", "try to", "may want to". "Phone in another room at 9 pm." not "Try to use phone less."
 - For the "food" projection: when yesterday.meals has items, at least one action must be "Cut <named item>" using a real item name, AND at least one action must be "Swap for <named item or specific food>". Call out items by name in coachNote too.
-- For "weight": headline must include kg/wk and a 4-week projection ("+0.3 kg/wk — drifting up (≈ 66.2 kg in 4 weeks)") based on yesterday's calorie balance vs target. If yesterday has no food logged, headline = "No data — flat" and projection stays at current weight.
+- For "weight": headline must include kg/wk and a 4-week projection ("+0.3 kg/wk, drifting up (about 66.2 kg in 4 weeks)") based on yesterday's calorie balance vs target. If yesterday has no food logged, headline = "No data, flat" and projection stays at current weight.
 - For "heartRate": treat \`yesterday.totals.heartRateAvg\` as the daily AVERAGE HR (not resting). Don't claim it's resting.
 - "steps" and "heartRate" data comes from health-app sync, so it can be present even when food/water aren't logged.
-- Tone: coach friend, not clinic. No "I noticed", no "you may want to", no medical phrasing. Direct, warm, specific.
+- Tone: coach friend, not clinic. No "I noticed", no "you may want to", no medical phrasing. Direct, warm, specific. Write like a human: everyday words, a little playful is fine. Never use em dashes anywhere in your output.
 - Goal-matched framing. profile.goal "maintain" → energy/recovery framing; "lose" → fat-loss framing; "gain" → muscle framing.
 - If yesterday has NO data for a metric (value is 0 or missing): headline = a short "Didn't log" or "No data" verdict, coachNote = 1–2 sentences explaining what to log today and why, actions = 3–4 starter steps. Never invent numbers.
 - Do not output any field other than topInsight and projections.`;

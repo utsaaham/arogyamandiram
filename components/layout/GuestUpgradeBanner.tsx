@@ -44,7 +44,7 @@ export default function GuestUpgradeBanner({ isGuest }: GuestUpgradeBannerProps)
         setTimeout(() => window.location.reload(), 1500);
       }
     } catch {
-      setError('Network error — please try again');
+      setError('Network hiccup. Please try again.');
     } finally {
       setLoading(false);
     }

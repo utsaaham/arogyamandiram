@@ -49,6 +49,8 @@ const WorkoutEntrySchema = new Schema(
     notes: { type: String, default: '' },
     // 'device' = came from health-data sync; 'manual' = user-entered
     source: { type: String, enum: ['manual', 'device'], default: 'manual' },
+    // Average heart rate during the workout (device-sourced, bpm)
+    avgHeartRate: { type: Number, min: 0, max: 300 },
     // When this log entry was logged from a planned exercise card, this stores
     // the canonical plan exercise name so the UI can re-hydrate "Logged" state.
     planExerciseName: { type: String },
@@ -71,6 +73,11 @@ const SleepEntrySchema = new Schema(
     duration: { type: Number, required: true, min: 0, max: 24 },
     quality: { type: Number, required: true, min: 1, max: 5 },
     notes: { type: String, default: '', maxlength: 500 },
+    // Sleep stages (device-sourced, hours)
+    deepHours:  { type: Number, min: 0, max: 24 },
+    remHours:   { type: Number, min: 0, max: 24 },
+    coreHours:  { type: Number, min: 0, max: 24 },
+    awakeHours: { type: Number, min: 0, max: 24 },
   },
   { _id: true }
 );
@@ -107,6 +114,15 @@ const DailyLogSchema = new Schema<IDailyLogDocument>(
     steps:          { type: Number, min: 0 },
     activeCalories: { type: Number, min: 0 },
     distanceKm:     { type: Number, min: 0 },
+    // Recovery vitals (device-sourced, used by the Vitals scores)
+    restingHeartRate: { type: Number, min: 20, max: 200 },
+    hrvSdnnMs:        { type: Number, min: 0, max: 500 },
+    respiratoryRate:  { type: Number, min: 4, max: 60 },
+    wristTempC:       { type: Number, min: 30, max: 45 },
+    vo2Max:           { type: Number, min: 10, max: 90 },
+    // Habit journal (user-logged via the Vitals page)
+    habits: { type: [String], default: undefined },
+    mood:   { type: Number, min: 1, max: 5 },
     notes: { type: String, default: '', maxlength: 500 },
     todoCompletions: {
       type: [

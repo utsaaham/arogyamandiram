@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckSquare, Dumbbell, Flame, ListChecks, Scissors, Zap } from 'lucide-react';
+import { CheckSquare, Dumbbell, Flame, Scissors, Zap } from 'lucide-react';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import { cn } from '@/lib/utils';
 import OverviewTab from './OverviewTab';
@@ -17,7 +17,7 @@ export default function TodaysPlanPage() {
   const [activeTab, setActiveTab] = useState<Tab>('todos');
   const aiEnabled = user?.settings?.aiEnabled !== false;
   const tabs = [
-    { key: 'todos',    label: 'Todos',    icon: CheckSquare },
+    { key: 'todos',    label: 'To-dos',   icon: CheckSquare },
     { key: 'care',     label: 'Care',     icon: Scissors },
     ...(aiEnabled
       ? [
@@ -33,7 +33,7 @@ export default function TodaysPlanPage() {
   }, [activeTab, aiEnabled]);
 
   return (
-    <DashboardPageShell title="Checklist" subtitle="Todos, care routines, and daily plans" icon={ListChecks}>
+    <DashboardPageShell title="Checklist" subtitle="Your daily to-dos and the care stuff we remember for you" icon={CheckSquare}>
       <div className="space-y-4">
 
         <div className="mt-4 mobile-fade-up mobile-dash-px lg:px-0 -mx-4 sm:mx-0">

@@ -57,7 +57,7 @@ Given the user's natural language input, decide which tool to use and extract th
 Available tools:
 - water: Log water intake. Extract amount_ml (convert: 1 glass/cup = 250ml, 1 bottle = 500ml).
 - weight: Log body weight. Extract weight_kg (convert lbs → kg if needed: 1 lb = 0.453592 kg).
-- sleep: Log sleep. Extract duration_hours (number), quality (1=very poor, 2=poor, 3=fair, 4=good, 5=excellent — default 3 if not mentioned).
+- sleep: Log sleep. Extract duration_hours (number), quality (1=very poor, 2=poor, 3=fair, 4=good, 5=excellent; default 3 if not mentioned).
 - food-ai-logger: Parse and log food or meals. Use this when user mentions eating, food, meals, snacks. Extract text (the user's original input as-is).
 - meal-ideas: Suggest meal ideas. Use when user asks for suggestions, ideas, or what to eat. Extract meal_types (array of: breakfast, lunch, dinner, snack) based on context; extract preferences (any dietary notes, default "").
 - workout-ai-logger: Parse and log completed workouts. Use when user mentions exercise they already did. Extract text (the user's original input as-is).
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
     // ── Step 1: Intent Classification ──────────────────────────────────────
     const classifyStart = Date.now();
     const classifySystemPrompt = imageBase64
-      ? `${ORCHESTRATOR_SYSTEM}\nThe user has also attached an image. Use it to help identify food items, workout equipment, or other health-relevant content.`
+      ? `${ORCHESTRATOR_SYSTEM}\nThe user has also attached an image. Use it to help identify food items, workout equipment, or other health-relevant content. If the image shows food or drink, choose food-ai-logger — the food tool will analyze the photo itself, so params.text only needs the user's own words (or "" if they wrote nothing).`
       : ORCHESTRATOR_SYSTEM;
     const classifyUserPrompt = userInput || '(image attached)';
 
@@ -207,8 +207,13 @@ export async function POST(req: NextRequest) {
         instructions: classifySystemPrompt,
         input: imageBase64
           ? [
-              { type: 'input_text', text: classifyUserPrompt },
-              { type: 'input_image', image_url: `data:${imageMimeType ?? 'image/jpeg'};base64,${imageBase64}` },
+              {
+                role: 'user',
+                content: [
+                  { type: 'input_text', text: classifyUserPrompt },
+                  { type: 'input_image', image_url: `data:${imageMimeType ?? 'image/jpeg'};base64,${imageBase64}` },
+                ],
+              },
             ]
           : classifyUserPrompt,
         tools: [CLASSIFY_TOOL],
@@ -220,7 +225,7 @@ export async function POST(req: NextRequest) {
     if (!openaiRes.ok) {
       const errBody = await openaiRes.text();
       console.error('[Orchestrator] OpenAI classify error:', errBody);
-      return errorResponse('AI classification failed', 502);
+      return errorResponse("I couldn't quite make sense of that one 🙈 mind trying again?", 502);
     }
 
     const classifyData = await openaiRes.json() as {
@@ -264,7 +269,7 @@ export async function POST(req: NextRequest) {
       toolEndpoint = '/api/water';
       toolPayload = { amount: amountMl };
       result = {
-        summary: `Log ${amountMl}ml of water?`,
+        summary: `${amountMl}ml of hydration goodness coming up 💧 shall I pour it into your log?`,
         pendingWater: { amountMl },
       };
       toolResponseBody = result;
@@ -276,7 +281,7 @@ export async function POST(req: NextRequest) {
       toolEndpoint = '/api/weight';
       toolPayload = { weight: weightKg };
       result = {
-        summary: `Log weight: ${weightKg} kg?`,
+        summary: `Noting you at ${weightKg} kg, looking good 😉 want me to save it?`,
         pendingWeight: { weightKg },
       };
       toolResponseBody = result;
@@ -292,24 +297,32 @@ export async function POST(req: NextRequest) {
       toolEndpoint = '/api/sleep';
       toolPayload = { duration_hours: durationHours, quality };
       result = {
-        summary: `Log ${durationHours}h sleep (quality: ${qualityLabel})?`,
+        summary: `${durationHours}h of beauty sleep, ${qualityLabel.toLowerCase()} quality 😴 shall I tuck it into your log?`,
         pendingSleep: { durationHours, quality, bedtime, wakeTime },
       };
       toolResponseBody = result;
     } else if (tool === 'food-ai-logger') {
       toolEndpoint = '/api/ai/food-logger';
-      toolPayload = { text: params.text || userInput };
-      const { status, json } = await callInternalRoute(req, toolEndpoint, toolPayload as Record<string, unknown>);
+      const foodText = params.text || userInput;
+      // Keep the debug-log payload small: never echo the base64 image into logs.
+      toolPayload = { text: foodText, imageAttached: Boolean(imageBase64) };
+      const { status, json } = await callInternalRoute(req, toolEndpoint, {
+        text: foodText,
+        ...(imageBase64 ? { imageBase64, imageMimeType } : {}),
+      });
       toolResponseStatus = status;
       toolResponseBody = json;
-      const d = (json as { data?: { items?: unknown[]; total?: unknown } }).data;
+      const d = (json as { data?: { items?: unknown[]; total?: unknown; feedback?: string } }).data;
       if (!json.success || !d?.items?.length) {
         return errorResponse((json as { error?: string }).error || 'Food logging failed', status);
       }
       result = {
-        summary: `Parsed ${d.items.length} food item${d.items.length !== 1 ? 's' : ''} — please confirm to log`,
+        summary: d.items.length === 1
+          ? `Ooh, I spotted one tasty thing on your plate 😋 what time did you have it? Pick the time and meal below and I'll log it.`
+          : `Ooh, I spotted ${d.items.length} goodies on your plate 😋 what time did you have them? Pick the time and meal below and I'll log them.`,
         foodItems: d.items,
         foodTotal: d.total as Record<string, number> | undefined,
+        ...(d.feedback ? { feedback: d.feedback } : {}),
       };
     } else if (tool === 'meal-ideas') {
       toolEndpoint = '/api/ai/meal-ideas';
@@ -325,7 +338,7 @@ export async function POST(req: NextRequest) {
         return errorResponse((json as { error?: string }).error || 'Meal ideas failed', status);
       }
       result = {
-        summary: `Here are ${(d2.suggestions as unknown[]).length} meal idea${(d2.suggestions as unknown[]).length !== 1 ? 's' : ''}`,
+        summary: `Whipped up ${(d2.suggestions as unknown[]).length} tasty idea${(d2.suggestions as unknown[]).length !== 1 ? 's' : ''} just for you 😘`,
         mealSuggestions: d2.suggestions,
       };
     } else if (tool === 'workout-ai-logger') {
@@ -339,7 +352,7 @@ export async function POST(req: NextRequest) {
         return errorResponse((json as { error?: string }).error || 'Workout logging failed', status);
       }
       result = {
-        summary: `Parsed ${d3.workouts.length} workout${d3.workouts.length !== 1 ? 's' : ''} — please confirm to log`,
+        summary: `Look at you go 💪 I caught ${d3.workouts.length} workout${d3.workouts.length !== 1 ? 's' : ''} in there. Want me to log ${d3.workouts.length !== 1 ? 'them' : 'it'}?`,
         workoutItems: d3.workouts,
       };
     } else if (tool === 'workout-plan') {
@@ -355,20 +368,20 @@ export async function POST(req: NextRequest) {
         return errorResponse((json as { error?: string }).error || 'Workout plan failed', status);
       }
       result = {
-        summary: `Here's your ${focusArea} workout plan (${durationMinutes} min)`,
+        summary: `Made you a ${durationMinutes} min ${focusArea} plan, now go crush it for me 💪`,
         workoutPlan: d4.plan as Record<string, unknown>,
       };
     } else if (tool === 'custom-food') {
       toolEndpoint = 'inline';
       result = {
-        summary: 'Opening custom food entry',
+        summary: 'Opening the kitchen for you 😋',
         openCustomFood: true,
       };
     } else {
       // unknown — not a health command
       toolEndpoint = 'none';
       result = {
-        summary: "I can help you log water, food, workouts, sleep, or weight. Try something like \"Add 300ml water\" or \"I had rice for lunch\".",
+        summary: "Hmm, that one went over my head 🙈 whisper me things like \"I drank 500ml of water\" or \"had rice for lunch\" and I'll take care of the rest 💛",
       };
     }
 

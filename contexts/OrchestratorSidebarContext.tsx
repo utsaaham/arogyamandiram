@@ -90,6 +90,8 @@ export interface ToolResult {
 export interface ConversationEntry {
   id: string;
   userText: string;
+  /** Data URL of the photo the user attached, for rendering in the chat bubble */
+  userImage?: string;
   status: 'pending' | 'success' | 'error' | 'awaiting-confirm' | 'cancelled';
   tool: OrchestratorTool | null;
   result: ToolResult | null;
@@ -116,7 +118,7 @@ interface OrchestratorSidebarContextValue {
   toggleSidebar: () => void;
   submitCommand: (text: string, imageBase64?: string, imageMimeType?: string) => Promise<void>;
   confirmSimpleEntry: (id: string) => Promise<string | undefined>;
-  confirmFoodEntry: (id: string, mealType: string) => Promise<string | undefined>;
+  confirmFoodEntry: (id: string, mealType: string, time?: string) => Promise<string | undefined>;
   confirmWorkoutEntry: (id: string) => Promise<string | undefined>;
   cancelEntry: (id: string) => void;
 }
@@ -161,6 +163,9 @@ export function OrchestratorSidebarProvider({ children }: { children: ReactNode 
       const entry: ConversationEntry = {
         id,
         userText: text,
+        userImage: imageBase64
+          ? `data:${imageMimeType ?? 'image/jpeg'};base64,${imageBase64}`
+          : undefined,
         status: 'pending',
         tool: null,
         result: null,
@@ -259,14 +264,14 @@ export function OrchestratorSidebarProvider({ children }: { children: ReactNode 
   );
 
   const confirmFoodEntry = useCallback(
-    async (id: string, mealType: string): Promise<string | undefined> => {
+    async (id: string, mealType: string, time?: string): Promise<string | undefined> => {
       const entry = conversation.find((e) => e.id === id);
       if (!entry?.result?.foodItems) return undefined;
 
       const today = getToday();
       try {
         for (const item of entry.result.foodItems) {
-          await api.addMeal(today, { ...item, mealType });
+          await api.addMeal(today, { ...item, mealType, ...(time ? { time } : {}) });
         }
         updateEntry(id, { status: 'success' });
         window.dispatchEvent(new Event('orchestrator:log-updated'));

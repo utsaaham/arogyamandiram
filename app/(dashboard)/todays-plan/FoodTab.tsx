@@ -127,7 +127,7 @@ export default function FoodTab() {
     const today = new Date().toISOString().split('T')[0];
     try {
       const res = await api.submitPlanFeedback({ date: today, ...(dislikedFoods.length > 0 ? { dislikedFoods } : {}) });
-      if (res.success) { setFeedbackSaved(true); showToast('Feedback saved — your next plan will adapt!', 'success'); }
+      if (res.success) { setFeedbackSaved(true); showToast('Feedback saved! Your next plan will adapt.', 'success'); }
       else showToast(res.error || 'Failed to save feedback', 'error');
     } catch { showToast('Failed to save feedback', 'error'); }
     finally { setFeedbackSaving(false); }
@@ -208,7 +208,7 @@ export default function FoodTab() {
       {dislikedFoods.length > 0 && (
         <div className="mt-4 flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-900/70 px-4 py-3">
           <p className="text-xs text-zinc-400">
-            {`${dislikedFoods.length} food${dislikedFoods.length > 1 ? 's' : ''} marked — saves for tomorrow`}
+            {`${dislikedFoods.length} food${dislikedFoods.length > 1 ? 's' : ''} marked. We'll remember for tomorrow.`}
           </p>
           <button onClick={handleSaveFeedback} disabled={feedbackSaving || feedbackSaved}
             className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-emerald-400 disabled:opacity-50">

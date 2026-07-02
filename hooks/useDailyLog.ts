@@ -28,6 +28,7 @@ interface WorkoutEntry {
   category: string;
   duration: number;
   caloriesBurned: number;
+  source?: string;
   sets?: number;
   reps?: number;
   weight?: number;
@@ -66,6 +67,10 @@ export interface DailyLogData {
   totalSugar?: number;
   totalSodium?: number;
   caloriesBurned: number;
+  activeCalories?: number;
+  steps?: number;
+  habits?: string[];
+  mood?: number;
   notes?: string;
 }
 

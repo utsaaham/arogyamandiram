@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       : (user?.settings?.foodPreferences?.allergies ?? []);
     const targetProteinG = Number(user?.targets?.protein) || undefined;
     const targetCalories = Number(user?.targets?.dailyCalories) || undefined;
-    const systemPrompt = `You are a practical nutrition coach. Create a simple food plan for TODAY based on the user's last-week food details.
+    const systemPrompt = `You are a practical nutrition coach. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Create a simple food plan for TODAY based on the user's last-week food details.
 Return JSON only with this shape:
 {
   "foodPlan": {

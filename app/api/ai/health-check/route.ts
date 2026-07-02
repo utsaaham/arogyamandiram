@@ -102,13 +102,13 @@ export async function GET() {
       avgDist7d != null ? `7-day avg distance: ${avgDist7d} km.` : 'Distance: no historical data.',
     ].join('\n');
 
-    const systemPrompt = `You are a health data analyst AI for a wellness app. Analyse the user's wearable metrics and return a structured health report.
+    const systemPrompt = `You are a health data analyst for a wellness app. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Analyse the user's wearable metrics and return a structured health report.
 
 Heart rate health guidelines (resting):
-- Below 55 bpm: low (could indicate bradycardia — advise to consult a doctor if symptomatic)
+- Below 55 bpm: low (could indicate bradycardia; advise to consult a doctor if symptomatic)
 - 55–75 bpm: optimal (healthy athletic range)
 - 76–100 bpm: healthy (normal resting range)
-- Above 100 bpm: high (could indicate tachycardia — advise to monitor)
+- Above 100 bpm: high (could indicate tachycardia; advise to monitor)
 - If no data: status "unknown"
 
 Step goal: any value >= dailySteps target = achieved.

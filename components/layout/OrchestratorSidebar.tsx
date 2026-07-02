@@ -73,7 +73,7 @@ export default function OrchestratorSidebar() {
           <ConversationHistory
             entries={conversation}
             onConfirmSimple={confirmSimpleEntry}
-            onConfirmFood={(id, mealType) => confirmFoodEntry(id, mealType)}
+            onConfirmFood={(id, mealType, time) => confirmFoodEntry(id, mealType, time)}
             onConfirmWorkout={confirmWorkoutEntry}
             onCancel={cancelEntry}
           />

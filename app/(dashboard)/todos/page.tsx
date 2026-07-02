@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import api from '@/lib/apiClient';
+import { removeLoggedMealsByName } from '@/lib/checklistFoodSync';
 import { cn, getToday } from '@/lib/utils';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
 
@@ -31,6 +32,7 @@ interface TodoTemplate {
   category: 'food' | 'supplement' | 'medicine' | 'habit' | 'care' | 'other';
   enabled: boolean;
   frequency?: number;
+  times?: string[];
   baseItems?: Record<string, unknown>[];
 }
 
@@ -78,7 +80,8 @@ export default function TodosPage() {
     try {
       const res = await api.getTodosForDate(today);
       if (res.success && res.data) {
-        setTemplates((res.data.templates ?? []) as TodoTemplate[]);
+        // Care items live on their own cadence; the Checklist page's Care tab handles them
+        setTemplates(((res.data.templates ?? []) as TodoTemplate[]).filter((t) => t.category !== 'care'));
         setCompletions((res.data.completions ?? []) as TodoCompletion[]);
       }
     } finally {
@@ -94,6 +97,7 @@ export default function TodosPage() {
     if (freq <= 1) return [{ ...t, _completionId: t.id, _doseLabel: null }];
     return Array.from({ length: freq }, (_, i): VirtualTodoItem => ({
       ...t,
+      time: t.times?.[i]?.trim() || t.time,
       _completionId: `${t.id}::${i}`,
       _doseLabel: `Dose ${i + 1}`,
     }));
@@ -120,20 +124,50 @@ export default function TodosPage() {
     }
 
     try {
+      const mealTypeNow = () => {
+        const h = new Date().getHours();
+        if (h < 10) return 'breakfast';
+        if (h < 14) return 'lunch';
+        if (h < 18) return 'snack';
+        return 'dinner';
+      };
+
       const isFirstDose = !completionId.includes('::') || completionId.endsWith('::0');
       if (nowCompleted && tmpl?.category === 'food' && isFirstDose) {
         const items = tmpl.baseItems ?? [];
         if (items.length > 0) {
-          const mealType = (() => {
-            const h = new Date().getHours();
-            if (h < 10) return 'breakfast';
-            if (h < 14) return 'lunch';
-            if (h < 18) return 'snack';
-            return 'dinner';
-          })();
+          const mealType = mealTypeNow();
           await Promise.all(items.map((item) => api.addMeal(today, { ...item, mealType })));
           showToast(`Logged ${items.length} food item${items.length !== 1 ? 's' : ''} to your food log`, 'success');
         }
+      }
+
+      // Supplements and medicines land in the food log too (0 kcal), so the
+      // food page and your insights know what you actually took today.
+      if (nowCompleted && tmpl && (tmpl.category === 'supplement' || tmpl.category === 'medicine')) {
+        const kind = tmpl.category === 'medicine' ? 'medicine' : 'supplement';
+        await api.addMeal(today, {
+          name: `${tmpl.title} (${kind})`,
+          calories: 0, protein: 0, carbs: 0, fat: 0,
+          quantity: 1, unit: 'dose',
+          mealType: mealTypeNow(),
+          isCustom: true,
+        });
+        showToast(`Noted in your food log, so your day knows you took your ${kind}.`, 'success');
+      }
+
+      // Unchecking takes it back out of the food log, so nothing lingers.
+      if (!nowCompleted && tmpl && (tmpl.category === 'supplement' || tmpl.category === 'medicine')) {
+        const kind = tmpl.category === 'medicine' ? 'medicine' : 'supplement';
+        const removed = await removeLoggedMealsByName(today, [`${tmpl.title} (${kind})`]);
+        if (removed > 0) showToast(`Unchecked, and we took the ${kind} back out of your food log.`, 'info');
+      }
+      if (!nowCompleted && tmpl?.category === 'food' && isFirstDose) {
+        const names = (tmpl.baseItems ?? [])
+          .map((item) => String((item as { name?: unknown }).name ?? ''))
+          .filter(Boolean);
+        const removed = await removeLoggedMealsByName(today, names);
+        if (removed > 0) showToast(`Unchecked, and we removed ${removed} item${removed !== 1 ? 's' : ''} from your food log.`, 'info');
       }
 
       const res = await api.toggleTodo(completionId, today, nowCompleted);

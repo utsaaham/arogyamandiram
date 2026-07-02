@@ -142,7 +142,7 @@ export function clampTargets(
   };
 }
 
-const SYSTEM_PROMPT = `You are a certified nutritionist and fitness expert for Arogyamandiram. Generate a personalized health plan based on the user's profile. Respond ONLY with valid JSON in this exact shape (no markdown, no extra text):
+const SYSTEM_PROMPT = `You are a certified nutritionist and fitness expert for Arogyamandiram. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Generate a personalized health plan based on the user's profile. Respond ONLY with valid JSON in this exact shape (no markdown, no extra text):
 {
   "targets": {
     "dailyCalories": number (kcal, 1200-5000),
