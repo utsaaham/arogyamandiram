@@ -1,7 +1,7 @@
 ---
 name: active-context
 type: context
-last_updated: 2026-07-01
+last_updated: 2026-07-02
 updated_by: claude-fable-5
 staleness_days: 3
 ---
@@ -12,7 +12,20 @@ staleness_days: 3
 
 `feature/dev-01-minmial-changes-sprint-apr-22-26`
 
-## What's Being Worked On (as of 2026-07-01)
+## What's Being Worked On (as of 2026-07-02)
+
+**WHOOP-style Daily Outlook + nav restructure (2026-07-02, claude-fable-5)** — Coach Overview rebuilt as a WHOOP-style briefing on both apps; based on web research of WHOOP's Daily Outlook / Recovery / Strain / Sleep Coach:
+- **Backend**: `/api/ai/daily-plan/overview` rewritten. POST now feeds the AI the full picture: computed Vitals (`computeVitals` over 45d — readiness/strain/sleep/stress + drivers + guidance band + habit insights + 14d trends), last 7 days of compact logs, today-so-far, targets, profile, and today's generated food/workout plans. Returns/stores a structured `outlook` on DailyPlan (headline, recoverySummary, today{effort=guidance.band, note, activities, bestWindow}, focus[≤3], watchOuts, tonight{sleepNeedHours, bedtimeWindow, note}); also mirrors headline into `topInsight`, `$unset`s legacy `projections`. GET returns `{outlook, status, generatedAt}`. `normalizeOutlook` + `OutlookData` in `daily-plan/shared.ts`; `outlook` added to DailyPlan model + `DailyPlanData` type. Old 7-projection generation is gone; nightly cron untouched (outlook is generated on demand via the button)
+- **Web**: `coach/OverviewTab.tsx` rebuilt — readiness dial hero (ProgressRing, green ≥67 / amber ≥40 / rose bands, matching /vitals conventions), guidance chip, strain/sleep/stress mini dials from `/api/scores` (live even without outlook), Daily Outlook narrative card with Today/activities chips, watch-outs (amber), focus cards, Tonight (indigo) + regenerate. Health Blueprint grid + projections UI removed
+- **iOS**: CoachView overview segment rebuilt the same way (reuses `VitalsModels`, `ProgressRing`, `Theme.scoreColor/guidanceColor/stressColor`); CoachStore now also fetches `/api/scores`; outlook models added (`CoachOutlook` etc.)
+- **Nav restructure (user-approved)**: iOS tab bar is now Home, Vitals("Stats"), Coach, More (+ Kiki) — Checklist removed from the bar and added as the first card in MoreView (`AppTab.checklist` case deleted). Web mobile bottom bar is now Home, Vitals("Stats" label), Coach, Water + More; Checklist moved into the more sheet. Desktop sidebar unchanged
+- Both builds verified (tsc + next build; xcodebuild simulator)
+
+**Coach page — AI daily plan gets its own home (2026-07-02, claude-fable-5)** — user-approved name: "Coach". The AI daily-plan sections (Overview / Food / Workout, backed by `/api/ai/daily-plan/*`) moved out of the Checklist page into a dedicated Coach page on both apps; backend untouched:
+- **Web**: new `app/(dashboard)/coach/page.tsx` (tabs Overview/Food/Workout, AI-disabled empty state linking to Settings); `OverviewTab/FoodTab/WorkoutTab` moved from `todays-plan/` to `coach/`; `usePlanAutoRefresh` moved to `hooks/`; `todays-plan/page.tsx` now only To-dos + Care (aiEnabled gating no longer needed there). Nav: Coach (Sparkles icon) added to Sidebar after Home; in MobileNav bottom bar Coach replaced Water (Water stays in the more sheet). tsc + `next build` verified
+- **iOS**: new `Features/Coach/CoachView.swift` (plan models + CoachStore + gold-tinted segment picker; copy says "your coach" instead of Kiki); `ChecklistView.swift` trimmed to To-dos + Care only; `AppTab.coach` pane added in AppShell and FloatingTabBar (sparkles icon, gold tint, 5 tabs + Kiki now). xcodebuild simulator build verified
+
+## Previous work (as of 2026-07-01)
 
 **Vitals feature (WHOOP-style daily scores)** — plan in `docs/arogyam-scores-plan.md` (renamed from `whoop-life-feature-analysis.md`). Built in one pass across both repos:
 - **iOS** (`../ArogyaM-iOS-v1`): HealthKit now also reads HRV SDNN, resting HR, respiratory rate, sleeping wrist temperature, VO2 max; payload gained `heart.restingBpm`/`heart.hrvSdnnMs`, optional `vitals` block, per-workout `avgHeartRate`; build verified

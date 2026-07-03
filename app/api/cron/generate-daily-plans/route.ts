@@ -268,3 +268,5 @@ export async function POST(req: NextRequest) {
     ...(errors.length > 0 ? { errors: errors.slice(0, 5) } : {}), // cap error list
   });
 }
+
+export { POST as GET };

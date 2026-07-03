@@ -296,6 +296,63 @@ async function applyMetrics(
   }
 }
 
+/**
+ * Map normalized day-records into DailyLog (sleep, device workouts, metrics)
+ * and award XP for today/yesterday. Shared by the pull-based cron sync and
+ * the push path (/api/health-snapshots POST), so data lands in the log the
+ * moment the phone uploads it — no cron required.
+ */
+export async function applyHealthRecords(input: {
+  userId: string;
+  records: Record<string, unknown>[];
+  timezone?: string;
+}): Promise<HealthSyncAction[]> {
+  const syncActions: HealthSyncAction[] = [];
+  const todayKey = toDateKey(new Date(), input.timezone);
+  const yesterdayKey = toDateKey(new Date(Date.now() - DAY_MS), input.timezone);
+  const cutoffKey = toDateKey(new Date(Date.now() - MAX_BACKFILL_DAYS * DAY_MS), input.timezone);
+  const seenDates = new Set<string>();
+
+  for (const record of input.records) {
+    const logDate = resolveLogDate(record, input.timezone);
+
+    if (logDate < cutoffKey) {
+      syncActions.push({
+        field: 'record',
+        status: 'error',
+        detail: `Skipped ${logDate}: older than ${MAX_BACKFILL_DAYS}d cutoff`,
+      });
+      continue;
+    }
+
+    // If two records resolve to the same date, the later one (newer timestamp,
+    // since we sorted ascending) wins — but warn so callers know to dedupe upstream.
+    if (seenDates.has(logDate)) {
+      syncActions.push({
+        field: 'record',
+        status: 'error',
+        detail: `Duplicate ${logDate} in batch; later entry overwrites earlier`,
+      });
+    }
+    seenDates.add(logDate);
+
+    const sleepRes = await applySleep(record, logDate, input.userId);
+    const workoutRes = await applyDeviceWorkouts(record, logDate, input.userId);
+    const metricsRes = await applyMetrics(record, logDate, input.userId);
+
+    syncActions.push(...sleepRes.actions, ...workoutRes.actions, ...metricsRes.actions);
+
+    const mutated = sleepRes.mutated || workoutRes.mutated || metricsRes.mutated;
+    // XP cap: only today + yesterday earn XP from sync; older backfilled days
+    // are stored (and contribute to streaks via gamification recalc) but skip XP.
+    if (mutated && (logDate === todayKey || logDate === yesterdayKey)) {
+      await awardDailyXp(input.userId, logDate).catch(() => {});
+    }
+  }
+
+  return syncActions;
+}
+
 export async function runHealthDataSync(input: {
   userId: string;
   endpoint: string;
@@ -370,47 +427,12 @@ export async function runHealthDataSync(input: {
     return { ok: true, schema, rowCount, syncActions };
   }
 
-  const todayKey = toDateKey(new Date(), input.timezone);
-  const yesterdayKey = toDateKey(new Date(Date.now() - DAY_MS), input.timezone);
-  const cutoffKey = toDateKey(new Date(Date.now() - MAX_BACKFILL_DAYS * DAY_MS), input.timezone);
-  const seenDates = new Set<string>();
-
-  for (const record of records) {
-    const logDate = resolveLogDate(record, input.timezone);
-
-    if (logDate < cutoffKey) {
-      syncActions.push({
-        field: 'record',
-        status: 'error',
-        detail: `Skipped ${logDate}: older than ${MAX_BACKFILL_DAYS}d cutoff`,
-      });
-      continue;
-    }
-
-    // If two records resolve to the same date, the later one (newer timestamp,
-    // since we sorted ascending) wins — but warn so callers know to dedupe upstream.
-    if (seenDates.has(logDate)) {
-      syncActions.push({
-        field: 'record',
-        status: 'error',
-        detail: `Duplicate ${logDate} in batch; later entry overwrites earlier`,
-      });
-    }
-    seenDates.add(logDate);
-
-    const sleepRes = await applySleep(record, logDate, input.userId);
-    const workoutRes = await applyDeviceWorkouts(record, logDate, input.userId);
-    const metricsRes = await applyMetrics(record, logDate, input.userId);
-
-    syncActions.push(...sleepRes.actions, ...workoutRes.actions, ...metricsRes.actions);
-
-    const mutated = sleepRes.mutated || workoutRes.mutated || metricsRes.mutated;
-    // XP cap: only today + yesterday earn XP from sync; older backfilled days
-    // are stored (and contribute to streaks via gamification recalc) but skip XP.
-    if (mutated && (logDate === todayKey || logDate === yesterdayKey)) {
-      await awardDailyXp(input.userId, logDate).catch(() => {});
-    }
-  }
+  const applied = await applyHealthRecords({
+    userId: input.userId,
+    records,
+    timezone: input.timezone,
+  });
+  syncActions.push(...applied);
 
   return { ok: true, schema, rowCount, syncActions };
 }

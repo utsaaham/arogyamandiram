@@ -102,6 +102,84 @@ export type OverviewProjectionEntry = {
 
 export type OverviewProjections = Record<OverviewProjectionKey, OverviewProjectionEntry>;
 
+// ─── Daily Outlook (WHOOP-style morning briefing) ────────────────────────────
+
+export type OutlookEffort = 'push' | 'maintain' | 'recover' | 'rest';
+
+export type OutlookFocusEntry = {
+  metric: string;
+  headline: string;
+  note: string;
+};
+
+export type OutlookData = {
+  headline: string;
+  recoverySummary: string;
+  today: {
+    effort: OutlookEffort;
+    note: string;
+    activities: string[];
+    bestWindow: string;
+  };
+  focus: OutlookFocusEntry[];
+  watchOuts: string[];
+  tonight: {
+    sleepNeedHours: number | null;
+    bedtimeWindow: string;
+    note: string;
+  };
+};
+
+const VALID_EFFORTS = new Set<OutlookEffort>(['push', 'maintain', 'recover', 'rest']);
+const VALID_FOCUS_METRICS = new Set(['sleep', 'food', 'water', 'workout', 'steps', 'stress', 'weight']);
+
+export function normalizeOutlook(input: unknown, fallbackEffort?: string): OutlookData {
+  const root = (input && typeof input === 'object') ? input as Record<string, unknown> : {};
+  const todayRaw = (root.today && typeof root.today === 'object') ? root.today as Record<string, unknown> : {};
+  const tonightRaw = (root.tonight && typeof root.tonight === 'object') ? root.tonight as Record<string, unknown> : {};
+
+  const effortRaw = asString(todayRaw.effort).toLowerCase();
+  const fallback = VALID_EFFORTS.has(asString(fallbackEffort).toLowerCase() as OutlookEffort)
+    ? asString(fallbackEffort).toLowerCase() as OutlookEffort
+    : 'maintain';
+  const effort = VALID_EFFORTS.has(effortRaw as OutlookEffort) ? effortRaw as OutlookEffort : fallback;
+
+  const focus = (Array.isArray(root.focus) ? root.focus : [])
+    .map((raw) => {
+      const entry = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
+      const metric = asString(entry.metric).toLowerCase();
+      return {
+        metric: VALID_FOCUS_METRICS.has(metric) ? metric : 'workout',
+        headline: asString(entry.headline),
+        note: asString(entry.note),
+      };
+    })
+    .filter((entry) => entry.headline || entry.note)
+    .slice(0, 3);
+
+  const sleepNeed = toFinite(tonightRaw.sleepNeedHours);
+
+  return {
+    headline: asString(root.headline),
+    recoverySummary: asString(root.recoverySummary),
+    today: {
+      effort,
+      note: asString(todayRaw.note),
+      activities: (Array.isArray(todayRaw.activities) ? todayRaw.activities : [])
+        .map((a) => asString(a)).filter(Boolean).slice(0, 4),
+      bestWindow: asString(todayRaw.bestWindow),
+    },
+    focus,
+    watchOuts: (Array.isArray(root.watchOuts) ? root.watchOuts : [])
+      .map((w) => asString(w)).filter(Boolean).slice(0, 3),
+    tonight: {
+      sleepNeedHours: typeof sleepNeed === 'number' ? clamp(Math.round(sleepNeed * 10) / 10, 5, 12) : null,
+      bedtimeWindow: asString(tonightRaw.bedtimeWindow),
+      note: asString(tonightRaw.note),
+    },
+  };
+}
+
 export type WorkoutRequestBody = {
   lastWeekDetails?: string;
   goal?: string;

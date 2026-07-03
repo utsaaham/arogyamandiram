@@ -27,6 +27,25 @@ export interface IDailyPlanDocument extends Document {
     weight?:    { headline?: string; coachNote?: string; actions?: string[] };
   };
 
+  /** WHOOP-style AI morning briefing built from scores + full history. */
+  outlook?: {
+    headline?: string;
+    recoverySummary?: string;
+    today?: {
+      effort?: 'push' | 'maintain' | 'recover' | 'rest';
+      note?: string;
+      activities?: string[];
+      bestWindow?: string;
+    };
+    focus?: { metric?: string; headline?: string; note?: string }[];
+    watchOuts?: string[];
+    tonight?: {
+      sleepNeedHours?: number | null;
+      bedtimeWindow?: string;
+      note?: string;
+    };
+  };
+
   foodPlan?: {
     suggestions: {
       name: string;
@@ -135,6 +154,36 @@ const ProjectionsSchema = new Schema(
   { _id: false }
 );
 
+const OutlookFocusSchema = new Schema(
+  {
+    metric: { type: String, default: '' },
+    headline: { type: String, default: '' },
+    note: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
+const OutlookSchema = new Schema(
+  {
+    headline: { type: String, default: '' },
+    recoverySummary: { type: String, default: '' },
+    today: {
+      effort: { type: String, enum: ['push', 'maintain', 'recover', 'rest'] },
+      note: { type: String, default: '' },
+      activities: { type: [String], default: [] },
+      bestWindow: { type: String, default: '' },
+    },
+    focus: { type: [OutlookFocusSchema], default: [] },
+    watchOuts: { type: [String], default: [] },
+    tonight: {
+      sleepNeedHours: { type: Number, default: null },
+      bedtimeWindow: { type: String, default: '' },
+      note: { type: String, default: '' },
+    },
+  },
+  { _id: false }
+);
+
 const ExerciseSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -161,6 +210,7 @@ const DailyPlanSchema = new Schema<IDailyPlanDocument>(
 
     topInsight: { type: String },
     projections: { type: ProjectionsSchema, default: undefined },
+    outlook: { type: OutlookSchema, default: undefined },
 
     foodPlan: {
       suggestions: { type: [MealSuggestionSchema], default: [] },

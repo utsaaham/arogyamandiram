@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { showToast } from '@/components/ui/Toast';
 import api from '@/lib/apiClient';
 import type { DailyPlanData, WorkoutEntry } from '@/types';
-import { usePlanAutoRefresh } from './usePlanAutoRefresh';
+import { usePlanAutoRefresh } from '@/hooks/usePlanAutoRefresh';
 
 type WorkoutExercise = NonNullable<DailyPlanData['workoutPlan']>['exercises'][number];
 type WorkoutPlan = NonNullable<DailyPlanData['workoutPlan']>;

@@ -10,7 +10,7 @@ import { useUser } from '@/hooks/useUser';
 import { showToast } from '@/components/ui/Toast';
 import api from '@/lib/apiClient';
 import type { AiMealSuggestion } from '@/types';
-import { usePlanAutoRefresh } from './usePlanAutoRefresh';
+import { usePlanAutoRefresh } from '@/hooks/usePlanAutoRefresh';
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 

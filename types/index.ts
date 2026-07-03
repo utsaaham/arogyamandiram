@@ -548,6 +548,23 @@ export interface DailyPlanData {
     heartRate?: { headline?: string; coachNote?: string; actions?: string[] };
     weight?:    { headline?: string; coachNote?: string; actions?: string[] };
   };
+  outlook?: {
+    headline?: string;
+    recoverySummary?: string;
+    today?: {
+      effort?: 'push' | 'maintain' | 'recover' | 'rest';
+      note?: string;
+      activities?: string[];
+      bestWindow?: string;
+    };
+    focus?: { metric?: string; headline?: string; note?: string }[];
+    watchOuts?: string[];
+    tonight?: {
+      sleepNeedHours?: number | null;
+      bedtimeWindow?: string;
+      note?: string;
+    };
+  };
   foodPlan?: {
     suggestions: AiMealSuggestion[];
     reasoning?: string;

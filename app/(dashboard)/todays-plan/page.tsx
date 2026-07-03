@@ -1,36 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { CheckSquare, Dumbbell, Flame, Scissors, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { CheckSquare, Scissors } from 'lucide-react';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import { cn } from '@/lib/utils';
-import OverviewTab from './OverviewTab';
-import FoodTab from './FoodTab';
-import WorkoutTab from './WorkoutTab';
 import TodosTab from './TodosTab';
-import { useUser } from '@/hooks/useUser';
 
-type Tab = 'overview' | 'food' | 'workout' | 'todos' | 'care';
+type Tab = 'todos' | 'care';
+
+const tabs = [
+  { key: 'todos', label: 'To-dos', icon: CheckSquare },
+  { key: 'care',  label: 'Care',   icon: Scissors },
+] as const;
 
 export default function TodaysPlanPage() {
-  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<Tab>('todos');
-  const aiEnabled = user?.settings?.aiEnabled !== false;
-  const tabs = [
-    { key: 'todos',    label: 'To-dos',   icon: CheckSquare },
-    { key: 'care',     label: 'Care',     icon: Scissors },
-    ...(aiEnabled
-      ? [
-          { key: 'overview', label: 'Overview', icon: Zap },
-          { key: 'food',     label: 'Food',     icon: Flame },
-          { key: 'workout',  label: 'Workout',  icon: Dumbbell },
-        ] as const
-      : []),
-  ] as const;
-
-  useEffect(() => {
-    if (!aiEnabled && !['todos', 'care'].includes(activeTab)) setActiveTab('todos');
-  }, [activeTab, aiEnabled]);
 
   return (
     <DashboardPageShell title="Checklist" subtitle="Your daily to-dos and the care stuff we remember for you" icon={CheckSquare}>
@@ -54,11 +38,8 @@ export default function TodaysPlanPage() {
         </div>
 
         <div className="mt-4 space-y-4 mobile-fade-up mobile-dash-px lg:px-0">
-          {aiEnabled && activeTab === 'overview' && <OverviewTab />}
-          {aiEnabled && activeTab === 'food'     && <FoodTab />}
-          {aiEnabled && activeTab === 'workout'  && <WorkoutTab />}
-          {activeTab === 'todos'    && <TodosTab mode="todos" />}
-          {activeTab === 'care'     && <TodosTab mode="care" />}
+          {activeTab === 'todos' && <TodosTab mode="todos" />}
+          {activeTab === 'care'  && <TodosTab mode="care" />}
         </div>
 
       </div>

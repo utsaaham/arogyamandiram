@@ -10,6 +10,7 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import HealthSnapshot from '@/models/HealthSnapshot';
 import { decrypt } from '@/lib/encryption';
+import { applyHealthRecords } from '@/lib/healthDataSync';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,17 @@ const RETURN_DAYS = 10;
 async function resolveUser(username: string, bearer: string) {
   if (!bearer || !username) return null;
 
-  let user: { _id: { toString(): string }; settings?: { healthData?: { apiKeyEncrypted?: string } } } | null;
+  let user: {
+    _id: { toString(): string };
+    profile?: { timezone?: string };
+    settings?: {
+      healthData?: { apiKeyEncrypted?: string };
+      reminderSchedule?: { timezone?: string };
+    };
+  } | null;
   try {
     user = await User.findOne({ username })
-      .select('+settings.healthData.apiKeyEncrypted')
+      .select('+settings.healthData.apiKeyEncrypted profile.timezone settings.reminderSchedule.timezone')
       .lean() as typeof user;
   } catch {
     return null;
@@ -96,7 +104,41 @@ export async function POST(
   }
 
   await HealthSnapshot.insertMany(docs, { ordered: false });
-  return NextResponse.json({ ok: true, count: docs.length });
+
+  // Apply the pushed records to DailyLog right away, so the dashboard
+  // reflects the phone within one push cycle instead of waiting on a cron.
+  let applied = 0;
+  try {
+    const timezone = user.profile?.timezone
+      || user.settings?.reminderSchedule?.timezone
+      || undefined;
+    const actions = await applyHealthRecords({
+      userId,
+      records: docs.map((d) => d.payload),
+      timezone,
+    });
+    applied = actions.filter((a) => a.status === 'logged').length;
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'settings.healthData.lastSyncAt': now,
+        'settings.healthData.lastSyncSource': 'auto',
+        'settings.healthData.lastSyncStatus': 'ok',
+        'settings.healthData.lastSyncError': '',
+      },
+    });
+  } catch (err) {
+    // Ingestion succeeded even if mapping failed; surface the error in settings.
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'settings.healthData.lastSyncAt': now,
+        'settings.healthData.lastSyncSource': 'auto',
+        'settings.healthData.lastSyncStatus': 'error',
+        'settings.healthData.lastSyncError': err instanceof Error ? err.message : String(err),
+      },
+    }).catch(() => {});
+  }
+
+  return NextResponse.json({ ok: true, count: docs.length, applied });
 }
 
 // ─── GET: runHealthDataSync → arogyamandiram ─────────────────────────────────
