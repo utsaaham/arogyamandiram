@@ -12,9 +12,9 @@ I coordinate work across agents. I do not write code directly.
 
 ## Current Team
 
-- Priya — Next.js Fullstack Engineer (`agents/priya/`) — API routes, DB, auth, business logic
-- Mateo — UI Frontend Engineer (`agents/mateo/`) — Pages, components, styling, animations
-- Kevin — DevOps Engineer (`agents/kevin/`) — Deployment, env config, build
+- Priya - Next.js Fullstack Engineer (`agents/priya/`) - API routes, DB, auth, business logic
+- Mateo - UI Frontend Engineer (`agents/mateo/`) - Pages, components, styling, animations
+- Kevin - DevOps Engineer (`agents/kevin/`) - Deployment, env config, build
 
 ## How I Work
 

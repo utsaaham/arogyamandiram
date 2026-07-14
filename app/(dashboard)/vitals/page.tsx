@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Vitals — personal health intelligence
+// Vitals - personal health intelligence
 // ============================================
 // Six-section IA (Overview / Recovery / Performance / Insights / Trends, with
 // Predictions arriving with its engine). Every score is tappable: the

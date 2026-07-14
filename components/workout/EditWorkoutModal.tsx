@@ -169,7 +169,7 @@ export default function EditWorkoutModal({ workout, onClose, onSave, loading, mo
                 onChange={(e) => setSets(e.target.value)}
                 className={inputClass}
                 min={0}
-                placeholder="—"
+                placeholder="-"
               />
             </div>
             <div>
@@ -180,7 +180,7 @@ export default function EditWorkoutModal({ workout, onClose, onSave, loading, mo
                 onChange={(e) => setReps(e.target.value)}
                 className={inputClass}
                 min={0}
-                placeholder="—"
+                placeholder="-"
               />
             </div>
             <div>
@@ -192,7 +192,7 @@ export default function EditWorkoutModal({ workout, onClose, onSave, loading, mo
                 className={inputClass}
                 min={0}
                 step={0.5}
-                placeholder="—"
+                placeholder="-"
               />
             </div>
           </div>

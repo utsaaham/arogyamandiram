@@ -1,10 +1,10 @@
 // ============================================
-// Health Score — the 0-100 capstone composite (monthly rolling)
+// Health Score - the 0-100 capstone composite (monthly rolling)
 // ============================================
 //
 // Combines recovery, sleep, nutrition, training, consistency, stress, and
 // trend direction over a rolling 30 days. Never a black box: components
-// carry weights so the attribution engine can decompose it exactly —
+// carry weights so the attribution engine can decompose it exactly -
 // tappable like every other score, with the one change that would raise it
 // most. Revives the "Wellness Age" idea from docs/arogyam-scores-plan.md now
 // that the feature store provides the weeks of history it needed.
@@ -123,7 +123,7 @@ export function computeHealthScore(
   const score = blend(currentParts);
 
   // Monthly delta: same composite over the previous 30 days (consistency
-  // history isn't stored per-month, so the prior blend omits it — noted
+  // history isn't stored per-month, so the prior blend omits it - noted
   // honestly by keying the delta only off shared components).
   let monthlyDelta: number | null = null;
   const prev30 = trends.slice(-60, -30);

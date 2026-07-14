@@ -1,5 +1,5 @@
 // ============================================
-// /api/debug-logs — Persist & list debug logs by page/agent (DEBUG_MODE only)
+// /api/debug-logs - Persist & list debug logs by page/agent (DEBUG_MODE only)
 // ============================================
 // GET: ?page=&agent= → logs for that agent. No params → tree of pages/agents with counts.
 // POST: body = { page, agent, log } → write to .debug-logs/{page}/{agent}/{id}.json
@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
       return Response.json({ logs });
     }
 
-    // No page/agent → return tree (pages with agents, count, lastActive) — only for this user
+    // No page/agent → return tree (pages with agents, count, lastActive) - only for this user
     const tree: Tree = [];
     let pageDirs: string[] = [];
     try {

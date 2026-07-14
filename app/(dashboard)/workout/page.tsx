@@ -182,7 +182,7 @@ export default function WorkoutPage() {
   const recommendedMinutes = targets.dailyWorkoutMinutes;
   const burnPercent = burnGoal > 0 ? Math.min(Math.round((totalBurned / burnGoal) * 100), 100) : 0;
 
-  // Baseline calorie burn from user profile (BMR + TDEE) — matches dashboard
+  // Baseline calorie burn from user profile (BMR + TDEE) - matches dashboard
   const profile = user?.profile;
   const age =
     profile?.dateOfBirth != null
@@ -201,7 +201,7 @@ export default function WorkoutPage() {
         })
       : null;
 
-  // Time-proportional baseline — exact same logic as dashboard energy balance
+  // Time-proportional baseline - exact same logic as dashboard energy balance
   const now = new Date();
   const dayFraction = (now.getHours() * 60 + now.getMinutes()) / 1440;
   const baselineSoFar = baselineBurn ? Math.round(baselineBurn.tdee * dayFraction) : 0;

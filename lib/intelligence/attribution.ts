@@ -1,5 +1,5 @@
 // ============================================
-// Attribution engine — exact per-component score decomposition
+// Attribution engine - exact per-component score decomposition
 // ============================================
 //
 // Every Vitals score is a linear weighted blend of components (weights
@@ -8,7 +8,7 @@
 // subtract directly. Day-over-day deltas come from comparing today's and
 // yesterday's contributions per component key.
 //
-// Design rule for the whole lib/intelligence/ layer: the LLM never computes —
+// Design rule for the whole lib/intelligence/ layer: the LLM never computes -
 // it only phrases what this deterministic layer proved.
 
 import type { ScoreComponent } from '@/lib/scores/types';
@@ -32,7 +32,7 @@ export interface DayOverDayChange {
   byComponent: Array<{ key: string; label: string; deltaPts: number }>;
   /** One plain sentence naming the single biggest reason, or null. */
   biggestReason: string | null;
-  /** 'up' | 'down' | 'flat' | null — the arrow the UI renders. */
+  /** 'up' | 'down' | 'flat' | null - the arrow the UI renders. */
   direction: 'up' | 'down' | 'flat' | null;
 }
 
@@ -41,14 +41,14 @@ export type ConfidenceLevel = 'high' | 'medium' | 'low';
 export interface ScoreAttribution {
   score: number | null;
   contributions: ComponentContribution[];
-  /** Penalty/annotation components (respiratory, wrist temp) — direct point hits. */
+  /** Penalty/annotation components (respiratory, wrist temp) - direct point hits. */
   penalties: ComponentContribution[];
   changeVsYesterday: DayOverDayChange;
-  /** "12% above your normal" — today vs the mean of recent prior scores. */
+  /** "12% above your normal" - today vs the mean of recent prior scores. */
   vsBaseline: { pct: number | null; phrase: string | null };
   /** Data confidence for this score, from signals present + history depth. */
   confidence: { level: ConfidenceLevel; reason: string };
-  /** The one component with the most headroom × weight — the fastest lever. */
+  /** The one component with the most headroom × weight - the fastest lever. */
   fastestLever: { key: string; label: string; note: string } | null;
 }
 

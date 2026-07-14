@@ -104,7 +104,7 @@ function isWeightSuccess(log: IDailyLog): boolean {
   return typeof log.weight === 'number';
 }
 
-// Per-habit "logged at all" predicates — used by streak counters so any
+// Per-habit "logged at all" predicates - used by streak counters so any
 // logged activity for a habit keeps that habit's streak alive. Distinct
 // from the strict isXxxSuccess goal checks, which still gate isPerfectDay.
 function hasCaloriesLog(log: IDailyLog): boolean {
@@ -203,7 +203,7 @@ export async function calculateStreaks(
   }
 
   // Recovery streak: a day succeeds when its readiness score sits at or above
-  // the mean of its own prior (≤14-day) readiness history — self-relative,
+  // the mean of its own prior (≤14-day) readiness history - self-relative,
   // like every other Vitals baseline. Needs ≥3 prior scored days.
   const todayKey = formatISO(today, { representation: 'date' });
   const vitalsSeries = computeVitals(logs.map(toDayInput), todayKey, daysBack + 1);
@@ -246,7 +246,7 @@ export async function calculateStreaks(
   let startProtein: string | undefined;
   let startRecovery: string | undefined;
 
-  // 24-hour grace: "today" never breaks the streak — user has until end of day.
+  // 24-hour grace: "today" never breaks the streak - user has until end of day.
   // Streak only breaks *tomorrow* if they didn't complete today (see e.g. Duolingo, Snapchat).
   while (keepLogging || keepHealthy || keepCalories || keepWater || keepWorkout || keepSleep || keepWeight || keepSteps || keepWaterGoal || keepProtein || keepRecovery) {
     const dateKey = formatISO(currentDate, { representation: 'date' });
@@ -255,7 +255,7 @@ export async function calculateStreaks(
 
     if (!log) {
       if (isToday) {
-        // Grace: today not over yet — skip today, count streak from yesterday backward
+        // Grace: today not over yet - skip today, count streak from yesterday backward
         currentDate = subDays(currentDate, 1);
         if (currentDate < fromDate) break;
         continue;

@@ -10,7 +10,7 @@ staleness_days: 3
 # Project Memory
 
 > This is the entry point for any AI agent working on this project.
-> Every tool — Cursor, Claude Code, Windsurf, Cline, Copilot, Gemini, Codex — starts here.
+> Every tool - Cursor, Claude Code, Windsurf, Cline, Copilot, Gemini, Codex - starts here.
 > Do NOT start working without reading this file and `.memory/README.md`.
 
 ---
@@ -29,14 +29,14 @@ staleness_days: 3
 
 ## Before You Do Anything
 
-1. Read `.memory/README.md` — folder map and full read order
-2. Read `context/active-context.md` — current sprint and recent changes
-3. Read `agents/index.md` — find the right agent for your task
+1. Read `.memory/README.md` - folder map and full read order
+2. Read `context/active-context.md` - current sprint and recent changes
+3. Read `agents/index.md` - find the right agent for your task
 4. Load the agent's skills + rules before writing any code
 
 ## Key Things Every Agent Must Know
 
-- All API responses go through **`lib/apiMask.ts`** — never return raw DB documents
+- All API responses go through **`lib/apiMask.ts`** - never return raw DB documents
 - API routes typically gate access through **`lib/session.ts`** helpers (`getAuthUserId`, `getAuthUserIdWithBypass`)
 - Protected app navigation is enforced in **`components/layout/DashboardLayoutClient.tsx`**; there is currently no root `middleware.ts`
 - Food search is **Mongo cache first + USDA FoodData Central fallback**, not Edamam

@@ -44,7 +44,7 @@ export interface UserProfile {
   goal: Goal;
   targetWeight: number;
   avatarUrl?: string;
-  // Body composition — used for AI plan personalization
+  // Body composition - used for AI plan personalization
   bodyType?: BodyType;
   bodyFat?: number;             // body fat percentage
   fatFocusAreas?: FatFocusArea[];
@@ -58,7 +58,7 @@ export interface UserProfile {
 
 export interface UserApiKeys {
   openai?: string;       // AES-256 encrypted
-  fdcApiKey?: string;    // AES-256 encrypted — USDA FoodData Central
+  fdcApiKey?: string;    // AES-256 encrypted - USDA FoodData Central
 }
 
 export interface SmtpSettings {
@@ -362,7 +362,7 @@ export interface SleepEntry {
   duration: number;       // hours (decimal, e.g. 7.5)
   quality: SleepQuality;  // 1-5 star rating
   notes?: string;
-  // Sleep stages (device-sourced, hours) — used by the Vitals sleep score
+  // Sleep stages (device-sourced, hours) - used by the Vitals sleep score
   deepHours?:  number;
   remHours?:   number;
   coreHours?:  number;
@@ -457,7 +457,7 @@ export interface FoodItem {
   /** Legacy optional localized display name kept for backward compatibility. */
   nameHindi?: string;
   category: FoodCategory;
-  servingSize: number;    // always 100 — nutritional values are per 100g/ml
+  servingSize: number;    // always 100 - nutritional values are per 100g/ml
   servingUnit: string;    // 'g' or 'ml'
   calories: number;       // per 100g/ml
   protein: number;
@@ -556,7 +556,7 @@ export interface AiWorkoutPlan {
     phase?: 'warmup' | 'strength' | 'cardio' | 'core' | 'mobility' | 'cooldown';
     /** Strength only: compound lifts come before accessories (LLM-tagged) */
     slot?: 'compound' | 'accessory';
-    /** Server-stamped 1..n gym order — do in this order */
+    /** Server-stamped 1..n gym order - do in this order */
     order?: number;
     durationMinutes?: number;
     restSeconds: number;

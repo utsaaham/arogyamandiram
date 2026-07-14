@@ -1,9 +1,9 @@
 // ============================================
-// /api/scores — Vitals daily scores
+// /api/scores - Vitals daily scores
 // ============================================
 // GET → today's Readiness / Strain / Sleep / Stress scores, Today's Guidance,
 //       30-day trends, and habit correlation insights.
-// Wellness estimates only — never diagnostic.
+// Wellness estimates only - never diagnostic.
 
 import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';

@@ -1,5 +1,5 @@
 // ============================================
-// Predictions — deterministic first, honestly gated
+// Predictions - deterministic first, honestly gated
 // ============================================
 //
 // Goal ETA from the least-squares weight slope, goal confidence from
@@ -85,7 +85,7 @@ export function computeGoalEta(
 
   const weeks = Math.abs(gapKg / slope);
   if (weeks > 52) {
-    return unavailable('At the current pace this is more than a year out — the trend will sharpen the estimate as you go.');
+    return unavailable('At the current pace this is more than a year out - the trend will sharpen the estimate as you go.');
   }
 
   const etaWeeks = Math.round(weeks * 10) / 10;
@@ -183,7 +183,7 @@ export function computeRecoveryForecast(
   return {
     sleepNeedHours: rounded,
     text: debt >= 1
-      ? `You're carrying ~${Math.round(debt * 10) / 10}h of sleep debt — about ${rounded}h tonight sets up a push-ready tomorrow.`
-      : `Little sleep debt — around ${rounded}h tonight keeps you push-ready.`,
+      ? `You're carrying ~${Math.round(debt * 10) / 10}h of sleep debt - about ${rounded}h tonight sets up a push-ready tomorrow.`
+      : `Little sleep debt - around ${rounded}h tonight keeps you push-ready.`,
   };
 }

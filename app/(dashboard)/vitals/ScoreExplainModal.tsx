@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Vitals › tap-to-explain — exact score breakdown modal
+// Vitals › tap-to-explain - exact score breakdown modal
 // ============================================
 // Everything shown here is deterministic arithmetic from the attribution
 // engine (lib/intelligence/attribution.ts): why the value, biggest +/−

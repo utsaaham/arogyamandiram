@@ -359,7 +359,7 @@ export async function GET(req: NextRequest) {
         return maskedResponse({ foods, edamamFoods: [], total: foods.length });
       }
 
-      // Not enough cached — call USDA
+      // Not enough cached - call USDA
       const apiKey = await resolveApiKey(String(userId));
       if (!apiKey) {
         const foods = cached.map(toFoodItem);
@@ -373,7 +373,7 @@ export async function GET(req: NextRequest) {
       return maskedResponse({ foods: merged, edamamFoods: [], total: merged.length });
     }
 
-    // Case 2: query < 3 chars — category browse or default
+    // Case 2: query < 3 chars - category browse or default
     if (resolvedCategories.length > 0) {
       const categoryFilter =
         resolvedCategories.length === 1
@@ -391,7 +391,7 @@ export async function GET(req: NextRequest) {
       return maskedResponse({ foods, edamamFoods: [], total: foods.length });
     }
 
-    // Case 3: empty query, no category — default "All" view
+    // Case 3: empty query, no category - default "All" view
     const cached = await Food.find({}).limit(20).lean<IFoodDocument[]>();
     if (cached.length >= 5) {
       const foods = cached.map(toFoodItem);

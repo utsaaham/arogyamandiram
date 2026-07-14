@@ -191,7 +191,7 @@ export default function SleepPage() {
                   size={140}
                   strokeWidth={10}
                   color="text-accent-violet stroke-accent-violet"
-                  value={currentSleep ? String(sleepScore ?? '—') : '—'}
+                  value={currentSleep ? String(sleepScore ?? '-') : '-'}
                   label="Sleep score"
                   valueClassName="text-lg font-bold text-[#a3a3a3]"
                   labelClassName="text-[10px] font-medium text-[#a3a3a3]"

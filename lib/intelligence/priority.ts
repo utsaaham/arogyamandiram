@@ -1,12 +1,12 @@
 // ============================================
-// Priority engine — the single best action today
+// Priority engine - the single best action today
 // ============================================
 //
 // Every candidate action carries a concrete number computed from the user's
 // ACTUAL gap ("700 ml more water", "30 g more protein", "bed 45 min
 // earlier"). Ranking is deterministic: base impact × gap severity × a
 // personal multiplier from the correlation engine's effect sizes. The LLM
-// only ever phrases the winner — it never picks it.
+// only ever phrases the winner - it never picks it.
 
 import type { FeatureInsight } from './correlations';
 

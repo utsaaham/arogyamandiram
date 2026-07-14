@@ -1,8 +1,8 @@
 # 🏥 Arogyamandiram
 
-**Your Premium Health & Wellness Companion**
+**A practical health companion for daily tracking**
 
-A full-stack health tracking web app built with Next.js 15, featuring food logging, water tracking, weight journal, workout planning, sleep tracking, and AI-powered recommendations.
+A full-stack health tracking web app built with Next.js 15. It covers food logging, water tracking, weight, workouts, sleep, and AI-assisted recommendations.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue) ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green) ![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8)
 
@@ -53,8 +53,8 @@ A full-stack health tracking web app built with Next.js 15, featuring food loggi
 - Category breakdown visualization
 
 ### 🤖 Insights
-- AI-powered insights: yesterday, weekly, monthly, yearly (gated by logged data)
-- Privacy-first: we never send your name or email—only anonymized health metrics
+- AI-assisted insights for yesterday, weekly, monthly, and yearly views, based on the data you log
+- Privacy-first: we never send your name or email, only anonymized health metrics
 - Personalized meal suggestions
 - Custom workout plan generator
 - Requires OpenAI API key (user provides their own)
@@ -78,7 +78,7 @@ A full-stack health tracking web app built with Next.js 15, featuring food loggi
 
 ## 🔒 Security Features
 
-- **API Masking**: All API responses are filtered server-side — no sensitive data in browser network tab
+- **API Masking**: All API responses are filtered server-side, so sensitive data never shows up in the browser network tab
 - **Encrypted API Keys**: User API keys encrypted with AES-256-GCM before storage
 - **Password Hashing**: bcrypt with 12 salt rounds
 - **JWT Sessions**: 30-day expiry via NextAuth.js
@@ -117,12 +117,12 @@ A full-stack health tracking web app built with Next.js 15, featuring food loggi
 
 | Item | Required? | Where to get it | Notes |
 |------|-----------|-----------------|-------|
-| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) — create a free cluster, copy connection string | Use the same cluster for local + Vercel if you want to share data. |
+| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) - create a free cluster and copy the connection string | Use the same cluster for local + Vercel if you want to share data. |
 | `NEXTAUTH_SECRET` | Yes | Run `openssl rand -base64 32` | Must stay stable per deployed environment. |
 | `ENCRYPTION_KEY` | Yes | Run `openssl rand -hex 32` | **If you share a MongoDB cluster between local and Vercel, this MUST be the same value everywhere. Changing it will make all previously stored API keys undecryptable until users re-enter them.** |
 | `NEXTAUTH_URL` | Yes | Use `http://localhost:3000` for local dev | Set to your Vercel URL in production. |
-| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) — for insights, meal ideas, workout plans | Optional server-wide fallback. Users can also add their own key in **Settings → API Keys**, which is AES-256 encrypted in MongoDB. In production (Vercel), it is recommended to set this so AI continues to work even if a user key is missing or broken. |
-| `FDC_API_KEY` | Optional | [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/) — for broader food search | Optional server-wide fallback for external food lookup beyond the built-in catalog. |
+| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) - for insights, meal ideas, and workout plans | Optional server-wide fallback. Users can also add their own key in **Settings → API Keys**, which is AES-256 encrypted in MongoDB. In production (Vercel), set this so AI keeps working even if a user key is missing or broken. |
+| `FDC_API_KEY` | Optional | [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/) - for broader food search | Optional server-wide fallback for food lookup beyond the built-in catalog. |
 
 ### Installation
 
@@ -285,7 +285,7 @@ Each tool reads its own instruction file:
 | Cursor | `.cursorrules` |
 | GitHub Copilot | `.github/copilot-instructions.md` |
 
-All files point to the same `.memory/` system — no duplication.
+All files point to the same `.memory/` system - no duplication.
 
 ---
 

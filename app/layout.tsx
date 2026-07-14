@@ -26,15 +26,15 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-// Satoshi is a premium font - using DM Sans as fallback
+// Satoshi is not bundled here, so DM Sans stays as the fallback.
 // To use Satoshi, download from https://www.fontshare.com/fonts/satoshi
 // and add to /public/fonts/
 
 // ---------- Metadata ----------
 export const metadata: Metadata = {
-  title: 'Arogyamandiram – Intelligent Health & Wellness OS',
+  title: 'Arogyamandiram - Health and wellness tracker',
   description:
-    'Arogyamandiram is your health & wellness companion for tracking nutrition, hydration, weight, workouts, sleep, and more, with insights that are personal to you. Private by design.',
+    'Arogyamandiram helps you track nutrition, hydration, weight, workouts, sleep, and more, with insights shaped by your own data. Private by design.',
   keywords: [
     'health',
     'wellness',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     'workouts',
     'sleep',
     'water intake',
-    'Insights & recommendations',
+    'Insights and recommendations',
   ],
   authors: [{ name: 'Arogyamandiram' }],
   manifest: '/manifest.json',

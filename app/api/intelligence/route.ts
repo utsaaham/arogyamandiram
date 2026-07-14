@@ -1,11 +1,11 @@
 // ============================================
-// /api/intelligence — deterministic intelligence layer payload
+// /api/intelligence - deterministic intelligence layer payload
 // ============================================
 // GET → Goal Score (with exact attribution), behavior consistency,
 //       feature↔score correlations, personal triggers, compound patterns,
 //       today's single best action (priority), and Today's Body Summary
 //       (LLM-phrased over the deterministic layer, cached per day).
-// Everything numeric here is computed arithmetic — the LLM only phrases it.
+// Everything numeric here is computed arithmetic - the LLM only phrases it.
 // Side effect: confirmed correlation patterns persist to CoachMemory.
 
 import connectDB from '@/lib/db';
@@ -38,7 +38,7 @@ export const dynamic = 'force-dynamic';
 // 75 days: 30 for the current month, 30 for the monthly delta, 15 baseline buffer.
 const WINDOW_DAYS = 75;
 
-/** Deterministic body summary — the fallback and the LLM's source of truth. */
+/** Deterministic body summary - the fallback and the LLM's source of truth. */
 function deterministicBodySummary(
   vitals: VitalsResult,
   goalAttribution: ScoreAttribution | null
@@ -185,7 +185,7 @@ export async function GET() {
       }
     }
 
-    // Predictions — deterministic and honestly gated.
+    // Predictions - deterministic and honestly gated.
     const consistency = computeConsistency(rows);
 
     // Health Score capstone: goal scores aligned to trend dates, then blend.

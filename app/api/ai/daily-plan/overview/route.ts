@@ -1,5 +1,5 @@
 // ============================================
-// /api/ai/daily-plan/overview — Daily Outlook
+// /api/ai/daily-plan/overview - Daily Outlook
 // ============================================
 // WHOOP-style AI morning briefing. Unlike the other daily-plan agents this one
 // sees the whole picture: today's computed Vitals scores (readiness / strain /
@@ -47,7 +47,7 @@ function num(value: unknown): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/** Compact one day of logs for the prompt — names and numbers only. */
+/** Compact one day of logs for the prompt - names and numbers only. */
 function compactLog(log: RecentLogLean) {
   return {
     date: log.date,

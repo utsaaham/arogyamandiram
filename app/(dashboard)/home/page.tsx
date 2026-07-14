@@ -168,7 +168,7 @@ export default function DashboardPage() {
 
         {/* Bento grid */}
         <div className="bento-grid">
-          {/* Streaks — pinned to top */}
+          {/* Streaks - pinned to top */}
           <div className="bento-streaks">
             <StreakCard
               streaks={achievements?.streaks}
@@ -264,7 +264,7 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<Moon className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+              value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '-'}
               label="Sleep"
               sub={log?.sleep ? `${log.sleep.quality}/5 quality` : '8h target'}
               valueColor="text-accent-violet"
@@ -274,7 +274,7 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<Footprints className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={wearableMetrics.steps != null ? formatNumber(wearableMetrics.steps) : '—'}
+              value={wearableMetrics.steps != null ? formatNumber(wearableMetrics.steps) : '-'}
               label="Steps"
               sub={wearableMetrics.steps != null ? `of ${formatNumber(targets.dailySteps ?? 8000)} goal` : 'No device data'}
               valueColor="text-accent-emerald"
@@ -284,7 +284,7 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<HeartPulse className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={wearableMetrics.heartRate != null ? String(wearableMetrics.heartRate) : '—'}
+              value={wearableMetrics.heartRate != null ? String(wearableMetrics.heartRate) : '-'}
               label="Heart Rate"
               sub={wearableMetrics.heartRate != null ? 'bpm' : 'No device data'}
               valueColor="text-accent-rose"
@@ -294,7 +294,7 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<Activity className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={wearableMetrics.activeCalories != null ? formatNumber(wearableMetrics.activeCalories) : '—'}
+              value={wearableMetrics.activeCalories != null ? formatNumber(wearableMetrics.activeCalories) : '-'}
               label="Active Cal"
               sub={wearableMetrics.activeCalories != null ? 'kcal burned' : 'No device data'}
               valueColor="text-accent-amber"
@@ -304,7 +304,7 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<MapPin className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={wearableMetrics.distanceKm != null ? wearableMetrics.distanceKm.toFixed(1) : '—'}
+              value={wearableMetrics.distanceKm != null ? wearableMetrics.distanceKm.toFixed(1) : '-'}
               label="Distance"
               sub={wearableMetrics.distanceKm != null ? `of ${targets.idealDistance ?? 5} km goal` : 'No device data'}
               valueColor="text-accent-cyan"
@@ -319,13 +319,13 @@ export default function DashboardPage() {
 
       {/* ─── Mobile (design layout) ─── */}
       <div className="mobile-dash cards-stack-mobile lg:hidden">
-        {/* Header — TopBar-style card */}
+        {/* Header - TopBar-style card */}
         <div className={cn('mobile-fade-up mobile-dash-px pt-0 pb-3')} style={{ animationDelay: '0ms' }}>
           <div
             className="card-glow relative w-full overflow-hidden rounded-[22px] px-5 pt-5 pb-[18px]"
             style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
           >
-            {/* Row 1: Greeting + Avatar — T centered with left text block */}
+            {/* Row 1: Greeting + Avatar - T centered with left text block */}
             <div className="flex justify-between items-center">
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-text-secondary text-[22px] font-extrabold leading-tight" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
@@ -348,7 +348,7 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {/* Avatar — larger, shifted slightly left */}
+              {/* Avatar - larger, shifted slightly left */}
               <Link href="/settings" className="shrink-0 active:opacity-90 transition-opacity -translate-x-3" aria-label="Open settings">
                 <div
                   className="w-[76px] h-[76px] rounded-full flex items-center justify-center text-[24px] font-black"
@@ -481,7 +481,7 @@ export default function DashboardPage() {
             <div className="stat-card-sleep">
               <StatMini
                 icon={<Moon className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+                value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '-'}
                 label="Sleep"
                 sub="of 8h target"
                 valueColor="text-accent-violet"
@@ -504,7 +504,7 @@ export default function DashboardPage() {
             <div className="stat-card-water">
               <StatMini
                 icon={<Footprints className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={wearableMetrics.steps != null ? formatNumber(wearableMetrics.steps) : '—'}
+                value={wearableMetrics.steps != null ? formatNumber(wearableMetrics.steps) : '-'}
                 label="Steps"
                 sub={wearableMetrics.steps != null ? `of ${formatNumber(targets.dailySteps ?? 8000)}` : 'No data'}
                 valueColor="text-accent-emerald"
@@ -516,7 +516,7 @@ export default function DashboardPage() {
             <div className="stat-card-burned">
               <StatMini
                 icon={<HeartPulse className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={wearableMetrics.heartRate != null ? String(wearableMetrics.heartRate) : '—'}
+                value={wearableMetrics.heartRate != null ? String(wearableMetrics.heartRate) : '-'}
                 label="Heart Rate"
                 sub={wearableMetrics.heartRate != null ? 'bpm' : 'No data'}
                 valueColor="text-accent-rose"
@@ -528,7 +528,7 @@ export default function DashboardPage() {
             <div className="stat-card-meals">
               <StatMini
                 icon={<Activity className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={wearableMetrics.activeCalories != null ? formatNumber(wearableMetrics.activeCalories) : '—'}
+                value={wearableMetrics.activeCalories != null ? formatNumber(wearableMetrics.activeCalories) : '-'}
                 label="Active Cal"
                 sub={wearableMetrics.activeCalories != null ? 'kcal' : 'No data'}
                 valueColor="text-accent-amber"
@@ -540,7 +540,7 @@ export default function DashboardPage() {
             <div className="stat-card-sleep">
               <StatMini
                 icon={<MapPin className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={wearableMetrics.distanceKm != null ? `${wearableMetrics.distanceKm.toFixed(1)}km` : '—'}
+                value={wearableMetrics.distanceKm != null ? `${wearableMetrics.distanceKm.toFixed(1)}km` : '-'}
                 label="Distance"
                 sub={wearableMetrics.distanceKm != null ? `of ${targets.idealDistance ?? 5} km` : 'No data'}
                 valueColor="text-accent-cyan"
@@ -787,7 +787,7 @@ function StreakCard({
 
   return (
     <div className="streak-card card-glow flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-      {/* Label + hint — full width on mobile, fixed-width on desktop */}
+      {/* Label + hint - full width on mobile, fixed-width on desktop */}
       <div className="sm:shrink-0 sm:w-[220px]">
         <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted mb-1">
           Active Streaks
@@ -822,7 +822,7 @@ function StreakCard({
         )}
       </div>
 
-      {/* Day dots — full-width row on mobile, shrunk column on desktop */}
+      {/* Day dots - full-width row on mobile, shrunk column on desktop */}
       <div className="grid w-full grid-cols-7 gap-1.5 sm:flex sm:w-auto sm:shrink-0">
         {DAY_LABELS.map((lbl, i) => (
           <div key={i} className={`sdot !w-full sm:!w-9 ${i === displayDayIndex ? 'sdot-today' : ''}`}>

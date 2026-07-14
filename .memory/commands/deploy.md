@@ -57,5 +57,5 @@ After deploy:
 
 ### 6. Update memory
 
-- Update `context/active-context.md` — new sprint begins
-- Update `context/progress.md` — mark deployed items as done
+- Update `context/active-context.md` - new sprint begins
+- Update `context/progress.md` - mark deployed items as done

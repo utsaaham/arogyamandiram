@@ -1,10 +1,10 @@
 // ============================================
-// Goal Score — how well today's actions align with the user's chosen goal
+// Goal Score - how well today's actions align with the user's chosen goal
 // ============================================
 //
 // Deterministic composite of goal-relevant behaviors (calorie adherence,
 // protein %, workout completion, steps), weighted per goal. Weights
-// renormalize over the behaviors that have data today — same pattern as the
+// renormalize over the behaviors that have data today - same pattern as the
 // Vitals scores, so the attribution engine can decompose it too.
 
 import type { Goal } from '@/types';
@@ -67,7 +67,7 @@ export function computeGoalScore(
       key: 'calories',
       label: 'Calorie adherence',
       score,
-      note: `${row.caloriePctOfTarget}% of calorie target — ${score >= 80 ? band.label : 'off the band for your goal'}`,
+      note: `${row.caloriePctOfTarget}% of calorie target - ${score >= 80 ? band.label : 'off the band for your goal'}`,
       weight: weights.calories,
     });
   }

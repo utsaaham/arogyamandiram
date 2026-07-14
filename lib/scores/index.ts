@@ -1,5 +1,5 @@
 // Vitals score engine orchestrator: turns a series of DailyLogs into the full
-// Vitals payload — today's four scores, guidance, trends, and habit insights.
+// Vitals payload - today's four scores, guidance, trends, and habit insights.
 
 import type { IDailyLog } from '@/types';
 import { attributeScore, type ScoreAttribution } from '@/lib/intelligence/attribution';
@@ -161,7 +161,7 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
   const todayInput = series[todayIndex];
 
   // Anomaly detection: the respiratory/wrist-temp z-penalty pattern extended
-  // to every baselined metric — |z| > 2 vs the user's own history flags an
+  // to every baselined metric - |z| > 2 vs the user's own history flags an
   // "Unusual today" callout (signal, not diagnosis).
   const ANOMALY_METRICS: Array<{
     key: string;
@@ -211,7 +211,7 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
     stress: attributionFor((p) => p.stress),
   };
 
-  // Timeline: chain day-over-day attribution across the last week — every day
+  // Timeline: chain day-over-day attribution across the last week - every day
   // a score moved meaningfully, name the biggest reason.
   const TIMELINE_DAYS = 7;
   const TIMELINE_MIN_DELTA = 8;

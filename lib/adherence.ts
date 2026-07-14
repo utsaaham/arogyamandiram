@@ -1,5 +1,5 @@
 // ============================================
-// Adherence — trailing 7-day planned-vs-logged workout match
+// Adherence - trailing 7-day planned-vs-logged workout match
 // ============================================
 //
 // Compares what the daily plans prescribed with what the user actually logged
@@ -46,7 +46,7 @@ function fuzzyNameMatch(a: string, b: string): boolean {
 
 /**
  * Trailing 7-day adherence ending the day before `endDateExclusive`
- * (pass today — today's plan is the one being generated).
+ * (pass today - today's plan is the one being generated).
  * Buckets: ≥90% progress · 60–89% hold · <60% deload · no history → hold.
  */
 export async function computeWorkoutAdherence(

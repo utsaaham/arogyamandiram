@@ -1,14 +1,14 @@
 // ============================================
-// Correlation & triggers engine — generalizes habit insights to ALL features
+// Correlation & triggers engine - generalizes habit insights to ALL features
 // ============================================
 //
 // Binarizes each continuous feature (vs its median, or vs 100% for
 // %-of-target features), then compares outcome scores on high vs low days.
 // Guardrails from the original habit-insights engine are kept: at least 3
-// samples on each side and a minimum 5-point delta — the engine stays silent
+// samples on each side and a minimum 5-point delta - the engine stays silent
 // on noise. Every insight carries sample counts → surfaced confidence.
 // Compound patterns come from fixed rule templates (never free-form mining).
-// Correlation, not causation — phrased accordingly in the UI.
+// Correlation, not causation - phrased accordingly in the UI.
 
 import type { DailyFeatureRow } from './features';
 import type { ConfidenceLevel } from './attribution';
@@ -24,7 +24,7 @@ export interface FeatureInsight {
   outcome: OutcomeKey;
   /** Outcome mean on "high/true" days minus "low/false" days. */
   delta: number;
-  /** delta / std(outcome) — comparable across features for trigger ranking. */
+  /** delta / std(outcome) - comparable across features for trigger ranking. */
   effectSize: number;
   sampleHigh: number;
   sampleLow: number;
@@ -44,7 +44,7 @@ export interface CompoundInsight {
 
 export interface CorrelationResults {
   insights: FeatureInsight[];
-  /** Ranked by |effectSize| — "for you, sleep moves recovery 3× more than protein". */
+  /** Ranked by |effectSize| - "for you, sleep moves recovery 3× more than protein". */
   triggers: FeatureInsight[];
   compound: CompoundInsight[];
 }

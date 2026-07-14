@@ -18,7 +18,7 @@ const HealthSnapshotSchema = new Schema<IHealthSnapshotDocument>(
 
 HealthSnapshotSchema.index({ userId: 1, receivedAt: -1 });
 
-// Auto-expire after 90 days — matches MAX_BACKFILL_DAYS in healthDataSync
+// Auto-expire after 90 days - matches MAX_BACKFILL_DAYS in healthDataSync
 HealthSnapshotSchema.index({ receivedAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
 const HealthSnapshot =

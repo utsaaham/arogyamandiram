@@ -1,8 +1,8 @@
 // ============================================
-// /api/ai/orchestrator - AI Health Orchestrator
+// /api/ai/orchestrator - Health command router
 // ============================================
-// One main AI agent classifies intent from any natural language input
-// and routes to the appropriate health-logging tool.
+// One model reads the user's message, figures out what they meant,
+// and sends it to the right health tool.
 
 import { NextRequest } from 'next/server';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
@@ -51,8 +51,8 @@ interface ClassifyResult {
 
 // ─── Intent Classification Tool Schema ──────────────────────────────────────
 
-const ORCHESTRATOR_SYSTEM = `You are a health AI orchestrator for Arogyamandiram, a health tracking app.
-Given the user's natural language input, decide which tool to use and extract the required parameters.
+const ORCHESTRATOR_SYSTEM = `You route health-related messages for Arogyamandiram.
+Read the user's natural language input, decide which tool to use, and extract the needed parameters.
 
 Available tools:
 - water: Log water intake. Extract amount_ml (convert: 1 glass/cup = 250ml, 1 bottle = 500ml).
@@ -68,7 +68,7 @@ Available tools:
 
 Confidence: high if intent is clear, medium if somewhat ambiguous, low if very unclear.
 If the input is a greeting, gibberish, or clearly not a health command, use tool=unknown.
-Always call classify_intent. Never respond in plain text.`;
+Always call classify_intent. Do not reply in plain text.`;
 
 const CLASSIFY_TOOL = {
   type: 'function' as const,
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
     // ── Step 1: Intent Classification ──────────────────────────────────────
     const classifyStart = Date.now();
     const classifySystemPrompt = imageBase64
-      ? `${ORCHESTRATOR_SYSTEM}\nThe user has also attached an image. Use it to help identify food items, workout equipment, or other health-relevant content. If the image shows food or drink, choose food-ai-logger — the food tool will analyze the photo itself, so params.text only needs the user's own words (or "" if they wrote nothing).`
+      ? `${ORCHESTRATOR_SYSTEM}\nThe user has also attached an image. Use it to help identify food items, workout equipment, or other health-relevant content. If the image shows food or drink, choose food-ai-logger - the food tool will analyze the photo itself, so params.text only needs the user's own words (or "" if they wrote nothing).`
       : ORCHESTRATOR_SYSTEM;
     const classifyUserPrompt = userInput || '(image attached)';
 
@@ -378,7 +378,7 @@ export async function POST(req: NextRequest) {
         openCustomFood: true,
       };
     } else {
-      // unknown — not a health command
+      // unknown - not a health command
       toolEndpoint = 'none';
       result = {
         summary: "Hmm, that one went over my head 🙈 whisper me things like \"I drank 500ml of water\" or \"had rice for lunch\" and I'll take care of the rest 💛",

@@ -1,5 +1,5 @@
 // ============================================
-// IMAP Email Reader — imapflow wrapper
+// IMAP Email Reader - imapflow wrapper
 // ============================================
 // Fetches unread replies from a user's inbox that match a subject prefix.
 // Used by the email reply processing cron job.
@@ -61,7 +61,7 @@ export async function fetchUnreadReplies(
     await client.connect();
     await client.mailboxOpen('INBOX');
 
-    // Search for unseen messages matching subject prefix — use UID mode so msg.uid is reliable
+    // Search for unseen messages matching subject prefix - use UID mode so msg.uid is reliable
     const searchResult = await client.search({ seen: false, subject: subjectPrefix }, { uid: true });
     const uids = Array.isArray(searchResult) ? searchResult : [];
 

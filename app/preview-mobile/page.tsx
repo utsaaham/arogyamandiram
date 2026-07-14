@@ -38,7 +38,7 @@ const STATS = [
     d: 'M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 002.5 2.5z' },
   { value: '9',     label: 'Meals',  sub: '1,327 kcal logged', color: '#fbbf24',
     d: null },
-  { value: '—',     label: 'Sleep',  sub: 'of 8h target',     color: '#a78bfa',
+  { value: '-',     label: 'Sleep',  sub: 'of 8h target',     color: '#a78bfa',
     d: 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z' },
 ];
 
@@ -57,7 +57,7 @@ export default function PreviewMobilePage() {
           fontFamily: 'var(--font-outfit, Outfit, system-ui, sans-serif)',
         }}
       >
-        {/* Status bar — vertically centered to match the dynamic island in the phone frame */}
+        {/* Status bar - vertically centered to match the dynamic island in the phone frame */}
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 82,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -299,7 +299,7 @@ function StreakCard() {
         Keep your streak alive to climb badge tiers.
       </p>
 
-      {/* Streak items — horizontal scroll */}
+      {/* Streak items - horizontal scroll */}
       <div style={{ display: 'flex', gap: 7, overflowX: 'hidden', marginBottom: 10 }}>
         {STREAKS.map((s) => (
           <div key={s.label} style={{

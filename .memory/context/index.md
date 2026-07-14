@@ -10,7 +10,7 @@ staleness_days: 3
 
 ## Project Summary
 
-Arogyamandiram is a full-stack health and wellness platform with tracking, AI orchestration, reminders, cron automation, health-data sync, and gamification. The app is built with Next.js App Router, MongoDB/Mongoose, NextAuth credentials auth, Tailwind plus custom CSS, and OpenAI-powered flows. Core product entry points are the dashboard, settings, AI page, and the API surface under `app/api/`.
+Arogyamandiram is a full-stack health and wellness platform with tracking, assistant routing, reminders, cron automation, health-data sync, and gamification. The app is built with Next.js App Router, MongoDB/Mongoose, NextAuth credentials auth, Tailwind plus custom CSS, and OpenAI-backed flows. Core product entry points are the dashboard, settings, assistant page, and the API surface under `app/api/`.
 
 ## Context Files
 

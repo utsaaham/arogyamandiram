@@ -1,7 +1,7 @@
 // ============================================
-// Meal Ideas Service — Production-grade AI recommendations
+// Meal Ideas Service - meal suggestions built from the user's own data
 // ============================================
-// Clean payload, realistic targets, structured history, ~60% token reduction.
+// Clean payload, realistic targets, structured history, lower token usage.
 
 import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
@@ -77,7 +77,7 @@ export interface MealHistoryResultWithDates {
   byDay: MealHistoryByDay;
 }
 
-// ---------- Exclude list: spices, condiments — never include in history ----------
+// ---------- Exclude list: spices, condiments - never include in history ----------
 
 const EXCLUDE_ITEMS = new Set([
   'salt', 'sugar', 'oil', 'ghee', 'butter', 'water',
@@ -507,7 +507,7 @@ async function callOpenAI(
       );
     }
     if (status >= 500) {
-      throw new Error('AI service is temporarily unavailable. Please try again in a few minutes.');
+      throw new Error('The AI service is taking a short break. Please try again in a few minutes.');
     }
     throw new Error(rawMessage || `OpenAI API error: ${status}`);
   }
@@ -543,7 +543,7 @@ export async function getMealIdeas(
   const apiKey = await resolveOpenAIKey(userId);
   if (!apiKey) {
     throw new Error(
-      'OpenAI API key required. Add your key in Settings to enable AI features.'
+      'OpenAI API key required. Add your key in Settings to turn on AI features.'
     );
   }
 

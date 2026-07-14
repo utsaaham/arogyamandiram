@@ -1,5 +1,5 @@
 ---
-name: Next.js Fullstack Agent — Skills
+name: Next.js Fullstack Agent - Skills
 last_updated: 2026-04-15
 updated_by: codex-gpt-5
 ---
@@ -8,15 +8,15 @@ updated_by: codex-gpt-5
 
 ## Technologies Owned
 
-- **Next.js 15 App Router** — API routes, server components, route groups
-- **TypeScript 5.7** — strict mode, path aliases (`@/*`)
-- **MongoDB + Mongoose 8** — schema design, compound indexes, connection pooling
-- **NextAuth.js 4** — JWT strategy, credentials provider, session callbacks
-- **bcryptjs** — password hashing
-- **AES-256-GCM** — key encryption/decryption via `lib/encryption.ts`
-- **Zod 3.24** — request validation
-- **OpenAI Responses API** — `gpt-4o-mini` calls for AI features
-- **date-fns 4.1** — date manipulation for log queries
+- **Next.js 15 App Router** - API routes, server components, route groups
+- **TypeScript 5.7** - strict mode, path aliases (`@/*`)
+- **MongoDB + Mongoose 8** - schema design, compound indexes, connection pooling
+- **NextAuth.js 4** - JWT strategy, credentials provider, session callbacks
+- **bcryptjs** - password hashing
+- **AES-256-GCM** - key encryption/decryption via `lib/encryption.ts`
+- **Zod 3.24** - request validation
+- **OpenAI Responses API** - `gpt-4o-mini` calls for AI features
+- **date-fns 4.1** - date manipulation for log queries
 
 ## Key Patterns
 
@@ -66,8 +66,8 @@ const res = await fetch('https://api.openai.com/v1/responses', {
 
 ## Gotchas
 
-- `password` has `select: false` — use `.select('+password')` when needed
-- Never return raw user documents — always mask them
+- `password` has `select: false` - use `.select('+password')` when needed
+- Never return raw user documents - always mask them
 - The `DailyLog` pre-save hook recalculates totals
 - Some routes support cron bypass headers; prefer `getAuthUserIdWithBypass(req)` where appropriate
 - `Food` and `DailyPlan` are active models; do not assume the data model is only `User` + `DailyLog`

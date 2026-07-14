@@ -1,5 +1,5 @@
 // Habit correlation insights: "On days with caffeine after 2pm, your next-day
-// readiness averages 9 points lower." Patterns and trends only — no causal or
+// readiness averages 9 points lower." Patterns and trends only - no causal or
 // medical claims. Requires at least 3 days with and 3 days without the habit.
 
 import { HABIT_LABELS, type HabitKey } from '@/types';
@@ -15,7 +15,7 @@ function mean(values: number[]): number | null {
 
 /**
  * A habit logged on day D is correlated with that night's sleep and the next
- * day's readiness — i.e. the scores at index D+1.
+ * day's readiness - i.e. the scores at index D+1.
  */
 export function computeInsights(
   days: DayInput[],

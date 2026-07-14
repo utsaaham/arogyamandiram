@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Coach › Overview — target-reached congratulation nudge
+// Coach › Overview - target-reached congratulation nudge
 // ============================================
 // Shows when the goal is lose_fat and the latest weight is at/below target.
 // Suggest-only: offers a goal switch (Recomp / Build Muscle) but never
@@ -83,7 +83,7 @@ export default function GoalReachedBanner() {
             You reached your target weight of {targetWeight} kg. Huge win.
           </p>
           <p className="mt-1 text-xs text-emerald-100/80">
-            Fat loss did its job. If you want a new challenge, switching your goal keeps the momentum going — your call, nothing changes unless you choose it.
+            Fat loss did its job. If you want a new challenge, switching your goal keeps the momentum going - your call, nothing changes unless you choose it.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button

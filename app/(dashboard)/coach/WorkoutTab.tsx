@@ -92,7 +92,7 @@ function extractSetsAndReps(comment: string, fallbackSets: number): { sets: numb
       return { sets: s, reps: r };
     }
   }
-  // "12 reps" or "12 sec" — single integer that's clearly reps/seconds, not a duration
+  // "12 reps" or "12 sec" - single integer that's clearly reps/seconds, not a duration
   const repsOnly = comment.match(/(\d+)\s*(?:reps?|sec|second)/i);
   if (repsOnly) {
     const n = Number(repsOnly[1]);
@@ -499,7 +499,7 @@ export default function WorkoutTab() {
         </div>
       </div>
 
-      {/* Exercises — numbered gym-order checklist */}
+      {/* Exercises - numbered gym-order checklist */}
       {totalExercises > 0 && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="text-xs font-semibold text-zinc-300">Workout sequence</p>
@@ -578,7 +578,7 @@ export default function WorkoutTab() {
                 )}
               </div>
 
-              {/* You did — free-text comment */}
+              {/* You did - free-text comment */}
               {showForm ? (
                 <div className="mt-2 flex items-center gap-2">
                   <input

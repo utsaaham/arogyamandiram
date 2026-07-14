@@ -1,5 +1,5 @@
 // ============================================
-// /api/coach/weekly-summary — rolling weekly recap (cached)
+// /api/coach/weekly-summary - rolling weekly recap (cached)
 // ============================================
 // Rolling 7 days ending yesterday: workouts done vs planned (lib/adherence),
 // weight delta, strongest-lift delta, protein days hit, plus one AI-written
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
         .sort({ date: 1 })
         .select('date weight totalProtein workouts.exercise workouts.category workouts.weight')
         .lean() as Promise<LogLean[]>,
-      // computeWorkoutAdherence's window is the 7 days before `today` —
+      // computeWorkoutAdherence's window is the 7 days before `today` -
       // exactly weekStart..weekEnd.
       computeWorkoutAdherence(String(userId), today),
     ]);
@@ -149,7 +149,7 @@ export async function GET(req: NextRequest) {
         const knownPatterns = await getCoachMemoryLines(userId).catch(() => [] as string[]);
         const ai = await createOpenAiJson<{ nextWeekLine?: string }>({
           apiKey,
-          systemPrompt: `You are Ciel, writing ONE sentence of fitness advice for the user's next week based on their weekly stats. ${COACH_TONE} knownPatterns are statistically confirmed patterns about this user — you may use them. Respond with JSON: { "nextWeekLine": string } — a single sentence, max 25 words, that names one concrete action for next week grounded in the stats.`,
+          systemPrompt: `You are Ciel, writing ONE sentence of fitness advice for the user's next week based on their weekly stats. ${COACH_TONE} knownPatterns are statistically confirmed patterns about this user - you may use them. Respond with JSON: { "nextWeekLine": string } - a single sentence, max 25 words, that names one concrete action for next week grounded in the stats.`,
           userPrompt: JSON.stringify({ weekStart, weekEnd, stats, knownPatterns }),
           maxTokens: 120,
         });

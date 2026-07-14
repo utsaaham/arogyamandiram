@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Coach › Overview — WHOOP-style Daily Outlook
+// Coach › Overview - WHOOP-style Daily Outlook
 // ============================================
 // Live score dials come straight from /api/scores; the AI briefing (outlook)
 // comes from /api/ai/daily-plan/overview and reads the user's whole history.

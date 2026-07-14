@@ -10,10 +10,10 @@ updated_by: codex-gpt-5
 ## How It's Used Here
 
 Primary collections:
-- `users` — profiles, settings, targets, achievements, encrypted keys, sync metadata
-- `dailylogs` — one document per user per day, containing tracking data and todo completions
-- `dailyplans` — AI-generated daily plan per user per date
-- `foods` — normalized searchable food cache, including USDA-imported foods
+- `users` - profiles, settings, targets, achievements, encrypted keys, sync metadata
+- `dailylogs` - one document per user per day, containing tracking data and todo completions
+- `dailyplans` - AI-generated daily plan per user per date
+- `foods` - normalized searchable food cache, including USDA-imported foods
 
 ## Connection
 

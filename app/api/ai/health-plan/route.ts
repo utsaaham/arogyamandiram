@@ -20,7 +20,7 @@ export async function POST(_req: NextRequest) {
     const apiKey = await getOpenAIKeyForHealthPlan(userId);
     if (!apiKey) {
       return errorResponse(
-        'OpenAI API key required. Add your key in Settings to enable AI health plan.',
+        'OpenAI API key required. Add your key in Settings to turn on health plan generation.',
         403
       );
     }

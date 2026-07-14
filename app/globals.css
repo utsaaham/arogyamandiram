@@ -8,7 +8,7 @@
 
 /* ---------- CSS Custom Properties ---------- */
 :root {
-  /* Neutral, premium dark-mode foundations */
+  /* Neutral dark-mode foundations */
   --bg-primary: #08080d;
   --bg-surface: #0a0a0a;
   --bg-elevated: #171717;
@@ -292,7 +292,7 @@ body {
   .glass-card.card-glow {
     background: linear-gradient(160deg, #111712 0%, #0c1410 100%);
   }
-  /* ring-card.card-glow intentionally NOT overridden — keeps its natural emerald tint */
+  /* ring-card.card-glow intentionally NOT overridden - keeps its natural emerald tint */
   /* Hero card tints for dashboard-style pages */
   .glass-card-tint-emerald {
     background: linear-gradient(145deg, rgba(30, 221, 139, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%);
@@ -1658,7 +1658,7 @@ input[type='date'].date-input {
 }
 
 /* ============================================
-   LANDING PAGE — World-Class Aesthetic
+   LANDING PAGE - World-Class Aesthetic
    ============================================ */
 
 /* 1. Film grain overlay */

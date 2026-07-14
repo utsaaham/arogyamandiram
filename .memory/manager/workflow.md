@@ -2,7 +2,7 @@
 state: template
 created: 2026-03-26
 last_updated: 2026-03-26
-last_read: —
+last_read: ""
 updated_by: claude-opus
 staleness_days: 30
 ---
@@ -14,15 +14,15 @@ How every task flows from start to finish.
 ## Standard Flow
 
 ```
-1. RECEIVE    — Manager gets the task
-2. ROUTE      — Manager checks task-router.md, picks the right agent
-3. CONTEXT    — Agent loads: persona + skills + relevant rules
-4. PLAN       — Agent says what it will do BEFORE doing it
-5. EXECUTE    — Agent does the work
-6. VERIFY     — Agent checks work against loaded rules
-7. TEST       — If code changed, tests must pass
-8. UPDATE     — Update active-context.md and progress.md
-9. DONE       — Report what was done and what is next
+1. RECEIVE    - Manager gets the task
+2. ROUTE      - Manager checks task-router.md, picks the right agent
+3. CONTEXT    - Agent loads: persona + skills + relevant rules
+4. PLAN       - Agent says what it will do BEFORE doing it
+5. EXECUTE    - Agent does the work
+6. VERIFY     - Agent checks work against loaded rules
+7. TEST       - If code changed, tests must pass
+8. UPDATE     - Update active-context.md and progress.md
+9. DONE       - Report what was done and what is next
 ```
 
 ## Rules That Never Bend

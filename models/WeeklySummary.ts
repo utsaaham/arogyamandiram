@@ -9,8 +9,8 @@ import mongoose, { Schema, type Document, type Model } from 'mongoose';
 
 export interface IWeeklySummary {
   userId: mongoose.Types.ObjectId;
-  weekEnd: string;   // 'YYYY-MM-DD' — last day included in the window
-  weekStart: string; // 'YYYY-MM-DD' — first day included
+  weekEnd: string;   // 'YYYY-MM-DD' - last day included in the window
+  weekStart: string; // 'YYYY-MM-DD' - first day included
   stats: {
     workoutsPlanned: number;
     workoutsDone: number;

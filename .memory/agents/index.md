@@ -14,15 +14,15 @@
 ## What Each Agent Owns
 
 ### Priya (Next.js Fullstack)
-- `app/api/` — all API route handlers
-- `models/` — `User.ts`, `DailyLog.ts`, `DailyPlan.ts`, `Food.ts`
+- `app/api/` - all API route handlers
+- `models/` - `User.ts`, `DailyLog.ts`, `DailyPlan.ts`, `Food.ts`
 - `lib/auth.ts`, `lib/session.ts`, `lib/db.ts`, `lib/encryption.ts`, `lib/apiMask.ts`
 - `lib/openaiKey.ts`, `lib/aiHealthPlan.ts`, `lib/mealIdeasService.ts`, `lib/healthDataSync.ts`
 - `lib/health.ts`, `lib/gamification.ts`, `lib/calorieBurn.ts`, `lib/debugLogsConfig.ts`
 
 ### Mateo (UI Frontend)
 - `app/(dashboard)/` and `app/(auth)/`
-- `components/` — including orchestrator and debug viewers
+- `components/` - including orchestrator and debug viewers
 - `app/globals.css`, `tailwind.config.ts`
 - `hooks/`, `contexts/`
 - `lib/apiClient.ts`

@@ -24,7 +24,7 @@ export default function CoachPage() {
   const aiEnabled = user?.settings?.aiEnabled !== false;
 
   return (
-    <DashboardPageShell title="Ciel" subtitle="Your day, planned overnight — insights, meals and training tuned to your logs" icon={Sparkles}>
+    <DashboardPageShell title="Ciel" subtitle="Your day, planned overnight with meal, workout, and insight suggestions based on your logs" icon={Sparkles}>
       <div>
 
         {aiEnabled ? (
@@ -58,7 +58,7 @@ export default function CoachPage() {
               <Sparkles className="h-10 w-10 text-zinc-600" />
               <p className="text-sm font-medium text-zinc-300">AI features are turned off</p>
               <p className="text-xs text-zinc-500">
-                Ciel needs AI enabled to plan your day. Turn it on in Settings to get daily insights, meal ideas and workouts.
+                Ciel needs AI turned on to plan your day. Enable it in Settings to get daily insights, meal ideas, and workouts.
               </p>
               <Link
                 href="/settings"

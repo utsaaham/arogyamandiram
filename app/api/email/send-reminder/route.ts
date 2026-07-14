@@ -1,5 +1,5 @@
 // ============================================
-// /api/email/send-reminder — Send one reminder email
+// /api/email/send-reminder - Send one reminder email
 // ============================================
 // Used by cron (with X-Cron-Secret + userId body param) and by the
 // preferences page for "send test" (session auth, no userId body param).
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       await User.findByIdAndUpdate(userId, { $set: checklistUpdate });
     }
 
-    // Write SMTP debug log (dev/debug only — filesystem not writable in production)
+    // Write SMTP debug log (dev/debug only - filesystem not writable in production)
     if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
       try {
         const { promises: fsp } = await import('fs');

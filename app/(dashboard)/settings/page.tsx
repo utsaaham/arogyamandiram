@@ -583,7 +583,7 @@ function SettingsInner() {
     try {
       const res = await api.generateHealthPlan();
       if (res.success && res.data) {
-        showToast('AI health plan updated', 'success');
+        showToast('Health plan updated', 'success');
         refetch();
         const data = res.data as { explanations?: Record<string, string> };
         if (data.explanations && Object.keys(data.explanations).length > 0) {
@@ -993,7 +993,7 @@ function SettingsInner() {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:gap-6 lg:items-start lg:min-h-0">
 
-      {/* ── Left nav — desktop ── */}
+      {/* ── Left nav - desktop ── */}
       <aside className="hidden lg:block lg:w-52 lg:shrink-0 lg:sticky lg:top-0 lg:self-start" style={{ maxHeight: 'calc(100vh - 10rem)' }}>
         <div className="glass-card rounded-2xl p-2 overflow-y-auto" style={{ maxHeight: 'inherit' }}>
           {NAV_ITEMS.map((item) => (
@@ -1018,7 +1018,7 @@ function SettingsInner() {
         </div>
       </aside>
 
-      {/* ── Top tab bar — mobile ── */}
+      {/* ── Top tab bar - mobile ── */}
       <div className="flex overflow-x-auto gap-2 pb-1 lg:hidden">
         {NAV_ITEMS.map((item) => (
           <button
@@ -1150,7 +1150,7 @@ function SettingsInner() {
         {/* ══════ BODY COMPOSITION ══════ */}
         {activeTab === 'body' && (
           <>
-            {/* Goal — user-owned; drives calorie/macro targets and AI plans */}
+            {/* Goal - user-owned; drives calorie/macro targets and AI plans */}
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -1163,7 +1163,7 @@ function SettingsInner() {
                   Save
                 </button>
               </div>
-              <p className="mt-1 text-xs text-text-muted">Your call — Ciel adapts plans and targets to the goal you pick.</p>
+              <p className="mt-1 text-xs text-text-muted">Your call - Ciel adapts plans and targets to the goal you pick.</p>
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {GOAL_OPTIONS.map((g) => (
                   <button key={g.value} type="button" onClick={() => setGoal(g.value)}
@@ -1481,11 +1481,11 @@ function SettingsInner() {
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-text-primary">Use AI features</h2>
+                    <h2 className="text-base font-semibold text-text-primary">Use AI here</h2>
                     <p className="mt-1 text-xs text-text-muted">
                       {aiEnabled
                         ? 'AI logging, Ciel plans, insights, and auto-generation can run.'
-                        : 'No AI calls will run anywhere in ArogyaMandiram.'}
+                        : 'Nothing AI-related will run anywhere in ArogyaMandiram.'}
                     </p>
                   </div>
                 </div>
@@ -1696,7 +1696,7 @@ function SettingsInner() {
                     <label className="text-xs font-medium text-text-muted">Cooking experience</label>
                     <select value={cookingSkill} onChange={(e) => setCookingSkill(e.target.value as 'beginner' | 'intermediate' | 'confident')}
                       className="glass-input mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
-                      {cookingSkillOptions.map((option) => <option key={option.value} value={option.value}>{option.label} — {option.desc}</option>)}
+                      {cookingSkillOptions.map((option) => <option key={option.value} value={option.value}>{option.label} - {option.desc}</option>)}
                     </select>
                   </div>
                   <div>
@@ -1757,7 +1757,7 @@ function SettingsInner() {
                     <label className="text-xs font-medium text-text-muted">{t.label}</label>
                     <input type="time" value={t.value} onChange={(e) => t.set(e.target.value)}
                       className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
-                    <p className="mt-1 text-[10px] text-text-muted truncate">{formatLastSent(lastSentAt[t.key]) || '—'}</p>
+                    <p className="mt-1 text-[10px] text-text-muted truncate">{formatLastSent(lastSentAt[t.key]) || '-'}</p>
                   </div>
                 ))}
               </div>
@@ -1822,7 +1822,7 @@ function SettingsInner() {
                     label: 'OpenAI API Key', active: openAiActive, show: showOpenai,
                     toggleShow: () => setShowOpenai(!showOpenai), value: openaiKey,
                     set: setOpenaiKey, placeholder: openAiActive ? '••••••••••••••••' : 'sk-...',
-                    hint: 'Required for AI meal suggestions, workout plans, and insights.',
+                    hint: 'Needed for meal suggestions, workout plans, and insights.',
                   },
                   {
                     label: 'USDA FoodData Central API Key', active: fdcActive, show: showFdc,
@@ -1862,7 +1862,7 @@ function SettingsInner() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Smile className="h-4 w-4 text-accent-violet" />
-                    <h2 className="text-base font-semibold text-text-primary">AI companion</h2>
+                    <h2 className="text-base font-semibold text-text-primary">Dashboard mascot</h2>
                   </div>
                   <button onClick={saveCustomizations} disabled={customizationsSaving}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
@@ -2416,7 +2416,7 @@ function TodoForm({
                   next.setDate(next.getDate() + cadenceInfo(values.cadence).days);
                   const label = next.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
                   return next.getTime() <= Date.now()
-                    ? `That makes it due already — it'll show up in your Care list right away.`
+                    ? `That makes it due already - it'll show up in your Care list right away.`
                     : `Next one comes due around ${label}.`;
                 })()
               : 'Tell us and the cycle starts from that day instead of today.'}
@@ -2474,7 +2474,7 @@ function TodoForm({
         </div>
       )}
 
-      {/* Frequency — only for supplement / medicine */}
+      {/* Frequency - only for supplement / medicine */}
       {showFrequency && (
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
@@ -2847,7 +2847,7 @@ export default function SettingsPage() {
         paddingTop: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 0.75rem)',
       }}
     >
-      {/* Fixed header — never scrolls */}
+      {/* Fixed header - never scrolls */}
       <div className="shrink-0 px-4 pb-3 sm:px-6 lg:px-6">
         <DashboardPageShell
           title="Settings"

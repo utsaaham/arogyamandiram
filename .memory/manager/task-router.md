@@ -2,7 +2,7 @@
 state: template
 created: 2026-03-26
 last_updated: 2026-03-26
-last_read: —
+last_read: ""
 updated_by: claude-opus
 staleness_days: 7
 ---
@@ -35,9 +35,9 @@ The manager reads this file to decide which agent handles a task.
 
 ## Edge Cases
 
-- **Task doesn't fit any agent** — Manager asks the user for clarification
-- **Task spans multiple areas** — Manager splits it and coordinates between agents
-- **Documentation only** — Any agent can handle it, prefer the one who knows the area
+- **Task doesn't fit any agent** - Manager asks the user for clarification
+- **Task spans multiple areas** - Manager splits it and coordinates between agents
+- **Documentation only** - Any agent can handle it, prefer the one who knows the area
 
 ---
 
@@ -62,9 +62,9 @@ The manager reads this file to decide which agent handles a task.
 
 ## Edge Cases
 
-- **Task doesn't fit any agent** — Manager asks the user for clarification
-- **Task spans multiple areas** — Manager splits it and coordinates between agents
-- **Documentation only** — Any agent can handle it, prefer the one who knows the area
+- **Task doesn't fit any agent** - Manager asks the user for clarification
+- **Task spans multiple areas** - Manager splits it and coordinates between agents
+- **Documentation only** - Any agent can handle it, prefer the one who knows the area
 
 ## Actions
 

@@ -1,8 +1,8 @@
 // ============================================
-// /api/ai/health-check — AI-Powered Health Analysis
+// /api/ai/health-check - Health analysis
 // ============================================
-// GET → analyses today's wearable metrics (heart rate, steps, active calories,
-// distance) against the user's goals and returns an AI health report.
+// GET -> analyses today's wearable metrics (heart rate, steps, active calories,
+// distance) against the user's goals and returns a health report.
 
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
@@ -35,7 +35,7 @@ export async function GET() {
     const apiKey = await resolveOpenAIKey(userId);
     if (!apiKey) {
       return errorResponse(
-        'OpenAI API key required. Add your key in Settings to enable AI features.',
+        'OpenAI API key required. Add your key in Settings to turn on AI features.',
         403
       );
     }
@@ -103,7 +103,7 @@ export async function GET() {
       avgDist7d != null ? `7-day avg distance: ${avgDist7d} km.` : 'Distance: no historical data.',
     ].join('\n');
 
-    const systemPrompt = `You are a health data analyst for a wellness app. ${COACH_TONE} Analyse the user's wearable metrics and return a structured health report.
+    const systemPrompt = `Write like a plainspoken health analyst for a wellness app. ${COACH_TONE} Analyze the user's wearable metrics and return a structured health report.
 
 Heart rate health guidelines (resting):
 - Below 55 bpm: low (could indicate bradycardia; advise to consult a doctor if symptomatic)
@@ -148,7 +148,7 @@ Respond ONLY with valid JSON in this exact shape (no markdown, no extra text):
         return errorResponse('Your OpenAI API key looks invalid or expired. Update it in Settings → API Keys.', 403);
       }
       if (status >= 500) {
-        return errorResponse('AI service is temporarily unavailable. Please try again in a few minutes.', 503);
+        return errorResponse('The AI service is taking a short break. Please try again in a few minutes.', 503);
       }
       const rawMessage = (err as { error?: { message?: string } }).error?.message;
       return errorResponse(rawMessage || `OpenAI API error: ${status}`, 500);

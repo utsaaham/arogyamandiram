@@ -1,12 +1,12 @@
 // ============================================
-// Goals — user-owned goal enum, normalization, calorie adjustment
+// Goals - user-owned goal enum, normalization, calorie adjustment
 // ============================================
 //
 // The user picks one of five goals; the system never overwrites it. The old
 // auto-derivation from weight vs targetWeight lives on only as a read-only
 // trend signal (deriveGoalDirection in app/api/ai/daily-plan/shared.ts).
 // Stored documents may still hold legacy 3-value strings ('lose' | 'maintain'
-// | 'gain') — normalize on read, never migrate data.
+// | 'gain') - normalize on read, never migrate data.
 
 import type { Goal, LegacyGoal } from '@/types';
 

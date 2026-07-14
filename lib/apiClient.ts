@@ -141,7 +141,7 @@ export const api = {
       body: JSON.stringify(keys),
     }),
 
-  // Email Settings (SMTP + IMAP — passwords are encrypted server-side)
+  // Email Settings (SMTP + IMAP - passwords are encrypted server-side)
   saveEmailSettings: (body: {
     smtp?: {
       host?: string; port?: number; secure?: boolean;

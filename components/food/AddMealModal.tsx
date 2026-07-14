@@ -168,7 +168,7 @@ export default function AddMealModal({ food, onClose, onAdd, loading }: AddMealM
         <div className="mt-6">
           {!isScoop && (
             <>
-              {/* Measure selector — only show if there's more than one option */}
+              {/* Measure selector - only show if there's more than one option */}
               {measureOptions.length > 1 && (
                 <div className="mb-4">
                   <label className="text-xs font-medium text-text-muted">Serving size</label>

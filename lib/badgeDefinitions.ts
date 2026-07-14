@@ -70,7 +70,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   { id: 'streak_recovery_14', name: 'Recovery Master', description: 'Readiness at or above your own baseline 14 days in a row.', icon: '⚡', category: 'milestone' },
 
   // ----- Best week -----
-  { id: 'milestone_best_week', name: 'Best Week Ever', description: 'Your most complete training week yet — more workouts in 7 days than any week before.', icon: '🚀', category: 'milestone' },
+  { id: 'milestone_best_week', name: 'Best Week Ever', description: 'Your most complete training week yet - more workouts in 7 days than any week before.', icon: '🚀', category: 'milestone' },
 
   // ----- Milestones (totals) -----
   { id: 'milestone_meals_50', name: '50 Meals', description: 'Logged 50 meals.', icon: '🍽️', category: 'milestone' },

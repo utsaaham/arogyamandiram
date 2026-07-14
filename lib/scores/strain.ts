@@ -8,7 +8,7 @@ import { clamp, type DayInput, type ScoreComponent, type StrainResult } from './
 const FALLBACK_ACTIVE_CAL = 400;
 const FALLBACK_STEPS = 7000;
 
-// Heart-rate zone bounds (bpm) — fixed, explainable thresholds for v1
+// Heart-rate zone bounds (bpm) - fixed, explainable thresholds for v1
 const ZONE_BOUNDS: Array<{ zone: string; min: number; max: number; intensity: number }> = [
   { zone: 'Z1 · Easy', min: 0, max: 114, intensity: 1 },
   { zone: 'Z2 · Light', min: 114, max: 133, intensity: 1.5 },
@@ -24,7 +24,7 @@ function zoneFor(avgHeartRate: number | undefined) {
 
 // Total active energy for a day: watch active calories plus hand-logged
 // workouts. The watch already counts its own workouts, so only non-device
-// entries are added on top — and a gym session logged without the watch
+// entries are added on top - and a gym session logged without the watch
 // still shows up here.
 function effectiveActiveCalories(day: DayInput): { total: number; manual: number; hasWatch: boolean } | null {
   const manual = (day.workouts ?? [])

@@ -47,7 +47,7 @@ export async function GET() {
       deriveActivityLevel(userId),
     ]);
     const profileBase = user.profile as { weight?: number; targetWeight?: number; goal?: string } | undefined;
-    // The goal is user-owned — never overridden from weight vs target. Legacy
+    // The goal is user-owned - never overridden from weight vs target. Legacy
     // stored values are normalized to the 5-value enum on read.
     const goal = normalizeGoal(profileBase?.goal);
     const userWithDerivedProfile = {

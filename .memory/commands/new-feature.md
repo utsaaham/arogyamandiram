@@ -47,8 +47,8 @@ Create `app/api/[feature]/route.ts`:
 
 ### 5. Add navigation link
 
-- `components/layout/Sidebar.tsx` — desktop nav item
-- `components/layout/MobileNav.tsx` — mobile tab (limited — only add if high priority)
+- `components/layout/Sidebar.tsx` - desktop nav item
+- `components/layout/MobileNav.tsx` - mobile tab (limited - only add if high priority)
 
 ### 6. Update hooks if needed
 
@@ -57,5 +57,5 @@ If the feature needs data fetched on multiple pages, create a hook in `hooks/use
 ### 7. Update memory
 
 After completing:
-- Update `context/progress.md` — move to Done
-- Update `context/active-context.md` — what's next
+- Update `context/progress.md` - move to Done
+- Update `context/active-context.md` - what's next

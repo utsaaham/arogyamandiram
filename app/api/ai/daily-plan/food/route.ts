@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       || 30;
     const targetProteinG = Number(user?.targets?.protein) || undefined;
     const targetCalories = Number(user?.targets?.dailyCalories) || undefined;
-    const systemPrompt = `You are Ciel, the user's practical nutrition guide. ${COACH_TONE} Create a simple food plan for TODAY based on the user's last-week food details.
+    const systemPrompt = `You are Ciel, the user's practical nutrition guide. ${COACH_TONE} Create a simple food plan for today based on the user's last week of food details.
 Return JSON only with this shape:
 {
   "foodPlan": {
@@ -98,7 +98,7 @@ Return JSON only with this shape:
     "reasoning": "string"
   }
 }
-Keep suggestions realistic and easy to follow. Ciel must explain how to make every dish, not just name it.`;
+Keep suggestions realistic and easy to follow. Ciel should explain how to make every dish, not just name it.`;
     const userPrompt = buildFoodPrompt({
       ...body,
       dietaryPreference,

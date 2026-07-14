@@ -224,7 +224,7 @@ export default function WeightPage() {
           {
             icon: Scale,
             label: 'Current',
-            value: currentWeight ? formatWeight(currentWeight, units) : '—',
+            value: currentWeight ? formatWeight(currentWeight, units) : '-',
             color: 'text-accent-emerald',
           },
           {
@@ -238,7 +238,7 @@ export default function WeightPage() {
           {
             icon: Target,
             label: 'Target',
-            value: targetWeight ? formatWeight(targetWeight, units) : '—',
+            value: targetWeight ? formatWeight(targetWeight, units) : '-',
             sub: targetWeight && currentWeight
               ? `${formatWeight(Math.abs(currentWeight - targetWeight), units).replace(' kg', '').replace(' lbs', '')} to go`
               : undefined,
@@ -247,13 +247,13 @@ export default function WeightPage() {
           {
             icon: Heart,
             label: 'Ideal',
-            value: idealWeight != null ? formatWeight(idealWeight, units) : '—',
+            value: idealWeight != null ? formatWeight(idealWeight, units) : '-',
             color: 'text-accent-emerald',
           },
           {
             icon: Ruler,
             label: 'BMI',
-            value: bmi ? bmi.toFixed(1) : '—',
+            value: bmi ? bmi.toFixed(1) : '-',
             sub: bmi
               ? bmi < 18.5 ? 'Under' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Over' : 'Obese'
               : undefined,
@@ -397,7 +397,7 @@ export default function WeightPage() {
                       'w-20 text-right font-medium',
                       change < 0 ? 'text-accent-emerald' : change > 0 ? 'text-accent-rose' : 'text-text-muted'
                     )}>
-                      {change !== 0 ? `${change > 0 ? '+' : ''}${displayChange.toFixed(1)}` : '—'}
+                      {change !== 0 ? `${change > 0 ? '+' : ''}${displayChange.toFixed(1)}` : '-'}
                     </span>
                     <span className="flex flex-1 items-center justify-end">
                       {change < 0 ? (
@@ -434,7 +434,7 @@ export default function WeightPage() {
                   <span className="text-xs text-text-muted">Lowest</span>
                 </div>
                 <span className="text-sm font-semibold text-text-primary">
-                  {lowestWeight ? formatWeight(lowestWeight, units) : '—'}
+                  {lowestWeight ? formatWeight(lowestWeight, units) : '-'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -443,7 +443,7 @@ export default function WeightPage() {
                   <span className="text-xs text-text-muted">Highest</span>
                 </div>
                 <span className="text-sm font-semibold text-text-primary">
-                  {highestWeight ? formatWeight(highestWeight, units) : '—'}
+                  {highestWeight ? formatWeight(highestWeight, units) : '-'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -454,7 +454,7 @@ export default function WeightPage() {
                 <span className="text-sm font-semibold text-text-primary">
                   {lowestWeight && highestWeight
                     ? formatWeight(highestWeight - lowestWeight, units)
-                    : '—'}
+                    : '-'}
                 </span>
               </div>
             </div>

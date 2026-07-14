@@ -1,5 +1,5 @@
 // ============================================
-// scripts/logger.mjs — loguru-style log formatter
+// scripts/logger.mjs - loguru-style log formatter
 // ============================================
 // Produces: 2026-04-20 09:14:22.341 | INFO     | module:fn:line - message
 

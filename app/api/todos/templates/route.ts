@@ -1,5 +1,5 @@
 // ============================================
-// /api/todos/templates — Manage recurring todo templates
+// /api/todos/templates - Manage recurring todo templates
 // ============================================
 // GET    → list all templates
 // POST   { title, note?, time?, category? } → create template

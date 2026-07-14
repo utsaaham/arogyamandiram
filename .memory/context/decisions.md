@@ -22,7 +22,7 @@ Health logs are semi-structured and evolve often. `DailyLog` keeps meals, workou
 
 ## NextAuth.js with Credentials Provider
 
-No OAuth for now — users register with email/password. JWT strategy (not database sessions) for stateless auth. 30-day token expiry. `NEXTAUTH_SECRET` fallback exists in `lib/auth.ts` for dev.
+No OAuth for now - users register with email/password. JWT strategy (not database sessions) for stateless auth. 30-day token expiry. `NEXTAUTH_SECRET` fallback exists in `lib/auth.ts` for dev.
 
 ## Auth Enforcement Split Between Layout And API Helpers
 

@@ -9,7 +9,7 @@ import {
   type SectionId,
 } from './DebugPipelineShared';
 
-/** AI Food Logger debug log shape. Supports single-step (legacy) and two-step pipeline. */
+/** Food logger debug log shape. Supports both the old single-step flow and the newer two-step pipeline. */
 export interface AILoggerDebugLog {
   userRequest: { text: string; requestedAt: string };
   /** Legacy single-step */
@@ -112,7 +112,7 @@ export function AILoggerLogView({
             <div className="relative rounded border border-[#1e1e1e] bg-black/20 p-3">
               <CopyButton text={log.userRequest?.text ?? ''} className="absolute right-2 top-2" />
               <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-words pr-16 font-mono text-[11px] leading-relaxed text-zinc-400">
-                {log.userRequest?.text ?? '—'}
+                {log.userRequest?.text ?? '-'}
               </pre>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function AILoggerLogView({
                 <div className="relative rounded border border-[#1e1e1e] bg-black/20 p-3">
                   <CopyButton text={log.step1?.prompt ?? ''} className="absolute right-2 top-2" />
                   <pre className="max-h-[120px] overflow-auto whitespace-pre-wrap break-words pr-16 font-mono text-[11px] leading-relaxed text-zinc-400">
-                    {log.step1?.prompt ?? '—'}
+                    {log.step1?.prompt ?? '-'}
                   </pre>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export function AILoggerLogView({
               <div className="relative rounded border border-[#1e1e1e] bg-black/20 p-3">
                 <CopyButton text={log.instructions ?? ''} className="absolute right-2 top-2" />
                 <pre className="max-h-[240px] overflow-auto whitespace-pre-wrap break-words pr-16 font-mono text-[11px] leading-relaxed text-zinc-400">
-                  {log.instructions ?? '—'}
+                  {log.instructions ?? '-'}
                 </pre>
               </div>
             </div>
@@ -276,7 +276,7 @@ export function AILoggerLogView({
             )}
             <div className="flex flex-col">
               <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Model</span>
-              <span className="font-mono text-zinc-300">{meta.model ?? '—'}</span>
+              <span className="font-mono text-zinc-300">{meta.model ?? '-'}</span>
             </div>
             <div className="h-8 w-px bg-[#1e1e1e]" aria-hidden />
             <div className="flex flex-col">
@@ -288,7 +288,7 @@ export function AILoggerLogView({
             <div className="h-8 w-px bg-[#1e1e1e]" aria-hidden />
             <div className="flex flex-col">
               <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Latency</span>
-              <span className="font-mono text-zinc-300">{meta.latencyMs != null ? `${meta.latencyMs.toLocaleString()}ms` : '—'}</span>
+              <span className="font-mono text-zinc-300">{meta.latencyMs != null ? `${meta.latencyMs.toLocaleString()}ms` : '-'}</span>
             </div>
             <div className="h-8 w-px bg-[#1e1e1e]" aria-hidden />
             <div className="flex flex-col">
@@ -310,7 +310,7 @@ export function AILoggerLogView({
                       hour: 'numeric',
                       minute: '2-digit',
                     })
-                  : '—'}
+                  : '-'}
               </span>
             </div>
           </div>

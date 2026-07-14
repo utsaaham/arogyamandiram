@@ -10,7 +10,7 @@ import type { Types } from 'mongoose';
 
 export interface IDailyPlanDocument extends Document {
   userId: Types.ObjectId;
-  date: string; // 'YYYY-MM-DD' — the day this plan is FOR
+  date: string; // 'YYYY-MM-DD' - the day this plan is FOR
   generatedAt: Date;
   status: 'generating' | 'ready' | 'failed';
   errorMessage?: string;

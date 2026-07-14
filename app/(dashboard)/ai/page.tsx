@@ -31,7 +31,7 @@ export default function AIPage() {
       <div className="shrink-0 flex items-center gap-2.5 px-4 py-3 lg:pb-4 lg:pt-7">
         <Sparkles className="h-4 w-4 text-emerald-400" />
         <h1 className="text-[18px] lg:text-[22px] font-semibold tracking-tight text-neutral-100">
-          AI Health Assistant
+          Health assistant
         </h1>
       </div>
 

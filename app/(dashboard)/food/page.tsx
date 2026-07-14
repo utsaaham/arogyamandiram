@@ -305,7 +305,7 @@ export default function FoodLogPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {/* Nutrition breakdown — mobile only (hidden on lg where right column shows it) */}
+                  {/* Nutrition breakdown - mobile only (hidden on lg where right column shows it) */}
                   <div className="lg:hidden mb-4 flex flex-col items-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
                     <ProgressRing
                       progress={calPercent}

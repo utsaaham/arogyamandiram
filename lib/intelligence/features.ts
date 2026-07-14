@@ -1,10 +1,10 @@
 // ============================================
-// Feature store — one normalized row per day, fusing all sources
+// Feature store - one normalized row per day, fusing all sources
 // ============================================
 //
 // This IS the wearable-fusion layer: sleep, nutrition %, hydration %, strain
 // load, workout done, time-of-day features (bedtime, last meal, workout
-// start when known), habits, mood, weekday/weekend — all in one row the
+// start when known), habits, mood, weekday/weekend - all in one row the
 // correlation and prediction engines consume. Pure mapping + a Mongo loader;
 // rows are cheap to compute so there is no cache collection yet (add
 // models/DailyFeatures.ts + a nightly cron if volumes ever demand it).

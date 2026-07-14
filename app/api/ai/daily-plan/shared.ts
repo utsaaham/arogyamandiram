@@ -446,7 +446,7 @@ function sanitizeWorkoutContext(context?: WorkoutPromptContext) {
  * Derive readiness/recovery signals from recent logs.
  *
  * Note: this no longer chooses a training strategy or required muscle-group
- * components — that decision is delegated to the LLM, which is given the full
+ * components - that decision is delegated to the LLM, which is given the full
  * weekly history. Server-side here we only compute objective signals about
  * recovery (protein deficit, sleep, steps) and the time budget for today.
  */
@@ -526,7 +526,7 @@ export const deriveWorkoutPlanConstraints = deriveReadinessSignals;
  * Derive the user's goal direction from current vs. target weight, falling back
  * to the explicit `profile.goal` field only if weight data is missing.
  *
- * Uses a 0.5 kg deadband — wide enough to absorb day-to-day water-weight noise
+ * Uses a 0.5 kg deadband - wide enough to absorb day-to-day water-weight noise
  * but tight enough that a 1 kg gap from target reads as a real intent to lose
  * (e.g. weight 66, target 65 → "lose").
  */
@@ -552,7 +552,7 @@ export function deriveGoalDirection(
 export type TargetGap = 'above_target' | 'at_target' | 'below_target' | 'unknown';
 
 /**
- * Where the user currently sits relative to their target weight — a read-only
+ * Where the user currently sits relative to their target weight - a read-only
  * state signal for prompts (the goal itself is user-owned and never derived).
  * Same 0.5 kg deadband as deriveGoalDirection.
  */
@@ -568,7 +568,7 @@ export function deriveTargetGap(weightKg?: number, targetWeightKg?: number): Tar
 
 /**
  * Build a compact summary of the recent workout window (yesterday and the day
- * before) for the LLM. Today is intentionally excluded — today's workouts are
+ * before) for the LLM. Today is intentionally excluded - today's workouts are
  * the plan we're about to generate, and today's partial-day nutrition / steps
  * would skew readiness averages.
  */
@@ -747,7 +747,7 @@ export function buildOverviewPrompt(
   };
 
   return [
-    'Inputs are provided as a JSON object below. Generate the daily overview using YESTERDAY\'s data only (yesterday.totals, yesterday.meals, yesterday.workouts, yesterday.sleep, yesterday.weightKg) plus the user\'s targets. The UI will prepend "At this rate →" to every projection.headline, so do NOT write that phrase yourself. Every projection.coachNote must reference real numbers or named items from yesterday, and every projection.actions[] step must begin with a verb. Do not invent values that are not in the inputs. goal is the user\'s chosen goal; targetGap is where they sit vs their target weight; weightTrend is the direction their weight is actually moving. If goal and weightTrend conflict (e.g. goal build_muscle but trend losing), point out the conflict and the fix in plain words. Never claim spot reduction — fat comes off the whole body.',
+    'Inputs are provided as a JSON object below. Generate the daily overview using YESTERDAY\'s data only (yesterday.totals, yesterday.meals, yesterday.workouts, yesterday.sleep, yesterday.weightKg) plus the user\'s targets. The UI will prepend "At this rate →" to every projection.headline, so do NOT write that phrase yourself. Every projection.coachNote must reference real numbers or named items from yesterday, and every projection.actions[] step must begin with a verb. Do not invent values that are not in the inputs. goal is the user\'s chosen goal; targetGap is where they sit vs their target weight; weightTrend is the direction their weight is actually moving. If goal and weightTrend conflict (e.g. goal build_muscle but trend losing), point out the conflict and the fix in plain words. Never claim spot reduction - fat comes off the whole body.',
     JSON.stringify({ inputs }, null, 2),
   ].join('\n');
 }
@@ -817,7 +817,7 @@ export function buildWorkoutPrompt(
     : null;
 
   // Build a per-weekday split map from the rolling window. Only includes days we
-  // have logs for — we don't pre-fill "rest" for missing days, since absent data
+  // have logs for - we don't pre-fill "rest" for missing days, since absent data
   // is not the same as a confirmed rest day.
   const lastWeekSplit: Record<string, string> = {};
   for (const day of weeklySummary.byDay) {
@@ -1206,7 +1206,7 @@ export function normalizeWorkoutPlan(input: unknown, signals?: ReadinessSignals)
   exercises = dedupeExercises(exercises);
 
   // Honour readiness signals (volume/intensity/cardio adjustments). We deliberately
-  // do NOT inject "required" body-part components anymore — the LLM decides.
+  // do NOT inject "required" body-part components anymore - the LLM decides.
   if (signals?.reduceVolume) {
     exercises = exercises.map((exercise) => ({
       ...exercise,

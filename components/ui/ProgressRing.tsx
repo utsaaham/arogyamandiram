@@ -78,7 +78,7 @@ export default function ProgressRing({
           strokeLinecap="round"
           className={`${color} transition-all duration-1000 ease-out`}
         />
-        {/* Overflow — exact same track, same width, different color */}
+        {/* Overflow - exact same track, same width, different color */}
         {hasOverflow && (
           <circle
             cx={center}

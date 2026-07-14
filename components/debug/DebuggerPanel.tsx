@@ -73,7 +73,7 @@ export default function DebuggerPanel({ foodLogs }: DebuggerPanelProps) {
                 className="flex w-full items-center gap-2 py-1 text-left text-sm text-zinc-400"
               >
                 {aiLoggerOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                AI Logger
+                Logger
               </button>
               {aiLoggerOpen && (
                 <div className="ml-3 mt-1">
@@ -87,7 +87,7 @@ export default function DebuggerPanel({ foodLogs }: DebuggerPanelProps) {
                       />
                     </div>
                   ) : (
-                    <p className="py-2 text-[11px] text-zinc-500">No recent AI Logger log.</p>
+                    <p className="py-2 text-[11px] text-zinc-500">No recent logger entry.</p>
                   )}
                 </div>
               )}

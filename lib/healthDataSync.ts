@@ -310,7 +310,7 @@ async function applyMetrics(
  * Map normalized day-records into DailyLog (sleep, device workouts, metrics)
  * and award XP for today/yesterday. Shared by the pull-based cron sync and
  * the push path (/api/health-snapshots POST), so data lands in the log the
- * moment the phone uploads it — no cron required.
+ * moment the phone uploads it - no cron required.
  */
 export async function applyHealthRecords(input: {
   userId: string;
@@ -336,7 +336,7 @@ export async function applyHealthRecords(input: {
     }
 
     // If two records resolve to the same date, the later one (newer timestamp,
-    // since we sorted ascending) wins — but warn so callers know to dedupe upstream.
+    // since we sorted ascending) wins - but warn so callers know to dedupe upstream.
     if (seenDates.has(logDate)) {
       syncActions.push({
         field: 'record',

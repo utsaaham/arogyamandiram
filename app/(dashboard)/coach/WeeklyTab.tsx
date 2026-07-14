@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Coach › Weekly — rolling 7-day recap
+// Coach › Weekly - rolling 7-day recap
 // ============================================
 // Stats come from /api/coach/weekly-summary (cached per week window):
 // workouts done vs planned, weight delta, strongest-lift delta, protein
@@ -108,13 +108,13 @@ export default function WeeklyTab({ className }: { className?: string } = {}) {
   const adherenceLabel = stats.adherencePct != null ? `${stats.adherencePct}% of planned` : 'No plans last week';
   const weightValue = stats.weightDeltaKg != null
     ? `${stats.weightDeltaKg > 0 ? '+' : ''}${stats.weightDeltaKg} kg`
-    : '—';
+    : '-';
   const weightSub = stats.startWeightKg != null && stats.endWeightKg != null
     ? `${stats.startWeightKg} → ${stats.endWeightKg} kg`
     : 'No weigh-ins last week';
   const liftValue = stats.strongestLift
     ? `${stats.strongestLift.deltaKg > 0 ? '+' : ''}${stats.strongestLift.deltaKg} kg`
-    : '—';
+    : '-';
   const liftSub = stats.strongestLift
     ? `${stats.strongestLift.exercise}: ${stats.strongestLift.fromKg} → ${stats.strongestLift.toKg} kg`
     : 'Log lift weights twice to see progress';

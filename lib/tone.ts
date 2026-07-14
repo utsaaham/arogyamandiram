@@ -1,5 +1,5 @@
 // ============================================
-// Tone — the one voice constant for every AI prompt
+// Tone - the one voice constant for every AI prompt
 // ============================================
 // Imported by every prompt that produces user-facing text so tone changes
 // once, everywhere. Clear over cute: the action always comes first.

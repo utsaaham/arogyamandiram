@@ -298,7 +298,7 @@ export default function OnboardingPage() {
                           if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a -= 1;
                           return a;
                         })()} years`
-                      : '—',
+                      : '-',
                   },
                   { label: 'Gender', value: gender },
                   { label: 'Height', value: `${height} cm` },

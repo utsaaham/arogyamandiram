@@ -1,5 +1,5 @@
 // ============================================
-// /api/email/verify-imap — Check IMAP test reply for current user
+// /api/email/verify-imap - Check IMAP test reply for current user
 // ============================================
 // Authenticated endpoint used by Preferences to poll every minute
 // for up to 10 minutes after sending IMAP test email.

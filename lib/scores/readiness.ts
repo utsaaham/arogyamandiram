@@ -21,7 +21,7 @@ export function computeReadiness(days: DayInput[], index: number): ReadinessResu
 
   const parts: Array<ScoreComponent & { weight: number }> = [];
 
-  // HRV vs. baseline — higher than usual is good
+  // HRV vs. baseline - higher than usual is good
   if (typeof day.hrvSdnnMs === 'number') {
     const base = baselineOf(column(days, (d) => d.hrvSdnnMs), index);
     if (base) {
@@ -37,7 +37,7 @@ export function computeReadiness(days: DayInput[], index: number): ReadinessResu
     }
   }
 
-  // Resting HR vs. baseline — elevated is a recovery red flag
+  // Resting HR vs. baseline - elevated is a recovery red flag
   if (typeof day.restingHeartRate === 'number') {
     const base = baselineOf(column(days, (d) => d.restingHeartRate), index);
     if (base) {
@@ -65,7 +65,7 @@ export function computeReadiness(days: DayInput[], index: number): ReadinessResu
     });
   }
 
-  // Yesterday's strain — a heavy day lowers today's readiness
+  // Yesterday's strain - a heavy day lowers today's readiness
   if (index > 0) {
     const yesterday = computeStrain(days, index - 1);
     if (yesterday.score !== null) {

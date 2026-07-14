@@ -9,9 +9,9 @@ applies_to: All Agents
 
 ## Language & Types
 
-- TypeScript strict mode throughout — no `any` without justification
+- TypeScript strict mode throughout - no `any` without justification
 - Use `@/` path alias for all imports (never relative `../../`)
-- Types live in `types/index.ts` — add new shared types there, not inline
+- Types live in `types/index.ts` - add new shared types there, not inline
 
 ## Naming
 
@@ -24,7 +24,7 @@ applies_to: All Agents
 ## React Components
 
 - Mark files with `'use client'` only when they use hooks, event handlers, or browser APIs
-- Page files (`page.tsx`) default to server components — keep them lean
+- Page files (`page.tsx`) default to server components - keep them lean
 - Prefer named exports over default exports for components (page files use default exports as required by Next.js)
 
 ## API Routes
@@ -36,11 +36,11 @@ applies_to: All Agents
 
 ## Styling
 
-- Do not use inline `style={{}}` for layout — use Tailwind classes
-- Do not create new card classes — use `dashboard-unified-card` or existing variants
-- Do not hardcode colors — use Tailwind token names (e.g. `text-emerald-500` not `text-[#10b981]`)
-- Exception: `globals.css` already uses hex for theme tokens — keep it consistent there
+- Do not use inline `style={{}}` for layout - use Tailwind classes
+- Do not create new card classes - use `dashboard-unified-card` or existing variants
+- Do not hardcode colors - use Tailwind token names (e.g. `text-emerald-500` not `text-[#10b981]`)
+- Exception: `globals.css` already uses hex for theme tokens - keep it consistent there
 
 ## File Size
 
-- Prefer splitting large files. `gamification.ts` is 800+ lines — that's the limit, don't let other lib files exceed this without a strong reason
+- Prefer splitting large files. `gamification.ts` is 800+ lines - that's the limit, don't let other lib files exceed this without a strong reason

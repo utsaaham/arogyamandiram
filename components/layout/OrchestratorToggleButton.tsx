@@ -75,7 +75,7 @@ export default function OrchestratorToggleButton() {
                   fontFamily: 'system-ui, sans-serif',
                 }}
               >
-                {"I'm your AI ✨"}
+                {"I'm the assistant ✨"}
               </div>
             </foreignObject>
           </svg>
@@ -84,14 +84,14 @@ export default function OrchestratorToggleButton() {
 
       <button
         onClick={handleClick}
-        aria-label="Open AI assistant"
+        aria-label="Open assistant"
         className="flex items-center justify-center w-[56px] h-[56px] lg:w-[84px] lg:h-[84px] cursor-pointer bg-transparent border-none p-0"
         style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
-          alt="AI assistant"
+          alt="assistant"
           width={84}
           height={84}
           style={{ objectFit: 'contain', width: '100%', height: '100%', transform: mascotKey === 'kiki' ? `scale(${scale}) translateY(-8px)` : undefined }}

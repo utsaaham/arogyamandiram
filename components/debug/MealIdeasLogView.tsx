@@ -79,12 +79,12 @@ function MetadataBar({ log, totalLatency }: { log: MealIdeasDebugLog; totalLaten
         hour: 'numeric',
         minute: '2-digit',
       })
-    : '—';
+    : '-';
   const username = (meta as { username?: string }).username;
 
   const items: { label: string; value: ReactNode; oneLine?: boolean; colSpan?: number }[] = [
     ...(username ? [{ label: 'User', value: username }] : []),
-    { label: 'Model', value: meta.model ?? '—' },
+    { label: 'Model', value: meta.model ?? '-' },
     { label: 'Prompt', value: promptTotal.toLocaleString() },
     { label: 'Completion', value: completionTotal.toLocaleString() },
     { label: 'Total', value: total.toLocaleString() },
@@ -208,27 +208,27 @@ export function MealIdeasLogView({
                     <tbody className="text-zinc-400">
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Height</td>
-                        <td className="py-2 pr-3">{log.userContext.height != null ? `${log.userContext.height} cm` : '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.height != null ? `${log.userContext.height} cm` : '-'}</td>
                       </tr>
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Weight</td>
-                        <td className="py-2 pr-3">{log.userContext.weight != null ? `${log.userContext.weight} kg` : '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.weight != null ? `${log.userContext.weight} kg` : '-'}</td>
                       </tr>
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Target weight</td>
-                        <td className="py-2 pr-3">{log.userContext.targetWeight != null ? `${log.userContext.targetWeight} kg` : '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.targetWeight != null ? `${log.userContext.targetWeight} kg` : '-'}</td>
                       </tr>
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Age</td>
-                        <td className="py-2 pr-3">{log.userContext.age != null ? `${log.userContext.age} years` : '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.age != null ? `${log.userContext.age} years` : '-'}</td>
                       </tr>
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Activity level</td>
-                        <td className="py-2 pr-3">{log.userContext.activityLevel ?? '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.activityLevel ?? '-'}</td>
                       </tr>
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Goal</td>
-                        <td className="py-2 pr-3">{log.userContext.goal ? normalizeGoal(log.userContext.goal).replace(/_/g, ' ') : '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.goal ? normalizeGoal(log.userContext.goal).replace(/_/g, ' ') : '-'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -264,7 +264,7 @@ export function MealIdeasLogView({
                             {row.totalCalories > 0 ? (
                               <span className="text-zinc-400">{Math.round(row.totalCalories)} kcal</span>
                             ) : (
-                              <span className="italic text-zinc-500">—</span>
+                              <span className="italic text-zinc-500">-</span>
                             )}
                           </td>
                         </tr>
@@ -284,10 +284,10 @@ export function MealIdeasLogView({
                     <tbody className="text-zinc-400">
                       {Object.entries(log.mealHistorySent ?? {}).map(([mealType, items]) => (
                         <tr key={mealType} className="border-b border-[#1e1e1e]/50">
-                          <td className="py-2 pl-3 pr-4 italic text-zinc-500">—</td>
+                          <td className="py-2 pl-3 pr-4 italic text-zinc-500">-</td>
                           <td className="py-2 pr-4 font-medium capitalize text-zinc-300">{mealType}</td>
                           <td className="py-2 pr-4">{Array.isArray(items) && items.length ? items.join(', ') : <span className="italic text-zinc-500">none</span>}</td>
-                          <td className="py-2 pr-3 italic text-zinc-500">—</td>
+                          <td className="py-2 pr-3 italic text-zinc-500">-</td>
                         </tr>
                       ))}
                     </tbody>
@@ -326,7 +326,7 @@ export function MealIdeasLogView({
             <div className="relative rounded border border-[#1e1e1e] bg-black/20 p-3">
               <CopyButton text={isNewFormat ? (log.systemPrompt ?? '') : (log.step1Prompt ?? '').split('\n\n')[0] ?? ''} className="absolute right-2 top-2" />
               <pre className="max-h-[180px] overflow-auto whitespace-pre-wrap break-words pr-16 font-mono text-[11px] leading-relaxed text-zinc-400">
-                {isNewFormat ? (log.systemPrompt ?? '') : '(Legacy: two-step flow — no separate system prompt)'}
+                {isNewFormat ? (log.systemPrompt ?? '') : '(Legacy: two-step flow - no separate system prompt)'}
               </pre>
             </div>
           </div>

@@ -164,7 +164,7 @@ export default function CommandInput({ onSubmit, disabled, open }: CommandInputP
         </div>
       )}
 
-      {/* Input bar — always stacked, no layout switch */}
+      {/* Input bar - always stacked, no layout switch */}
       <div
         className={cn(
           'flex flex-col rounded-2xl border border-neutral-800/40 bg-neutral-900/70 pt-3 pb-1 cursor-text',

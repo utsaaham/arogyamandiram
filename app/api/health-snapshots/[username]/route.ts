@@ -1,9 +1,9 @@
-// POST — phone pushes snapshot records directly (bare array, envelope {days:[...]}, or single object)
-// GET  — runHealthDataSync pulls recent snapshots as a bare array
+// POST - phone pushes snapshot records directly (bare array, envelope {days:[...]}, or single object)
+// GET  - runHealthDataSync pulls recent snapshots as a bare array
 //
 // Auth: both verbs require Authorization: Bearer <apiKey> where apiKey
 // matches the decrypted settings.healthData.apiKeyEncrypted for the username
-// in the path. No session cookie needed — designed for device-to-server calls.
+// in the path. No session cookie needed - designed for device-to-server calls.
 
 import { type NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';

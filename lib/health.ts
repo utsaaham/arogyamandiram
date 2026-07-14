@@ -84,7 +84,7 @@ export function calculateMacros(
       fatRatio = 0.25;
       break;
     case 'recomp':
-      // Highest protein — building muscle while near maintenance
+      // Highest protein - building muscle while near maintenance
       proteinRatio = 0.40;
       fatRatio = 0.25;
       break;

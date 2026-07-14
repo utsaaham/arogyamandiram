@@ -1,5 +1,5 @@
 // ============================================
-// Weight trend — least-squares slope over recent weight logs
+// Weight trend - least-squares slope over recent weight logs
 // ============================================
 //
 // Read-only signal: the direction the user's weight is ACTUALLY moving,
@@ -20,7 +20,7 @@ export interface WeightTrendResult {
   samples: number;
 }
 
-/** ±0.2 kg/week — smaller slopes read as measurement noise, not a real trend. */
+/** ±0.2 kg/week - smaller slopes read as measurement noise, not a real trend. */
 const STABLE_THRESHOLD_KG_PER_WEEK = 0.2;
 const MIN_SAMPLES = 3;
 

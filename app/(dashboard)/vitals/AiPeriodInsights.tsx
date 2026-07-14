@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Vitals › Insights — AI period insights (yesterday / week / month / year)
+// Vitals › Insights - AI period insights (yesterday / week / month / year)
 // ============================================
 // First UI for the existing /api/ai/recommendations type=insights endpoint;
 // eligibility comes from /api/ai/insights-eligibility, and locked periods say

@@ -1,5 +1,5 @@
 // ============================================
-// /api/todos — Daily todo completions
+// /api/todos - Daily todo completions
 // ============================================
 // GET ?date=YYYY-MM-DD → { templates, completions }
 // POST { templateId, date, completed } → toggle completion

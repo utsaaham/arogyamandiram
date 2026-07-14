@@ -1,5 +1,5 @@
 // ============================================
-// /api/cron/generate-daily-plans — Nightly plan generation
+// /api/cron/generate-daily-plans - Nightly plan generation
 // ============================================
 // Called by Vercel Cron at 23:55 daily.
 // For each user with an OpenAI key: analyzes today's logs, derives fitness
@@ -21,7 +21,7 @@ import { deriveTargetGap, normalizeFoodPlan, normalizeWorkoutPlan } from '@/app/
 import { deriveFitnessLevel } from '@/lib/deriveFitnessLevel';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes — needed for large user bases
+export const maxDuration = 300; // 5 minutes - needed for large user bases
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -128,10 +128,10 @@ async function generateForUser(
   const weeklyWeightChangeKg = avgDeficit !== 0 ? Number((-(avgDeficit * 7 / 7700)).toFixed(2)) : 0;
 
   const profileContext = [
-    `Profile: age ${age}y, gender ${profile.gender ?? '—'}, height ${profile.height ?? '—'}cm, weight ${currentWeight ?? '—'}kg.`,
-    `Goal: ${profile.goal ? normalizeGoal(profile.goal) : '—'}, target weight ${profile.targetWeight ?? '—'}kg, activity ${profile.activityLevel ?? '—'}.`,
+    `Profile: age ${age}y, gender ${profile.gender ?? '-'}, height ${profile.height ?? '-'}cm, weight ${currentWeight ?? '-'}kg.`,
+    `Goal: ${profile.goal ? normalizeGoal(profile.goal) : '-'}, target weight ${profile.targetWeight ?? '-'}kg, activity ${profile.activityLevel ?? '-'}.`,
     `Weight signals (read-only): ${deriveTargetGap(currentWeight, profile.targetWeight)} vs target; trend ${weightTrend.trend}${weightTrend.slopeKgPerWeek != null ? ` (${weightTrend.slopeKgPerWeek} kg/week)` : ''}.`,
-    `Body: type ${profile.bodyType ?? '—'}, body fat ${profile.bodyFat != null ? profile.bodyFat + '%' : '—'}, fitness ${fitnessLevel}, focus areas: ${profile.fatFocusAreas?.join(', ') || '—'}.`,
+    `Body: type ${profile.bodyType ?? '-'}, body fat ${profile.bodyFat != null ? profile.bodyFat + '%' : '-'}, fitness ${fitnessLevel}, focus areas: ${profile.fatFocusAreas?.join(', ') || '-'}.`,
     `Targets: ${targets.dailyCalories ?? 2000} kcal, protein ${targets.protein ?? 150}g, water ${targets.dailyWater ?? 2500}ml, workout ${targets.dailyWorkoutMinutes ?? 30}min, sleep ${targets.sleepHours ?? 8}h.`,
   ].join('\n');
 
@@ -163,7 +163,7 @@ IMPORTANT: Respond with this exact JSON:
 
 Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, adjust workout intensity based on difficulty feedback. Every dish needs complete ingredients and clear cooking steps.
 Food totals must provide 5-10g MORE protein than the profile protein target and 5-10% FEWER calories than the profile calorie target. Do not create a larger deficit. Favor vegetables, fruit, whole grains, legumes, lean proteins, and unsaturated fats; keep processed foods, added sugar, and excess sodium low.
-The goal is the user's choice — plan FOR it. If the weight trend conflicts with the goal (e.g. goal build_muscle but trend losing), mention the fix in the reasoning, never suggest changing the goal. Focus areas mean extra strength volume for the muscles there — never claim spot fat reduction.`;
+The goal is the user's choice - plan FOR it. If the weight trend conflicts with the goal (e.g. goal build_muscle but trend losing), mention the fix in the reasoning, never suggest changing the goal. Focus areas mean extra strength volume for the muscles there - never claim spot fat reduction.`;
 
   const userPrompt = [
     profileContext,
@@ -174,8 +174,8 @@ The goal is the user's choice — plan FOR it. If the weight trend conflicts wit
     `Favorite cuisines: ${favoriteCuisines.length > 0 ? favoriteCuisines.join(', ') : 'No favorites provided; vary cuisines'}.`,
     `Cooking comfort: ${cookingSkill}. Maximum total cooking time per dish: ${maxCookingMinutes} minutes.`,
     dislikedFoods.length > 0 ? `Avoid foods: ${dislikedFoods.join(', ')}.` : '',
-    lastDifficulty === 'too_hard' ? 'Last workout was too hard — suggest lighter/recovery session.' : '',
-    lastDifficulty === 'too_easy' ? 'Last workout was too easy — increase difficulty slightly.' : '',
+    lastDifficulty === 'too_hard' ? 'Last workout was too hard - suggest lighter/recovery session.' : '',
+    lastDifficulty === 'too_easy' ? 'Last workout was too easy - increase difficulty slightly.' : '',
     avgCalories > 0 ? `Avg intake: ${Math.round(avgCalories)} kcal/day. ${avgDeficit > 0 ? 'Deficit' : 'Surplus'}: ${Math.abs(Math.round(avgDeficit))} kcal/day.` : '',
     `Plan date: ${tomorrowDate}`,
   ].filter(Boolean).join('\n');
@@ -212,7 +212,7 @@ The goal is the user's choice — plan FOR it. If the weight trend conflicts wit
         'foodPlan.suggestions': foodPlan.suggestions,
         'foodPlan.reasoning': foodPlan.reasoning ?? null,
         // Same normalization as the interactive route: ordering, phases,
-        // order stamps, calorie sanity — the cron path must not bypass it.
+        // order stamps, calorie sanity - the cron path must not bypass it.
         workoutPlan: parsed.workoutPlan ? normalizeWorkoutPlan(parsed.workoutPlan) : null,
         prediction,
         fitnessLevelDerived: fitnessLevel,

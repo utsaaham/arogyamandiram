@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// Vitals › intelligence panels — Goal Score card + personal triggers
+// Vitals › intelligence panels - Goal Score card + personal triggers
 // ============================================
 // Rendered from /api/intelligence (deterministic layer). The Goal Score card
 // is tappable like every other score; triggers and correlations carry
@@ -242,7 +242,7 @@ export function AnomaliesCallout({ data }: { data: IntelligenceDto | null }) {
           <li key={a.key} className="text-[12px] text-amber-100/80">{a.note}</li>
         ))}
       </ul>
-      <p className="mt-2 text-[10px] text-zinc-500">Far outside your usual range — a signal to notice, not a diagnosis.</p>
+      <p className="mt-2 text-[10px] text-zinc-500">Far outside your usual range - a signal to notice, not a diagnosis.</p>
     </div>
   );
 }
@@ -323,7 +323,7 @@ export function PredictionsSection({ data }: { data: IntelligenceDto | null }) {
   if (!p) {
     return (
       <div className="glass-card p-4 lg:p-5">
-        <p className="text-[12px] text-zinc-500">Predictions unlock as your logging history grows — usually around week 4.</p>
+        <p className="text-[12px] text-zinc-500">Predictions unlock as your logging history grows - usually around week 4.</p>
       </div>
     );
   }
@@ -349,7 +349,7 @@ export function PredictionsSection({ data }: { data: IntelligenceDto | null }) {
             {p.goalEta.available && p.goalEta.etaWeeks !== null ? (
               <p className="mt-3 text-4xl font-bold text-emerald-400">~{Math.round(p.goalEta.etaWeeks)} wk</p>
             ) : (
-              <p className="mt-3 text-4xl font-bold text-zinc-500">— —</p>
+              <p className="mt-3 text-4xl font-bold text-zinc-500">- -</p>
             )}
             <p className="mt-3 text-[12px] leading-relaxed text-zinc-500">{p.goalEta.text}</p>
           </div>

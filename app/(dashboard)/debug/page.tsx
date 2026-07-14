@@ -43,16 +43,16 @@ function getLogTimestamp(log: Record<string, unknown>): string {
 function requestTypeLabel(log: Record<string, unknown>, page: string, agent: string): string {
   if (page === 'food' && agent === 'meal-ideas') {
     const types = (log.userRequest as { selectedMealTypes?: string[] })?.selectedMealTypes;
-    if (!types?.length) return '—';
+    if (!types?.length) return '-';
     return types.join(', ');
   }
   if (page === 'food' && agent === 'ai-logger') {
     const text = (log.userRequest as { text?: string })?.text ?? '';
-    return text.length > 40 ? `${text.slice(0, 40)}…` : text || '—';
+    return text.length > 40 ? `${text.slice(0, 40)}…` : text || '-';
   }
   if (page === 'workout' && agent === 'ai-logger') {
     const text = (log.userRequest as { text?: string })?.text ?? '';
-    return text.length > 40 ? `${text.slice(0, 40)}…` : text || '—';
+    return text.length > 40 ? `${text.slice(0, 40)}…` : text || '-';
   }
   return getAgentLabel(agent);
 }
@@ -354,7 +354,7 @@ export default function DebugPage() {
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-[11rem_11rem_1fr] gap-px bg-white/[0.06]">
-        {/* Bar 1 — Pages */}
+        {/* Bar 1 - Pages */}
         <aside
           className="dashboard-unified-card flex flex-col overflow-hidden rounded-l-lg border border-white/[0.06] border-r-0"
           aria-label="Pages"
@@ -465,7 +465,7 @@ export default function DebugPage() {
               ];
               return (
             <div className="grid min-h-0 flex-1 grid-cols-[11rem_1fr] gap-px bg-white/[0.06]">
-              {/* Bar 2 — Orchestrator log list */}
+              {/* Bar 2 - Orchestrator log list */}
               <div className="dashboard-unified-card flex flex-col overflow-hidden border border-white/[0.06] border-r-0">
                 <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
                   <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-600">
@@ -527,7 +527,7 @@ export default function DebugPage() {
                 </div>
               </div>
 
-              {/* Bar 3 — Orchestrator log detail */}
+              {/* Bar 3 - Orchestrator log detail */}
               <main className="dashboard-unified-card flex min-w-0 flex-1 flex-col overflow-hidden border border-white/[0.06] border-l-0">
                 <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {selectedOrchestratorLog ? (
@@ -549,7 +549,7 @@ export default function DebugPage() {
             })()
           ) : (
             <div className="grid min-h-0 flex-1 grid-cols-[11rem_1fr] gap-px bg-white/[0.06]">
-              {/* Bar 2 — Logs by date (same color as Bar 1) */}
+              {/* Bar 2 - Logs by date (same color as Bar 1) */}
               <div className="dashboard-unified-card flex flex-col overflow-hidden border border-white/[0.06] border-r-0">
                 <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
                   <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-600">
@@ -643,7 +643,7 @@ export default function DebugPage() {
                 </div>
               </div>
 
-              {/* Bar 3 — Log view */}
+              {/* Bar 3 - Log view */}
               <main className="dashboard-unified-card flex min-w-0 flex-1 flex-col overflow-hidden border border-white/[0.06] border-l-0">
                 <div
                   className={cn(

@@ -1,5 +1,5 @@
 // ============================================
-// scripts/dev.mjs — dev runner with loguru-style logs
+// scripts/dev.mjs - dev runner with loguru-style logs
 // ============================================
 // Replaces `concurrently`. Spawns `next dev` and the local cron runner,
 // pipes every stdout/stderr line through the shared formatter so both

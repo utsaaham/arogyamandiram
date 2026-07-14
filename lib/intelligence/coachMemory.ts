@@ -1,5 +1,5 @@
 // ============================================
-// Coach memory — persist correlation patterns that keep holding
+// Coach memory - persist correlation patterns that keep holding
 // ============================================
 //
 // A pattern enters memory after the correlation engine reports it; each
@@ -65,7 +65,7 @@ export async function updateCoachMemory(userId: string, results: CorrelationResu
 }
 
 /**
- * Durable pattern lines for LLM prompts — strongest first, confirmed patterns
+ * Durable pattern lines for LLM prompts - strongest first, confirmed patterns
  * only. Empty array when the user has no established patterns yet.
  */
 export async function getCoachMemoryLines(userId: string): Promise<string[]> {
@@ -75,7 +75,7 @@ export async function getCoachMemoryLines(userId: string): Promise<string[]> {
     active: true,
     timesConfirmed: { $gte: MIN_CONFIRMATIONS },
   })
-    .sort({ confidence: 1, sampleCount: -1 }) // 'high' < 'low' alphabetically — resort below
+    .sort({ confidence: 1, sampleCount: -1 }) // 'high' < 'low' alphabetically - resort below
     .limit(MAX_PROMPT_LINES * 2)
     .lean();
 

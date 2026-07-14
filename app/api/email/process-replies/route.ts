@@ -1,5 +1,5 @@
 // ============================================
-// /api/email/process-replies — Poll IMAP and auto-log email replies
+// /api/email/process-replies - Poll IMAP and auto-log email replies
 // ============================================
 // Called by the cron job every 15 minutes.
 // For each user with IMAP configured, fetches unread replies to
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     try {
       replies = await fetchUnreadReplies(imapConfig, 'ArogyaMandiram:');
     } catch (err) {
-      errors.push(`${userId}: IMAP fetch failed — ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`${userId}: IMAP fetch failed - ${err instanceof Error ? err.message : String(err)}`);
       continue;
     }
 
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
           };
 
           if (!foodJson.success || !foodJson.data?.items?.length) {
-            errors.push(`${userId}: food-logger failed for ${reminderType} — ${foodJson.error ?? 'no items'}`);
+            errors.push(`${userId}: food-logger failed for ${reminderType} - ${foodJson.error ?? 'no items'}`);
             imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'failed', outcome: { error: foodJson.error ?? 'no items' } });
             continue;
           }
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
             });
             if (!mealRes.ok) {
               const mealJson = await mealRes.json() as { error?: string };
-              errors.push(`${userId}: meal log failed — ${mealJson.error ?? mealRes.status}`);
+              errors.push(`${userId}: meal log failed - ${mealJson.error ?? mealRes.status}`);
             }
           }
 
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
           };
 
           if (!woJson.success || !woJson.data?.workouts?.length) {
-            errors.push(`${userId}: workout-logger failed — ${woJson.error ?? 'no workouts'}`);
+            errors.push(`${userId}: workout-logger failed - ${woJson.error ?? 'no workouts'}`);
             imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'failed', outcome: { error: woJson.error ?? 'no workouts' } });
             continue;
           }
@@ -198,14 +198,14 @@ export async function POST(req: NextRequest) {
             });
             if (!woLogRes.ok) {
               const woLogJson = await woLogRes.json() as { error?: string };
-              errors.push(`${userId}: workout log failed — ${woLogJson.error ?? woLogRes.status}`);
+              errors.push(`${userId}: workout log failed - ${woLogJson.error ?? woLogRes.status}`);
             }
           }
 
           processed++;
           imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'logged', outcome: { workoutsLogged: woJson.data.workouts.length } });
         } else {
-          // water, weighIn or sleep — route through orchestrator (handles parsing + logging)
+          // water, weighIn or sleep - route through orchestrator (handles parsing + logging)
           const orchRes = await fetch(`${origin}/api/ai/orchestrator`, {
             method: 'POST',
             headers: userBypassHeaders,
@@ -218,7 +218,7 @@ export async function POST(req: NextRequest) {
           };
 
           if (!orchJson.success) {
-            errors.push(`${userId}: orchestrator failed for ${reminderType} — ${orchJson.error}`);
+            errors.push(`${userId}: orchestrator failed for ${reminderType} - ${orchJson.error}`);
             imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'failed', outcome: { error: orchJson.error } });
             continue;
           }
@@ -272,7 +272,7 @@ export async function POST(req: NextRequest) {
         // Mark as seen only after successful processing for the matched app user.
         await markMessageSeen(imapConfig, reply.uid);
       } catch (err) {
-        errors.push(`${userId}: unhandled error for ${reminderType} — ${err instanceof Error ? err.message : String(err)}`);
+        errors.push(`${userId}: unhandled error for ${reminderType} - ${err instanceof Error ? err.message : String(err)}`);
         imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'error', outcome: { error: err instanceof Error ? err.message : String(err) } });
       }
     }
@@ -286,7 +286,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Write IMAP debug log (dev/debug only — filesystem not writable in production)
+    // Write IMAP debug log (dev/debug only - filesystem not writable in production)
     if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
       try {
         const { promises: fsp } = await import('fs');
