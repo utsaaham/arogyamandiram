@@ -9,9 +9,11 @@ import User from '@/models/User';
 import { resolveOpenAIKey } from '@/lib/openaiKey';
 import { getToday, toLocalDateString, getAgeFromDateOfBirth } from '@/lib/utils';
 import { calculateBMR, calculateTDEE } from '@/lib/health';
+import { goalCalorieAdjustment, normalizeGoal } from '@/lib/goals';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
 import type { ActivityLevel, Goal, Gender } from '@/types';
 import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
+import { COACH_TONE } from '@/lib/tone';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 const MODEL = OPENAI_BEST_MODEL;
@@ -132,19 +134,16 @@ function computeMealTargets(
   age: number,
   gender: Gender,
   activityLevel: ActivityLevel,
-  goal: Goal
+  goal: Goal,
+  bodyFat?: number
 ): { calories: number; protein: number; carbs: number; fat: number } {
   const bmr = calculateBMR(weight, height, age, gender);
   const tdee = calculateTDEE(bmr, activityLevel);
 
-  const goalAdjust: Record<Goal, number> = {
-    lose: -400,
-    maintain: 0,
-    gain: 300,
-  };
-  const calories = Math.max(1200, Math.round(tdee + goalAdjust[goal]));
+  const calories = Math.max(1200, Math.round(tdee + goalCalorieAdjustment(goal, { bodyFat, gender })));
 
-  const proteinPerKg = goal === 'lose' ? 1.4 : goal === 'gain' ? 1.0 : 1.2;
+  const proteinPerKg =
+    goal === 'lose_fat' || goal === 'recomp' ? 1.4 : goal === 'build_muscle' ? 1.0 : 1.2;
   const protein = Math.round(weight * proteinPerKg);
   const fat = Math.round((calories * 0.28) / 9);
   const carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
@@ -182,7 +181,7 @@ interface UserProfileForPrompt {
   targetWeightKg: number;
   age: number;
   activityLevel: ActivityForPrompt;
-  goal: 'maintain' | 'lose' | 'gain';
+  goal: Goal;
 }
 
 interface MealPayload {
@@ -300,7 +299,7 @@ function buildUserProfileForPrompt(ctx: UserContext): UserProfileForPrompt {
     targetWeightKg: ctx.targetWeight ?? 0,
     age: ctx.age ?? 30,
     activityLevel: mapActivityToPrompt(ctx.activityLevel),
-    goal: (ctx.goal === 'lose' || ctx.goal === 'gain' ? ctx.goal : 'maintain') as UserProfileForPrompt['goal'],
+    goal: normalizeGoal(ctx.goal),
   };
 }
 
@@ -341,7 +340,7 @@ function buildPayload(
 
 // ---------- System prompt (compressed for latency) ----------
 
-const SYSTEM_PROMPT = `Suggest meals based on the user's recent meal history and today's remaining calorie budget. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes.
+const SYSTEM_PROMPT = `Suggest meals based on the user's recent meal history and today's remaining calorie budget. ${COACH_TONE}
 
 Rules:
 - Use userProfile (height, weight, age, activity level, goal) to estimate appropriate calorie ranges and portion sizes.
@@ -439,7 +438,7 @@ export async function getUserProfileForMealIdeas(userId: string): Promise<UserCo
     weight: latestLoggedWeight ?? profile.weight,
     targetWeight: profile.targetWeight,
     activityLevel: profile.activityLevel ?? 'moderate',
-    goal: profile.goal ?? 'maintain',
+    goal: normalizeGoal(profile.goal),
     age,
   };
 }
@@ -448,13 +447,13 @@ async function computeTargets(profile: UserContext, userId: string): Promise<typ
   const weight = profile.weight ?? 0;
   const height = profile.height ?? 0;
   const activityLevel = (profile.activityLevel ?? 'moderate') as ActivityLevel;
-  const goal = (profile.goal ?? 'maintain') as Goal;
+  const goal = normalizeGoal(profile.goal);
 
   if (weight <= 0 || height <= 0) return DEFAULT_TARGETS;
 
   await connectDB();
   const user = await User.findById(userId).select('profile').lean();
-  const p = user?.profile as { gender?: string; dateOfBirth?: Date | string; age?: number } | undefined;
+  const p = user?.profile as { gender?: string; dateOfBirth?: Date | string; age?: number; bodyFat?: number } | undefined;
   if (!p) return DEFAULT_TARGETS;
 
   let age: number;
@@ -467,7 +466,7 @@ async function computeTargets(profile: UserContext, userId: string): Promise<typ
   }
 
   const gender = (p.gender ?? 'male') as Gender;
-  return computeMealTargets(weight, height, age, gender, activityLevel, goal);
+  return computeMealTargets(weight, height, age, gender, activityLevel, goal, p.bodyFat);
 }
 
 // ---------- OpenAI API call ----------

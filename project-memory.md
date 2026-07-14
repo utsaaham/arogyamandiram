@@ -1,9 +1,9 @@
 ---
 state: populated
 created: 2026-03-26
-last_updated: 2026-07-02
-last_read: 2026-07-01
-updated_by: claude-opus-4-8
+last_updated: 2026-07-14
+last_read: 2026-07-14
+updated_by: codex-gpt-5
 staleness_days: 3
 ---
 
@@ -19,7 +19,7 @@ staleness_days: 3
 
 | Section | Last Updated | Updated By | Stale After | Status |
 |---------|-------------|------------|-------------|--------|
-| context/ | 2026-07-02 | claude-fable-5 | 3 days | Current |
+| context/ | 2026-07-14 | codex-gpt-5 | 3 days | Current |
 | agents/ | 2026-04-15 | codex-gpt-5 | 7 days | Current |
 | skills/ | 2026-04-15 | codex-gpt-5 | 10 days | Current |
 | rules/ | 2026-03-26 | claude-sonnet-4-6 | 14 days | Current |

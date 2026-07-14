@@ -16,6 +16,8 @@ export interface IDailyPlanDocument extends Document {
   errorMessage?: string;
 
   topInsight?: string; // AI-selected #1 priority for the day
+  /** One-sentence "Today's Body Summary" cached per day by /api/intelligence. */
+  bodySummary?: string;
   /** Per-metric projection cards (sleep/food/water/workout/steps/heartRate/weight). */
   projections?: {
     sleep?:     { headline?: string; coachNote?: string; actions?: string[] };
@@ -56,6 +58,9 @@ export interface IDailyPlanDocument extends Document {
       fat: number;
       mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
       ingredients: string[];
+      steps: string[];
+      prepMinutes?: number;
+      cookMinutes?: number;
       isVegetarian: boolean;
     }[];
     reasoning?: string;
@@ -127,6 +132,9 @@ const MealSuggestionSchema = new Schema(
     fat: { type: Number, default: 0 },
     mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack'], default: 'snack' },
     ingredients: { type: [String], default: [] },
+    steps: { type: [String], default: [] },
+    prepMinutes: { type: Number, min: 0, max: 600 },
+    cookMinutes: { type: Number, min: 0, max: 600 },
     isVegetarian: { type: Boolean, default: false },
   },
   { _id: false }
@@ -191,6 +199,10 @@ const ExerciseSchema = new Schema(
     sets: { type: Number, default: 1 },
     reps: { type: String, default: '1' },
     phase: { type: String, enum: ['warmup', 'strength', 'cardio', 'core', 'mobility', 'cooldown'] },
+    // Strength only: compound lifts sort before accessories
+    slot: { type: String, enum: ['compound', 'accessory'] },
+    // Server-stamped 1..n gym order (stampOrderAndPhase)
+    order: { type: Number },
     durationMinutes: { type: Number },
     restSeconds: { type: Number, default: 60 },
     intensity: { type: String, enum: ['low', 'medium', 'high'] },
@@ -209,6 +221,9 @@ const DailyPlanSchema = new Schema<IDailyPlanDocument>(
     errorMessage: { type: String },
 
     topInsight: { type: String },
+    // One-sentence "Today's Body Summary" (LLM-phrased over deterministic
+    // attribution; cached per day by /api/intelligence)
+    bodySummary: { type: String },
     projections: { type: ProjectionsSchema, default: undefined },
     outlook: { type: OutlookSchema, default: undefined },
 

@@ -318,8 +318,8 @@ export async function POST(req: NextRequest) {
       }
       result = {
         summary: d.items.length === 1
-          ? `Ooh, I spotted one tasty thing on your plate 😋 what time did you have it? Pick the time and meal below and I'll log it.`
-          : `Ooh, I spotted ${d.items.length} goodies on your plate 😋 what time did you have them? Pick the time and meal below and I'll log them.`,
+          ? 'I found one food item. Review the details below.'
+          : `I found ${d.items.length} food items. Review the details below.`,
         foodItems: d.items,
         foodTotal: d.total as Record<string, number> | undefined,
         ...(d.feedback ? { feedback: d.feedback } : {}),

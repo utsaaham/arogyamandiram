@@ -10,7 +10,6 @@ import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, getAuthUserIdWithBypass, isUserId } from '@/lib/session';
 import { getToday, toLocalDateString } from '@/lib/utils';
 import { awardDailyXp } from '@/lib/xp';
-import { syncGoalForUser } from '@/lib/goalSync';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,10 +78,6 @@ export async function POST(req: NextRequest) {
       { _id: userId },
       { $set: { 'profile.weight': weight } }
     );
-
-    // Auto-update profile.goal from the latest weight vs targetWeight so the UI
-    // selector and AI plans always reflect reality.
-    await syncGoalForUser(userId);
 
     await awardDailyXp(String(userId), logDate);
 

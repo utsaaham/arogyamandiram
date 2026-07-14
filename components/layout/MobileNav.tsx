@@ -27,7 +27,7 @@ import { signOut } from 'next-auth/react';
 const mobileNav = [
   { href: '/home', icon: LayoutDashboard, label: 'Home' },
   { href: '/vitals', icon: VitalsIcon, label: 'Stats' },
-  { href: '/coach', icon: Sparkles, label: 'Coach' },
+  { href: '/coach', icon: Sparkles, label: 'Ciel' },
   { href: '/water', icon: Droplets, label: 'Water' },
 ];
 

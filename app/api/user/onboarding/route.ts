@@ -9,6 +9,7 @@ import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { generateTargets } from '@/lib/health';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
+import { isAcceptedGoalInput, normalizeGoal } from '@/lib/goals';
 import { generateHealthPlanTargets, getOpenAIKeyForHealthPlan } from '@/lib/aiHealthPlan';
 
 export const dynamic = 'force-dynamic';
@@ -42,9 +43,15 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    if (profile.goal !== undefined && !isAcceptedGoalInput(profile.goal)) {
+      return errorResponse('Invalid goal', 400);
+    }
+    const goal = normalizeGoal(profile.goal);
+
     // Build profile for DB: store dateOfBirth when provided, and age for legacy/compat
     const profileToSave = {
       ...profile,
+      goal,
       age,
       ...(profile.dateOfBirth && { dateOfBirth: new Date(profile.dateOfBirth) }),
     };
@@ -56,7 +63,8 @@ export async function POST(req: NextRequest) {
       age,
       profile.gender,
       profile.activityLevel || 'moderate',
-      profile.goal || 'maintain'
+      goal,
+      typeof profile.bodyFat === 'number' ? profile.bodyFat : undefined
     );
 
     let user = await User.findByIdAndUpdate(

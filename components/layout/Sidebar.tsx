@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 const mainNavItems = [
   { href: '/home', icon: LayoutGrid, label: 'Home' },
-  { href: '/coach', icon: Sparkles, label: 'Coach' },
+  { href: '/coach', icon: Sparkles, label: 'Ciel' },
   { href: '/vitals', icon: VitalsIcon, label: 'Vitals' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },

@@ -273,7 +273,16 @@ export function OrchestratorSidebarProvider({ children }: { children: ReactNode 
         for (const item of entry.result.foodItems) {
           await api.addMeal(today, { ...item, mealType, ...(time ? { time } : {}) });
         }
-        updateEntry(id, { status: 'success' });
+        const itemCount = entry.result.foodItems.length;
+        updateEntry(id, {
+          status: 'success',
+          result: {
+            ...entry.result,
+            summary: itemCount === 1
+              ? 'Added 1 food item. You can view it in Food below the search bar.'
+              : `Added ${itemCount} food items. You can view them in Food below the search bar.`,
+          },
+        });
         window.dispatchEvent(new Event('orchestrator:log-updated'));
         return TOOL_ROUTE['food-ai-logger'];
       } catch (err) {

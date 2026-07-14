@@ -11,8 +11,7 @@ import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { generateTargets } from '@/lib/health';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
 import { deriveActivityLevel } from '@/lib/deriveActivityLevel';
-import { syncGoalForUser } from '@/lib/goalSync';
-import { deriveGoalDirection } from '@/app/api/ai/daily-plan/shared';
+import { isAcceptedGoalInput, normalizeGoal, goalToLegacyDirection } from '@/lib/goals';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,15 +47,18 @@ export async function GET() {
       deriveActivityLevel(userId),
     ]);
     const profileBase = user.profile as { weight?: number; targetWeight?: number; goal?: string } | undefined;
-    const effectiveWeight = latestWeight != null ? latestWeight : profileBase?.weight;
-    const derivedGoal = deriveGoalDirection(effectiveWeight, profileBase?.targetWeight, profileBase?.goal);
+    // The goal is user-owned — never overridden from weight vs target. Legacy
+    // stored values are normalized to the 5-value enum on read.
+    const goal = normalizeGoal(profileBase?.goal);
     const userWithDerivedProfile = {
       ...user,
       profile: {
         ...user.profile,
         ...(latestWeight != null ? { weight: latestWeight } : {}),
         activityLevel: derivedActivityLevel,
-        goal: derivedGoal,
+        goal,
+        // 3-value alias for older iOS builds that predate the 5-value enum.
+        goalDirection: goalToLegacyDirection(goal),
       },
     };
 
@@ -102,9 +104,13 @@ export async function PUT(req: NextRequest) {
       // Build dot-notation updates for nested fields (do not set profile.username - use top-level username only)
       for (const [key, value] of Object.entries(profile)) {
         if (key === 'username') continue; // username is top-level on User, not under profile
-        // profile.goal is server-derived from weight vs targetWeight — clients
-        // cannot set it. syncGoalForUser writes the derived value below.
-        if (key === 'goal') continue;
+        if (key === 'goal') {
+          // The goal is user-owned. Accept the 5-value enum plus known legacy
+          // strings; store normalized.
+          if (!isAcceptedGoalInput(value)) return errorResponse('Invalid goal', 400);
+          updateData['profile.goal'] = normalizeGoal(value as string);
+          continue;
+        }
         if (key === 'dateOfBirth' && value) {
           updateData['profile.dateOfBirth'] = new Date(value as string);
         } else {
@@ -112,28 +118,37 @@ export async function PUT(req: NextRequest) {
         }
       }
 
-      // Recompute formula-based targets when profile has all required fields
-      const weight = typeof profile.weight === 'number' ? profile.weight : undefined;
-      const height = typeof profile.height === 'number' ? profile.height : undefined;
-      const targetWeight = typeof profile.targetWeight === 'number' ? profile.targetWeight : undefined;
-      const gender = profile.gender as string | undefined;
-      const activityLevel = profile.activityLevel as string | undefined;
-      // Goal is server-derived from weight vs targetWeight, not user-settable.
-      const goal = deriveGoalDirection(weight, targetWeight, undefined);
+      // Recompute formula-based targets. Fields missing from this payload fall
+      // back to the stored profile so a goal-only change still recalculates.
+      const storedUser = await User.findById(userId).select('profile').lean();
+      const stored = (storedUser?.profile ?? {}) as {
+        weight?: number; height?: number; gender?: string; activityLevel?: string;
+        goal?: string; dateOfBirth?: Date; age?: number; bodyFat?: number;
+      };
+      const weight = typeof profile.weight === 'number' ? profile.weight : stored.weight;
+      const height = typeof profile.height === 'number' ? profile.height : stored.height;
+      const gender = (profile.gender as string | undefined) ?? stored.gender;
+      const activityLevel = (profile.activityLevel as string | undefined) ?? stored.activityLevel;
+      const bodyFat = typeof profile.bodyFat === 'number' ? profile.bodyFat : stored.bodyFat;
+      const goal = normalizeGoal((updateData['profile.goal'] as string | undefined) ?? stored.goal);
       let age: number | undefined;
       if (profile.dateOfBirth) {
         const dob = new Date(profile.dateOfBirth);
         if (!Number.isNaN(dob.getTime())) age = getAgeFromDateOfBirth(dob);
       } else if (typeof profile.age === 'number') {
         age = profile.age;
+      } else if (stored.dateOfBirth) {
+        age = getAgeFromDateOfBirth(stored.dateOfBirth);
+      } else if (typeof stored.age === 'number') {
+        age = stored.age;
       }
       const hasRequired =
         weight != null && weight > 0 &&
         height != null && height > 0 &&
-        gender && activityLevel && goal &&
+        gender && activityLevel &&
         age != null && age >= 13 && age <= 120;
       if (hasRequired) {
-        const generated = generateTargets(weight!, height!, age!, gender as 'male' | 'female' | 'other', activityLevel as 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active', goal as 'lose' | 'maintain' | 'gain');
+        const generated = generateTargets(weight!, height!, age!, gender as 'male' | 'female' | 'other', activityLevel as 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active', goal, bodyFat);
         for (const [key, value] of Object.entries(generated)) {
           updateData[`targets.${key}`] = value;
         }
@@ -165,12 +180,26 @@ export async function PUT(req: NextRequest) {
           for (const [nKey, nVal] of Object.entries(value as Record<string, boolean>)) {
             updateData[`settings.notifications.${nKey}`] = nVal;
           }
+        } else if (key === 'nudges' && typeof value === 'object' && value !== null) {
+          // Explicit dot-set per subkey so a partial nudges payload never
+          // clobbers the rest of settings.nudges.
+          const nudges = value as Record<string, unknown>;
+          if (nudges.targetReachedDismissedForTargetWeight !== undefined) {
+            const v = nudges.targetReachedDismissedForTargetWeight;
+            if (v !== null && (typeof v !== 'number' || !Number.isFinite(v))) {
+              return errorResponse('Invalid nudge dismissal value', 400);
+            }
+            updateData['settings.nudges.targetReachedDismissedForTargetWeight'] = v;
+          }
         } else if (key === 'foodPreferences' && typeof value === 'object' && value !== null) {
           const prefs = value as Record<string, unknown>;
           const rawDietaryPreference = typeof prefs.dietaryPreference === 'string'
             ? prefs.dietaryPreference.trim()
             : '';
-          const allowedDietaryPreferences = new Set(['no_preference', 'vegetarian', 'non_vegetarian', 'vegan']);
+          const allowedDietaryPreferences = new Set([
+            'no_preference', 'vegetarian', 'non_vegetarian', 'eggetarian',
+            'vegan', 'pescatarian', 'flexitarian',
+          ]);
           if (rawDietaryPreference && !allowedDietaryPreferences.has(rawDietaryPreference)) {
             return errorResponse('Invalid dietary preference', 400);
           }
@@ -186,6 +215,31 @@ export async function PUT(req: NextRequest) {
               .map((entry) => String(entry).trim())
               .filter(Boolean)
               .slice(0, 20);
+          }
+
+          if (prefs.favoriteCuisines !== undefined) {
+            if (!Array.isArray(prefs.favoriteCuisines)) {
+              return errorResponse('Favorite cuisines must be an array of strings', 400);
+            }
+            updateData['settings.foodPreferences.favoriteCuisines'] = Array.from(new Set(
+              prefs.favoriteCuisines.map((entry) => String(entry).trim()).filter(Boolean)
+            )).slice(0, 20);
+          }
+
+          if (prefs.cookingSkill !== undefined) {
+            const cookingSkill = String(prefs.cookingSkill).trim();
+            if (!new Set(['beginner', 'intermediate', 'confident']).has(cookingSkill)) {
+              return errorResponse('Invalid cooking skill', 400);
+            }
+            updateData['settings.foodPreferences.cookingSkill'] = cookingSkill;
+          }
+
+          if (prefs.maxCookingMinutes !== undefined) {
+            const maxCookingMinutes = Number(prefs.maxCookingMinutes);
+            if (!Number.isInteger(maxCookingMinutes) || maxCookingMinutes < 5 || maxCookingMinutes > 180) {
+              return errorResponse('Maximum cooking time must be between 5 and 180 minutes', 400);
+            }
+            updateData['settings.foodPreferences.maxCookingMinutes'] = maxCookingMinutes;
           }
         } else if (key === 'customizations' && typeof value === 'object' && value !== null) {
           const customizations = value as Record<string, unknown>;
@@ -308,17 +362,7 @@ export async function PUT(req: NextRequest) {
 
     if (!user) return errorResponse('User not found', 404);
 
-    // If weight or targetWeight just changed, re-derive profile.goal so the UI
-    // selector and AI plans stay in sync with reality.
-    if (
-      Object.prototype.hasOwnProperty.call(updateData, 'profile.weight') ||
-      Object.prototype.hasOwnProperty.call(updateData, 'profile.targetWeight')
-    ) {
-      await syncGoalForUser(userId);
-    }
-
-    const refreshed = await User.findById(userId).lean();
-    return maskedResponse(maskUser(refreshed ?? user), { message: 'Profile updated' });
+    return maskedResponse(maskUser(user), { message: 'Profile updated' });
   } catch (err) {
     console.error('[User PUT Error]:', err);
     return errorResponse('Failed to update user', 500);

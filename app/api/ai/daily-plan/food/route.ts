@@ -10,6 +10,7 @@ import { getToday } from '@/lib/utils';
 import { writeDebugLog } from '@/lib/debugLogWriter';
 import { buildFoodPrompt, type FoodRequestBody, normalizeFoodPlan } from '../shared';
 import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
+import { COACH_TONE } from '@/lib/tone';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,9 @@ export async function POST(req: NextRequest) {
           foodPreferences?: {
             dietaryPreference?: string;
             allergies?: string[];
+            favoriteCuisines?: string[];
+            cookingSkill?: string;
+            maxCookingMinutes?: number;
           };
         };
         targets?: {
@@ -60,9 +64,18 @@ export async function POST(req: NextRequest) {
     const allergies = Array.isArray(body.allergies) && body.allergies.length > 0
       ? body.allergies
       : (user?.settings?.foodPreferences?.allergies ?? []);
+    const favoriteCuisines = Array.isArray(body.favoriteCuisines) && body.favoriteCuisines.length > 0
+      ? body.favoriteCuisines
+      : (user?.settings?.foodPreferences?.favoriteCuisines ?? []);
+    const cookingSkill = body.cookingSkill?.trim()
+      || user?.settings?.foodPreferences?.cookingSkill
+      || 'beginner';
+    const maxCookingMinutes = Number(body.maxCookingMinutes)
+      || Number(user?.settings?.foodPreferences?.maxCookingMinutes)
+      || 30;
     const targetProteinG = Number(user?.targets?.protein) || undefined;
     const targetCalories = Number(user?.targets?.dailyCalories) || undefined;
-    const systemPrompt = `You are a practical nutrition coach. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Create a simple food plan for TODAY based on the user's last-week food details.
+    const systemPrompt = `You are Ciel, the user's practical nutrition guide. ${COACH_TONE} Create a simple food plan for TODAY based on the user's last-week food details.
 Return JSON only with this shape:
 {
   "foodPlan": {
@@ -74,14 +87,28 @@ Return JSON only with this shape:
         "protein": number,
         "carbs": number,
         "fat": number,
-        "mealType": "breakfast" | "lunch" | "dinner" | "snack"
+        "mealType": "breakfast" | "lunch" | "dinner" | "snack",
+        "ingredients": ["quantity + ingredient"],
+        "steps": ["short cooking step in order"],
+        "prepMinutes": number,
+        "cookMinutes": number,
+        "isVegetarian": boolean
       }
     ],
     "reasoning": "string"
   }
 }
-Keep suggestions realistic and easy to follow.`;
-    const userPrompt = buildFoodPrompt({ ...body, dietaryPreference, allergies, targetProteinG, targetCalories }, today);
+Keep suggestions realistic and easy to follow. Ciel must explain how to make every dish, not just name it.`;
+    const userPrompt = buildFoodPrompt({
+      ...body,
+      dietaryPreference,
+      allergies,
+      favoriteCuisines,
+      cookingSkill,
+      maxCookingMinutes,
+      targetProteinG,
+      targetCalories,
+    }, today);
     let openAiDebug:
       | {
           endpoint: string;
@@ -99,7 +126,7 @@ Keep suggestions realistic and easy to follow.`;
         apiKey,
         systemPrompt,
         userPrompt: prompt,
-        maxTokens: 1500,
+        maxTokens: 3000,
         onDebug: (debug) => {
           openAiDebug = debug;
         },
@@ -109,15 +136,27 @@ Keep suggestions realistic and easy to follow.`;
 
     let foodPlan = await runFoodGeneration(userPrompt);
     const totalProtein = foodPlan.suggestions.reduce((sum, meal) => sum + (Number(meal.protein) || 0), 0);
-    const minimumProteinFloor = targetProteinG && targetProteinG > 0
-      ? Math.max(60, Math.round(targetProteinG * 0.75))
+    const totalCalories = foodPlan.suggestions.reduce((sum, meal) => sum + (Number(meal.calories) || 0), 0);
+    const proteinRange = targetProteinG && targetProteinG > 0
+      ? { min: Math.round(targetProteinG) + 5, max: Math.round(targetProteinG) + 10 }
       : null;
-    if (minimumProteinFloor && totalProtein < minimumProteinFloor) {
+    const calorieRange = targetCalories && targetCalories > 0
+      ? { min: Math.round(targetCalories * 0.9), max: Math.round(targetCalories * 0.95) }
+      : null;
+    const proteinOutsideRange = proteinRange
+      ? totalProtein < proteinRange.min || totalProtein > proteinRange.max
+      : false;
+    const caloriesOutsideRange = calorieRange
+      ? totalCalories < calorieRange.min || totalCalories > calorieRange.max
+      : false;
+    if (proteinOutsideRange || caloriesOutsideRange) {
       const reinforcedPrompt = [
         userPrompt,
-        `Critical correction: the previous plan was too low protein (${totalProtein}g).`,
-        `Regenerate with total protein >= ${minimumProteinFloor}g while keeping calories realistic and meal quality practical.`,
-        'Ensure breakfast/lunch/dinner each include meaningful protein sources.',
+        `Critical correction: the previous totals were ${totalProtein}g protein and ${totalCalories} kcal.`,
+        proteinRange ? `Regenerate with total protein between ${proteinRange.min}g and ${proteinRange.max}g.` : '',
+        calorieRange ? `Regenerate with total calories between ${calorieRange.min} and ${calorieRange.max} kcal.` : '',
+        'Use vegetables, fruit, whole grains, legumes, lean proteins, and unsaturated fats. Keep processed foods, added sugar, and excess sodium low.',
+        'Add every meal total before responding and stay inside both ranges.',
       ].join('\n');
       foodPlan = await runFoodGeneration(reinforcedPrompt);
     }

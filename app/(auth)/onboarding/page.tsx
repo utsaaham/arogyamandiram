@@ -31,9 +31,11 @@ const activityLevels = [
 ];
 
 const goalOptions = [
-  { value: 'lose', label: 'Lose Weight', desc: 'We\'ll set a healthy calorie deficit', emoji: '📉', color: 'border-accent-cyan/30 bg-accent-cyan/5' },
-  { value: 'maintain', label: 'Maintain Weight', desc: 'Stay at your current weight', emoji: '⚖️', color: 'border-accent-emerald/30 bg-accent-emerald/5' },
-  { value: 'gain', label: 'Gain Weight', desc: 'We\'ll set a calorie surplus for muscle', emoji: '📈', color: 'border-accent-amber/30 bg-accent-amber/5' },
+  { value: 'lose_fat', label: 'Lose Fat', desc: 'Healthy calorie deficit, high protein to keep muscle', emoji: '📉', color: 'border-accent-cyan/30 bg-accent-cyan/5' },
+  { value: 'build_muscle', label: 'Build Muscle', desc: 'Calorie surplus focused on strength training', emoji: '💪', color: 'border-accent-amber/30 bg-accent-amber/5' },
+  { value: 'recomp', label: 'Recomposition', desc: 'Lose fat and build muscle at the same time', emoji: '🔄', color: 'border-accent-violet/30 bg-accent-violet/5' },
+  { value: 'improve_fitness', label: 'Improve Fitness', desc: 'Conditioning and performance at maintenance calories', emoji: '🏃', color: 'border-accent-rose/30 bg-accent-rose/5' },
+  { value: 'maintain', label: 'Maintain', desc: 'Hold your current weight and stay consistent', emoji: '⚖️', color: 'border-accent-emerald/30 bg-accent-emerald/5' },
 ];
 
 export default function OnboardingPage() {

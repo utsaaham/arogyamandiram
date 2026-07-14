@@ -8,8 +8,12 @@ import { createOpenAiJson } from '@/lib/openaiJson';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
+import { computeWorkoutAdherence } from '@/lib/adherence';
+import { getCoachMemoryLines } from '@/lib/intelligence/coachMemory';
 import { writeDebugLog } from '@/lib/debugLogWriter';
 import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
+import { COACH_TONE } from '@/lib/tone';
 import {
   buildWorkoutPrompt,
   deriveReadinessSignals,
@@ -58,28 +62,41 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
     const today = getToday();
-    const systemPrompt = `You are an evidence-based fitness coach generating ONE user's daily workout plan as JSON. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes.
+    const systemPrompt = `You are Ciel, an evidence-based fitness guide generating ONE user's daily workout plan as JSON. ${COACH_TONE}
 
 Your responsibilities, in order:
 1. Read the user's last 2 days of workouts (provided in the user message). Decide the right training split for THIS user right now. Choices include — but you may also blend or invent — full body, upper/lower, push-pull-legs, or single-body-part-per-day. Pick what fits their fitness level, recovery state, and what's already been trained recently. Do NOT fall back to a default rule like "always full body for beginners" — use the data.
 2. For today, choose body parts the user has NOT trained in the last 1–2 days. Aim for full-body weekly coverage.
 3. Apply the readiness signals provided (protein deficit, sleep, steps).
-4. Use the DERIVED goalDirection (lose / maintain / gain), NOT the raw profile.goal field. If goalDirection is "lose": lean toward higher total work and moderate cardio. If "maintain": balanced. If "gain": more strength volume, longer rests, less cardio.
-5. Tune the session to profile.physiqueGoal when present — this is the look/performance the user is training toward. Heuristics:
+   Progression policy — inputs.progression is the last 7 days of planned-vs-completed strength work:
+   - bucket "progress" (≥90% completed) → progress: a small load or rep bump on the main lifts vs the recent sessions in recentLogs.
+   - bucket "hold" (60–89%, or no plan history) → repeat a similar prescription; consistency before progression.
+   - bucket "deload" (<60%) → cut total working sets by about 35% and keep intensity moderate. Frame it positively in whyToday: a fresh, easy re-entry — never a punishment for missed days.
+4. Train for inputs.goal — the goal the USER chose (never second-guess it):
+   - lose_fat → higher total work, moderate cardio, keep strength to preserve muscle.
+   - build_muscle → more strength volume, longer rests, minimal cardio.
+   - recomp → hypertrophy-focused strength (8–12 reps) with modest conditioning.
+   - improve_fitness → conditioning, mixed modalities, athletic work.
+   - maintain → balanced.
+   Cross-check against inputs.targetGap (where they sit vs their target weight) and inputs.weightTrend (the direction their weight is ACTUALLY moving). When goal and trend conflict (e.g. goal build_muscle but trend "losing"), keep training for the goal and flag the conflict with the fix in whyToday ("you're set on building muscle but the scale is trending down — eat more").
+5. profile.fatFocusAreas lists where the user says they carry more fat. Spot reduction is not real — NEVER claim an exercise burns fat in one spot. Use focus areas honestly: bias accessory volume toward the muscles under those areas and rely on total-body energy expenditure for the fat itself. When focus areas are set, acknowledge them in whyToday.
+   - Good: "Extra core work builds strength under the belly area you flagged; the fat comes off with the overall deficit."
+   - Bad: "These crunches will burn your belly fat."
+6. Tune the session to profile.physiqueGoal when present — this is the look/performance the user is training toward. Heuristics:
    - lean_toned / healthy_slim → more conditioning, full-body circuits, moderate strength, higher rep ranges (12–20).
    - lean_muscle → hypertrophy emphasis (8–12 reps), modest cardio for recomp.
    - athletic → mixed strength + conditioning + power/plyo; balanced splits.
    - muscular_bulk → strength + hypertrophy (6–12 reps), longer rests, minimal cardio.
    - bodybuilder → split-style isolation + compound work, 8–15 reps, controlled tempo, minimal cardio.
    - powerlifter → heavy compounds (3–6 reps), long rests, low cardio volume.
-6. Respect profile.workoutLocation when prescribing exercises. Defaults by location:
+7. Respect profile.workoutLocation when prescribing exercises. Defaults by location:
    - full_gym → barbells, dumbbells, cables, machines all fair game.
    - home → assume bodyweight + light dumbbells unless equipmentNotes say otherwise.
    - outdoors → bodyweight, pull-up bars, benches, running/sprints. No machines.
    - hotel_travel → bodyweight + light dumbbells if any; assume minimal space.
    Then read profile.equipmentNotes as the user's own description of what they HAVE and what they DON'T HAVE. This is plain free-text — interpret it pragmatically. If they say "no cable machine", do not prescribe cable rows. If they say "I have a pull-up bar and 20kg dumbbells", you may use those. The notes OVERRIDE the location default.
    (Legacy values that may still appear: home_gym = home with rack+barbell+bench+dumbbells; home_dumbbells = home with dumbbells only; home_minimal = home with bodyweight only.)
-7. Estimate calories burned with MET × bodyweight × time. Use these ranges; do NOT under- or over-estimate:
+8. Estimate calories burned with MET × bodyweight × time. Use these ranges; do NOT under- or over-estimate:
    - cardio:           low 3.5–4.5 · medium 5.0–7.0 · high 7.0–10.0
    - strength:         low 3.0–4.0 · medium 4.5–6.0 · high 6.0–8.0
    - core:             low 2.5–3.5 · medium 3.5–4.5 · high 4.5–6.0
@@ -104,6 +121,7 @@ Return JSON only with this exact shape:
       {
         "name": "string",
         "phase": "warmup | strength | cardio | core | mobility | cooldown",
+        "slot": "compound | accessory — strength exercises only: big multi-joint lifts are compound and come first, isolation/assistance work is accessory. Omit for non-strength phases.",
         "sets": number,
         "reps": "string — e.g. '10', '10-12', '30 seconds', or 'continuous'",
         "durationMinutes": number,
@@ -153,14 +171,15 @@ Return JSON only with this exact shape:
         };
       } | null;
 
-    // 2-day window: yesterday + day-before-yesterday. We intentionally exclude
+    // 7-day trailing window ending yesterday. We intentionally exclude
     // today — today's workouts are the plan we're generating, and today's
     // partial-day nutrition / steps would skew readiness averages downward
     // (plans are usually generated in the morning before the user has eaten or
-    // moved much). Yesterday's log carries fresh enough sleep data.
+    // moved much). A full week gives the split and adherence context a real
+    // training cycle to reason over.
     const windowStart = (() => {
       const d = new Date(today);
-      d.setDate(d.getDate() - 2);
+      d.setDate(d.getDate() - 7);
       return d.toISOString().slice(0, 10);
     })();
     const windowEnd = (() => {
@@ -170,7 +189,7 @@ Return JSON only with this exact shape:
     })();
     const recentLogs = await DailyLog.find({ userId, date: { $gte: windowStart, $lte: windowEnd } })
       .sort({ date: -1 })
-      .limit(2)
+      .limit(7)
       .select('date totalCalories totalProtein totalCarbs totalFat waterIntake caloriesBurned heartRate steps activeCalories distanceKm sleep.duration sleep.quality workouts.exercise workouts.planExerciseName workouts.category workouts.duration workouts.caloriesBurned workouts.sets workouts.reps workouts.source workouts.notes')
       .lean() as Array<{
         date?: string;
@@ -210,11 +229,20 @@ Return JSON only with this exact shape:
         };
       }>;
 
+    const [weightTrend, progression, knownPatterns] = await Promise.all([
+      getWeightTrendForUser(String(userId)),
+      computeWorkoutAdherence(String(userId), today),
+      getCoachMemoryLines(String(userId)).catch(() => [] as string[]),
+    ]);
+
     const promptContext = {
       profile: user?.profile ?? null,
       targets: user?.targets ?? null,
       recentLogs,
       recentFeedback,
+      weightTrend,
+      progression,
+      knownPatterns,
     };
     const userPrompt = buildWorkoutPrompt(body, today, promptContext);
     const signals = deriveReadinessSignals(body, promptContext);

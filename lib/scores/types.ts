@@ -55,6 +55,12 @@ export interface ScoreComponent {
   score: number | null;
   /** Plain-language note, e.g. "HRV 12% below your 2-week baseline" */
   note?: string;
+  /**
+   * Blend weight before renormalization; absent on penalty/annotation
+   * components. Exposed so the attribution engine can compute exact
+   * per-component point contributions.
+   */
+  weight?: number;
 }
 
 export interface ReadinessResult {

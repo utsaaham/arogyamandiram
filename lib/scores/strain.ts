@@ -117,6 +117,7 @@ export function computeStrain(days: DayInput[], index: number): StrainResult {
   return {
     score,
     zones,
-    components: parts.map(({ weight: _w, raw: _r, ...c }) => c),
+    // Weights stay on the components so attribution can decompose the blend.
+    components: parts.map(({ raw: _r, ...c }) => c),
   };
 }

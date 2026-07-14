@@ -8,7 +8,9 @@ import { Types } from 'mongoose';
 
 export type Gender = 'male' | 'female' | 'other';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-export type Goal = 'lose' | 'maintain' | 'gain';
+export type Goal = 'lose_fat' | 'build_muscle' | 'recomp' | 'improve_fitness' | 'maintain';
+/** Pre-2026 3-value goal strings; still present in stored documents and old clients. */
+export type LegacyGoal = 'lose' | 'maintain' | 'gain';
 export type UnitSystem = 'metric' | 'imperial';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type WorkoutCategory = 'cardio' | 'strength' | 'flexibility' | 'core' | 'sports' | 'other';
@@ -111,11 +113,23 @@ export interface ReminderScheduleSettings {
 }
 
 export type HealthDataSyncSource = 'manual' | 'auto';
-export type DietaryPreference = 'no_preference' | 'vegetarian' | 'non_vegetarian' | 'vegan';
+export type DietaryPreference =
+  | 'no_preference'
+  | 'vegetarian'
+  | 'non_vegetarian'
+  | 'eggetarian'
+  | 'vegan'
+  | 'pescatarian'
+  | 'flexitarian';
+
+export type CookingSkill = 'beginner' | 'intermediate' | 'confident';
 
 export interface FoodPreferencesSettings {
   dietaryPreference?: DietaryPreference;
   allergies?: string[];
+  favoriteCuisines?: string[];
+  cookingSkill?: CookingSkill;
+  maxCookingMinutes?: number;
 }
 
 export interface HealthDataSettings {
@@ -162,6 +176,14 @@ export interface UserSettings {
    * and you want to re-show the tour once.
    */
   dashboardTourVersion?: number;
+  /** Suggest-only nudges; dismissal state so they don't nag. */
+  nudges?: {
+    /**
+     * targetWeight value at which the target-reached nudge was dismissed;
+     * re-arms automatically when the user sets a new target.
+     */
+    targetReachedDismissedForTargetWeight?: number | null;
+  };
   /** SMTP/IMAP configuration for email reminders. Passwords are server-only. */
   emailSettings?: EmailSettings;
   /** Recipient list for reminder emails. */
@@ -213,6 +235,8 @@ export interface UserStreaks {
     weight: number;     // consecutive days logging weight
     steps?: number;     // consecutive days meeting daily step goal
     waterGoal?: number; // consecutive days hitting full daily water target
+    protein?: number;   // consecutive days hitting the protein target
+    recovery?: number;  // consecutive days with readiness at/above personal baseline
   };
   best: {
     logging: number;
@@ -224,6 +248,8 @@ export interface UserStreaks {
     weight: number;
     steps?: number;     // longest run of days meeting daily step goal
     waterGoal?: number; // longest run of days hitting full daily water target
+    protein?: number;   // longest run of days hitting the protein target
+    recovery?: number;  // longest run of readiness-at/above-baseline days
   };
   /**
    * Optional start dates (ISO YYYY-MM-DD) for the *current* streak run
@@ -240,6 +266,8 @@ export interface UserStreaks {
     weight?: string;
     steps?: string;
     waterGoal?: string;
+    protein?: string;
+    recovery?: string;
   };
 }
 
@@ -501,6 +529,9 @@ export interface AiMealSuggestion {
   fat: number;
   mealType: MealType;
   ingredients: string[];
+  steps: string[];
+  prepMinutes?: number;
+  cookMinutes?: number;
   isVegetarian: boolean;
 }
 
@@ -523,6 +554,10 @@ export interface AiWorkoutPlan {
     reps: string;
     /** Workout-flow phase, used for ordering and UI grouping */
     phase?: 'warmup' | 'strength' | 'cardio' | 'core' | 'mobility' | 'cooldown';
+    /** Strength only: compound lifts come before accessories (LLM-tagged) */
+    slot?: 'compound' | 'accessory';
+    /** Server-stamped 1..n gym order — do in this order */
+    order?: number;
     durationMinutes?: number;
     restSeconds: number;
     intensity?: 'low' | 'medium' | 'high';
@@ -539,6 +574,8 @@ export interface DailyPlanData {
   generatedAt: string;
   status: 'generating' | 'ready' | 'failed';
   topInsight?: string;
+  /** One-sentence "Today's Body Summary" cached per day by /api/intelligence. */
+  bodySummary?: string;
   projections?: {
     sleep?:     { headline?: string; coachNote?: string; actions?: string[] };
     food?:      { headline?: string; coachNote?: string; actions?: string[] };

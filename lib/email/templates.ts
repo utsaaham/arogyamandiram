@@ -68,46 +68,19 @@ const SUBJECTS: Record<ReminderType, string> = {
   sleep:    'ArogyaMandiram: Sleep check-in 😴',
 };
 
-// ─── Kiki's flirty openers ────────────────────────────────────────────────────
-// Picked by the gender the user set in settings; unknown stays neutral.
+// ─── Action-first openers ─────────────────────────────────────────────────────
+// One per reminder type, same for everyone. Formula: what to do + why it
+// matters, in at most two short sentences. Warm but plain — no pet names,
+// no flirting, the action always comes first.
 
-type EmailAudience = 'male' | 'female' | 'neutral';
-
-export function audienceFromGender(gender?: string): EmailAudience {
-  const g = gender?.toLowerCase();
-  if (g === 'male') return 'male';
-  if (g === 'female') return 'female';
-  return 'neutral';
-}
-
-const FLIRTY_OPENERS: Record<EmailAudience, Record<ReminderType, string>> = {
-  male: {
-    water:    'Hey handsome, your water bottle has been giving me sad looks all day.',
-    breakfast:'Morning champ, even heroes need a real breakfast before saving the day.',
-    lunch:    'Lunch date? You pick the table, big guy, I&rsquo;ll keep the log warm.',
-    dinner:   'Warm plate, good company, and you. Best evening plan there is, handsome.',
-    workout:  'Those muscles don&rsquo;t build themselves, and honestly they&rsquo;re doing great.',
-    weighIn:  'Quick hop on the scale, champ. I love watching your progress.',
-    sleep:    'Tell me you slept like the king you are.',
-  },
-  female: {
-    water:    'Hey gorgeous, your water bottle told me it feels ignored today.',
-    breakfast:'Morning sunshine, a queen deserves a proper breakfast before her big day.',
-    lunch:    'Lunch date? You pick the table, love, I&rsquo;ll keep the log warm.',
-    dinner:   'Warm plate, soft lights, and you. A perfect evening, gorgeous.',
-    workout:  'That glow of yours? Movement keeps it dazzling, and you&rsquo;re dazzling.',
-    weighIn:  'Quick hop on the scale, pretty. I love watching your progress.',
-    sleep:    'Tell me you slept like the queen you are.',
-  },
-  neutral: {
-    water:    'Hey you, your water bottle told me it feels a little ignored today.',
-    breakfast:'Morning sunshine, the main character deserves a proper breakfast.',
-    lunch:    'Lunch date? You pick the table, I&rsquo;ll keep the log warm.',
-    dinner:   'Warm plate, soft lights, and you. A perfect evening honestly.',
-    workout:  'That spark of yours? Movement keeps it bright, and you&rsquo;re glowing.',
-    weighIn:  'Quick hop on the scale, cutie. I love watching your progress.',
-    sleep:    'Tell me you slept like absolute royalty.',
-  },
+const ACTION_OPENERS: Record<ReminderType, string> = {
+  water:    'Time for a glass of water. Small sips through the day add up faster than you think.',
+  breakfast:'Have your breakfast, then log it here. A solid morning meal keeps your energy steady until lunch.',
+  lunch:    'Lunchtime — eat, then log what you had. Logging the midday meal keeps your day’s numbers honest.',
+  dinner:   'Time to log your dinner. It completes today’s nutrition picture, even if it was just something light.',
+  workout:  'Get your movement in today, then log it. A short walk counts just as much as a gym session.',
+  weighIn:  'Step on the scale and log your weight. Daily readings are what make your trend line trustworthy.',
+  sleep:    'Log last night’s sleep. Duration and quality drive your recovery and readiness numbers.',
 };
 
 function baseLayout(firstName: string, contentHtml: string): string {
@@ -212,16 +185,17 @@ export function getReminderTemplate(
   userName: string,
   gender?: string
 ): { subject: string; html: string } {
+  void gender; // kept in the signature for caller compatibility; openers are the same for everyone
   const firstName = userName?.split(' ')[0] || 'there';
   const c = CONTENT[type];
-  const opener = FLIRTY_OPENERS[audienceFromGender(gender)][type];
+  const opener = ACTION_OPENERS[type];
 
   const contentHtml = `
-    <!-- Kiki's opener -->
+    <!-- Action-first opener -->
     <tr>
       <td style="padding:20px 32px 0 32px;">
         <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;
-                  color:#059669;line-height:1.6;font-style:italic;">
+                  color:#059669;line-height:1.6;">
           ${opener}
         </p>
       </td>

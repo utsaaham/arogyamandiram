@@ -17,6 +17,10 @@ import { decrypt } from '@/lib/encryption';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserIdWithBypass, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
+import { normalizeGoal } from '@/lib/goals';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
+import { deriveTargetGap } from '@/app/api/ai/daily-plan/shared';
+import { COACH_TONE } from '@/lib/tone';
 import { writeDebugLog } from '@/lib/debugLogWriter';
 
 export const dynamic = 'force-dynamic';
@@ -810,25 +814,30 @@ function enforceAlmondMilkSanity(item: NormalizedItem): NormalizedItem {
 // simply omits the feedback from the response.
 
 const FEEDBACK_INSTRUCTIONS = `
-You are Kiki, the user's warm, playful, slightly flirty health buddy inside a
-health tracking app. You talk like a sweet friend who happens to know nutrition,
-never like a bot or a clinical coach.
+You are the user's supportive nutrition coach inside a health tracking app.
+${COACH_TONE}
 
 You get: the meal the user just logged (items + totals), their daily targets,
-their goal, and what they have already eaten today BEFORE this meal.
+their goal, where they sit vs their target weight (target_gap), the direction
+their weight is actually moving (weight_trend), and what they have already
+eaten today BEFORE this meal.
+
+When the goal and weight_trend conflict (for example goal build_muscle but
+weight_trend losing), you may use that in point 3: nudge the eating direction
+that serves their goal. Never suggest changing the goal, and never claim food
+or exercise burns fat in one body spot.
 
 Write feedback about this meal in 2-3 short sentences:
-1. One concrete, specific observation about the meal itself (what's lovely
-   about it, or what's a bit heavy: protein, sodium, fiber, sugar).
+1. One concrete, specific observation about the meal itself (what works well,
+   or what's a bit heavy: protein, sodium, fiber, sugar).
 2. How it fits their day: roughly how many calories or how much protein they
-   have left after this meal given their targets, or a gentle heads-up if it
-   nudges them over.
+   have left after this meal given their targets, or a plain heads-up if it
+   pushes them over.
 3. Optionally one small, doable suggestion for the rest of the day.
 
 Voice rules:
-- Warm, cheesy, a little flirty, always kind. Think "so proud of you" energy.
-- Never judgmental, alarmist, or preachy.
-- Sound human: contractions, casual phrasing, no corporate or robotic wording.
+- Warm and human, never judgmental, alarmist, or preachy.
+- Contractions and casual phrasing are fine; no corporate or robotic wording.
 - Never use hyphens or dashes in the text. No bullet points, no markdown, no
   headers, no greetings, and don't recite all the numbers back.
 - At most one emoji, and only if it feels natural.
@@ -842,15 +851,16 @@ async function generateMealFeedback(
 ): Promise<string | null> {
   try {
     await connectDB();
-    const [user, todayLog] = await Promise.all([
-      User.findById(userId).select('profile.goal targets').lean(),
+    const [user, todayLog, weightTrend] = await Promise.all([
+      User.findById(userId).select('profile.goal profile.weight profile.targetWeight targets').lean(),
       DailyLog.findOne({ userId, date: getToday() })
         .select('totalCalories totalProtein totalCarbs totalFat')
         .lean(),
+      getWeightTrendForUser(userId),
     ]);
 
     const targets = (user?.targets ?? {}) as Record<string, number | undefined>;
-    const profile = (user?.profile ?? {}) as { goal?: string };
+    const profile = (user?.profile ?? {}) as { goal?: string; weight?: number; targetWeight?: number };
     const log = (todayLog ?? {}) as Record<string, number | undefined>;
 
     const context = {
@@ -858,7 +868,11 @@ async function generateMealFeedback(
         items: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, calories: i.calories })),
         total,
       },
-      goal: profile.goal ?? 'maintain',
+      goal: normalizeGoal(profile.goal),
+      // Read-only signals: where they sit vs their target weight, and the
+      // direction the scale is actually moving.
+      target_gap: deriveTargetGap(profile.weight, profile.targetWeight),
+      weight_trend: weightTrend,
       daily_targets: {
         calories: targets.dailyCalories ?? 2000,
         protein_g: targets.protein ?? 150,

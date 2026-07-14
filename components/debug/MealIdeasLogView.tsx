@@ -11,6 +11,7 @@ import {
   type SectionId,
 } from './DebugPipelineShared';
 import { formatDate } from '@/lib/utils';
+import { normalizeGoal } from '@/lib/goals';
 
 /** Meal Ideas debug log shape (matches API response). New format: prompt/response. Legacy: step1/step2. */
 export interface MealIdeasDebugLog {
@@ -227,7 +228,7 @@ export function MealIdeasLogView({
                       </tr>
                       <tr className="border-b border-[#1e1e1e]/50">
                         <td className="py-2 pl-3 pr-4 text-zinc-500">Goal</td>
-                        <td className="py-2 pr-3">{log.userContext.goal ? (log.userContext.goal === 'lose' ? 'lose weight' : log.userContext.goal === 'gain' ? 'gain weight' : 'maintain weight') : '—'}</td>
+                        <td className="py-2 pr-3">{log.userContext.goal ? normalizeGoal(log.userContext.goal).replace(/_/g, ' ') : '—'}</td>
                       </tr>
                     </tbody>
                   </table>

@@ -16,6 +16,7 @@ import api from '@/lib/apiClient';
 import { CARE_CADENCES, cadenceInfo } from '@/lib/careCadence';
 import { cn } from '@/lib/utils';
 import { getTargetsForUser } from '@/lib/health';
+import { GOAL_OPTIONS } from '@/lib/goals';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import Image from 'next/image';
 
@@ -48,17 +49,27 @@ const activityLevels = [
   { value: 'very_active', label: 'Very Active',  desc: 'Intense daily exercise' },
 ];
 
-const goals = [
-  { value: 'lose',     label: 'Lose Weight', desc: 'Calorie deficit' },
-  { value: 'maintain', label: 'Maintain',    desc: 'Stay current' },
-  { value: 'gain',     label: 'Gain Weight', desc: 'Calorie surplus' },
-];
-
 const dietaryPreferenceOptions = [
-  { value: 'no_preference', label: 'No preference' },
-  { value: 'vegetarian', label: 'Vegetarian' },
-  { value: 'non_vegetarian', label: 'Non-vegetarian' },
-  { value: 'vegan', label: 'Vegan' },
+  { value: 'no_preference', label: 'Anything', icon: '✨', desc: 'No restrictions' },
+  { value: 'vegetarian', label: 'Vegetarian', icon: '🌱', desc: 'No meat or fish' },
+  { value: 'non_vegetarian', label: 'Non-vegetarian', icon: '🍗', desc: 'Meat and fish' },
+  { value: 'eggetarian', label: 'Eggetarian', icon: '🥚', desc: 'Vegetarian + eggs' },
+  { value: 'vegan', label: 'Vegan', icon: '🥬', desc: 'Plant-based only' },
+  { value: 'pescatarian', label: 'Pescatarian', icon: '🐟', desc: 'Vegetarian + seafood' },
+  { value: 'flexitarian', label: 'Flexitarian', icon: '🌿', desc: 'Mostly plant-based' },
+] as const;
+
+type DietaryPreferenceValue = (typeof dietaryPreferenceOptions)[number]['value'];
+
+const cuisineOptions = [
+  'Indian', 'Italian', 'Mexican', 'Mediterranean', 'Chinese', 'Japanese',
+  'Korean', 'Thai', 'Middle Eastern', 'American', 'French', 'African', 'Caribbean',
+] as const;
+
+const cookingSkillOptions = [
+  { value: 'beginner', label: 'Beginner', desc: 'Simple steps and basic techniques' },
+  { value: 'intermediate', label: 'Intermediate', desc: 'Comfortable with everyday cooking' },
+  { value: 'confident', label: 'Confident', desc: 'More techniques and involved recipes' },
 ] as const;
 
 const bodyTypeOptions = [
@@ -209,9 +220,13 @@ function SettingsInner() {
   const [physiqueGoal, setPhysiqueGoal] = useState('');
   const [workoutLocation, setWorkoutLocation] = useState('');
   const [equipmentNotes, setEquipmentNotes] = useState('');
-  const [dietaryPreference, setDietaryPreference] = useState<'no_preference' | 'vegetarian' | 'non_vegetarian' | 'vegan'>('no_preference');
+  const [dietaryPreference, setDietaryPreference] = useState<DietaryPreferenceValue>('no_preference');
   const [allergies, setAllergies] = useState<string[]>([]);
   const [allergyDraft, setAllergyDraft] = useState('');
+  const [favoriteCuisines, setFavoriteCuisines] = useState<string[]>([]);
+  const [cuisineDraft, setCuisineDraft] = useState('');
+  const [cookingSkill, setCookingSkill] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
+  const [maxCookingMinutes, setMaxCookingMinutes] = useState('30');
 
   // ── Targets state ──────────────────────────────────────────────────────────
   const [targetsSaving, setTargetsSaving] = useState(false);
@@ -383,13 +398,17 @@ function SettingsInner() {
         : DEFAULT_WATER_QUICK_AMOUNTS;
       setCustomWaterAmounts(normalizedQuickAmounts.map((value) => String(value)));
       const savedDietaryPreference = s.foodPreferences?.dietaryPreference;
-      const normalizedDietaryPreference: 'no_preference' | 'vegetarian' | 'non_vegetarian' | 'vegan' =
+      const normalizedDietaryPreference: DietaryPreferenceValue =
         dietaryPreferenceOptions.some((option) => option.value === savedDietaryPreference)
-          ? (savedDietaryPreference as 'no_preference' | 'vegetarian' | 'non_vegetarian' | 'vegan')
+          ? (savedDietaryPreference as DietaryPreferenceValue)
           : 'no_preference';
       setDietaryPreference(normalizedDietaryPreference);
       setAllergies(Array.isArray(s.foodPreferences?.allergies) ? s.foodPreferences.allergies.filter((v): v is string => typeof v === 'string' && v.trim().length > 0) : []);
       setAllergyDraft('');
+      setFavoriteCuisines(Array.isArray(s.foodPreferences?.favoriteCuisines) ? s.foodPreferences.favoriteCuisines.filter((v): v is string => typeof v === 'string' && v.trim().length > 0) : []);
+      setCuisineDraft('');
+      setCookingSkill(s.foodPreferences?.cookingSkill === 'intermediate' || s.foodPreferences?.cookingSkill === 'confident' ? s.foodPreferences.cookingSkill : 'beginner');
+      setMaxCookingMinutes(String(s.foodPreferences?.maxCookingMinutes ?? 30));
       const lsa = s.reminderSchedule?.lastSentAt ?? {};
       setLastSentAt({
         water: String(lsa.water ?? ''), breakfast: String(lsa.breakfast ?? ''),
@@ -593,6 +612,16 @@ function SettingsInner() {
       ? [...allergies, ...pendingDraft.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)]
       : allergies;
     const dedupedAllergies = Array.from(new Set(merged.map((s) => s.trim()).filter(Boolean)));
+    const pendingCuisineDraft = cuisineDraft.trim();
+    const mergedCuisines = pendingCuisineDraft
+      ? [...favoriteCuisines, ...pendingCuisineDraft.split(/[,\n]/).map((s) => s.trim()).filter(Boolean)]
+      : favoriteCuisines;
+    const dedupedCuisines = Array.from(new Set(mergedCuisines.map((s) => s.trim()).filter(Boolean)));
+    const parsedMaxCookingMinutes = Number(maxCookingMinutes);
+    if (!Number.isInteger(parsedMaxCookingMinutes) || parsedMaxCookingMinutes < 5 || parsedMaxCookingMinutes > 180) {
+      showToast('Maximum cooking time must be a whole number between 5 and 180 minutes', 'error');
+      return;
+    }
 
     setCustomizationsSaving(true);
     try {
@@ -605,10 +634,14 @@ function SettingsInner() {
         foodPreferences: {
           dietaryPreference,
           allergies: dedupedAllergies,
+          favoriteCuisines: dedupedCuisines,
+          cookingSkill,
+          maxCookingMinutes: parsedMaxCookingMinutes,
         },
       });
       if (res.success) {
         if (pendingDraft) setAllergyDraft('');
+        if (pendingCuisineDraft) setCuisineDraft('');
         showToast('Customizations saved', 'success');
         await refetch();
       } else {
@@ -619,6 +652,16 @@ function SettingsInner() {
     } finally {
       setCustomizationsSaving(false);
     }
+  };
+
+  const resetFoodPreferences = () => {
+    setDietaryPreference('no_preference');
+    setAllergies([]);
+    setAllergyDraft('');
+    setFavoriteCuisines([]);
+    setCuisineDraft('');
+    setCookingSkill('beginner');
+    setMaxCookingMinutes('30');
   };
 
   // ── API Keys save ──────────────────────────────────────────────────────────
@@ -1094,25 +1137,6 @@ function SettingsInner() {
               </div>
             </div>
 
-            {/* Goal — auto-derived from current weight vs target weight. */}
-            <div className="glass-card rounded-2xl p-6">
-              <div className="flex items-center gap-2">
-                <Flag className="h-4 w-4 text-accent-emerald" />
-                <h2 className="text-base font-semibold text-text-primary">Goal</h2>
-              </div>
-              <p className="mt-1 text-xs text-text-muted">Auto-derived from your current weight vs. target weight. Update those above to change your goal.</p>
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {goals.map((g) => (
-                  <div key={g.value}
-                    className={cn('rounded-2xl border px-4 py-3 text-left text-xs transition-all',
-                      goal === g.value ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900/50 text-zinc-400')}>
-                    <p className={cn('font-semibold', goal === g.value ? 'text-emerald-400' : 'text-zinc-200')}>{g.label}</p>
-                    <p className="mt-0.5 text-[10px] text-zinc-400">{g.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div className="flex justify-end">
               <button onClick={saveProfile} disabled={saving}
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50">
@@ -1126,6 +1150,32 @@ function SettingsInner() {
         {/* ══════ BODY COMPOSITION ══════ */}
         {activeTab === 'body' && (
           <>
+            {/* Goal — user-owned; drives calorie/macro targets and AI plans */}
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Flag className="h-4 w-4 text-accent-emerald" />
+                  <h2 className="text-base font-semibold text-text-primary">Goal</h2>
+                </div>
+                <button onClick={saveProfile} disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
+                  {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                  Save
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-text-muted">Your call — Ciel adapts plans and targets to the goal you pick.</p>
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {GOAL_OPTIONS.map((g) => (
+                  <button key={g.value} type="button" onClick={() => setGoal(g.value)}
+                    className={cn('rounded-2xl border px-4 py-3 text-left text-xs transition-all',
+                      goal === g.value ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700')}>
+                    <p className={cn('font-semibold', goal === g.value ? 'text-emerald-400' : 'text-zinc-200')}>{g.label}</p>
+                    <p className="mt-0.5 text-[10px] text-zinc-400">{g.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Body Type */}
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between gap-3">
@@ -1434,7 +1484,7 @@ function SettingsInner() {
                     <h2 className="text-base font-semibold text-text-primary">Use AI features</h2>
                     <p className="mt-1 text-xs text-text-muted">
                       {aiEnabled
-                        ? 'AI logging, plans, insights, coaching, and auto-generation can run.'
+                        ? 'AI logging, Ciel plans, insights, and auto-generation can run.'
                         : 'No AI calls will run anywhere in ArogyaMandiram.'}
                     </p>
                   </div>
@@ -1523,82 +1573,142 @@ function SettingsInner() {
             </div>
 
             {/* Food preferences */}
-            <div className="glass-card rounded-2xl p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Utensils className="h-4 w-4 text-emerald-400" />
-                  <h2 className="text-base font-semibold text-text-primary">Food preferences</h2>
+            <div className="glass-card rounded-2xl p-5 sm:p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-emerald-400" />
+                    <h2 className="text-base font-semibold text-text-primary">Food preferences</h2>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-text-muted">Help Ciel recommend meals and write recipes you&apos;ll actually enjoy.</p>
                 </div>
-                <button onClick={saveCustomizations} disabled={customizationsSaving}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
-                  {customizationsSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                  Save
-                </button>
+                <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                  <button type="button" onClick={resetFoodPreferences} disabled={customizationsSaving}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50">
+                    <RotateCcw className="h-3 w-3" /> Reset
+                  </button>
+                  <button type="button" onClick={saveCustomizations} disabled={customizationsSaving}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50">
+                    {customizationsSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                    Save
+                  </button>
+                </div>
               </div>
-              <p className="mt-1 text-xs text-text-muted">Used automatically when AI creates your food plan.</p>
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-medium text-text-muted">Dietary preference</label>
-                  <select
-                    value={dietaryPreference}
-                    onChange={(e) => setDietaryPreference(e.target.value as 'no_preference' | 'vegetarian' | 'non_vegetarian' | 'vegan')}
-                    className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  >
-                    {dietaryPreferenceOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+
+              <div className="mt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">What do you eat?</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+                  {dietaryPreferenceOptions.map((option) => {
+                    const selected = dietaryPreference === option.value;
+                    return (
+                      <button key={option.value} type="button" aria-pressed={selected} onClick={() => setDietaryPreference(option.value)}
+                        className={cn(
+                          'min-h-[70px] rounded-xl border p-2.5 text-left transition-colors',
+                          selected
+                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
+                            : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                        )}>
+                        <span className="text-base" aria-hidden="true">{option.icon}</span>
+                        <span className="mt-0.5 block text-xs font-semibold">{option.label}</span>
+                        <span className="mt-0.5 block text-[10px] leading-tight text-zinc-500">{option.desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-text-muted">Allergies / foods to avoid</label>
-                  <input
-                    type="text"
-                    value={allergyDraft}
-                    onChange={(e) => setAllergyDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ',') {
-                        e.preventDefault();
-                        const parts = allergyDraft.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
-                        if (parts.length > 0) {
-                          setAllergies((prev) => Array.from(new Set([...prev, ...parts])));
-                          setAllergyDraft('');
-                        }
-                      } else if (e.key === 'Backspace' && allergyDraft === '' && allergies.length > 0) {
-                        setAllergies((prev) => prev.slice(0, -1));
-                      }
-                    }}
-                    onBlur={() => {
+              </div>
+
+              <div className="mt-4">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Allergies &amp; foods to avoid</label>
+                <p className="mt-1 text-xs text-zinc-500">Ciel will leave these out of generated meal plans.</p>
+                <input type="text" value={allergyDraft} onChange={(e) => setAllergyDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
                       const parts = allergyDraft.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
                       if (parts.length > 0) {
                         setAllergies((prev) => Array.from(new Set([...prev, ...parts])));
                         setAllergyDraft('');
                       }
-                    }}
-                    placeholder="Type and press Enter (e.g. peanuts)"
-                    className="glass-input mt-1 w-full rounded-xl px-3 py-2 text-sm bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  />
-                  {allergies.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {allergies.map((tag, idx) => (
-                        <span
-                          key={`${tag}-${idx}`}
-                          className="inline-flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800/60 pl-2.5 pr-1 py-0.5 text-xs text-zinc-200"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            aria-label={`Remove ${tag}`}
-                            onClick={() => setAllergies((prev) => prev.filter((_, i) => i !== idx))}
-                            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-700 hover:text-rose-400 transition-colors"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
+                    } else if (e.key === 'Backspace' && allergyDraft === '' && allergies.length > 0) {
+                      setAllergies((prev) => prev.slice(0, -1));
+                    }
+                  }}
+                  placeholder="Type a food or allergy, then press Enter"
+                  className="glass-input mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                {allergies.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {allergies.map((tag, idx) => (
+                      <span key={`${tag}-${idx}`} className="inline-flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800/60 py-1 pl-2.5 pr-1 text-xs text-zinc-200">
+                        {tag}
+                        <button type="button" aria-label={`Remove ${tag}`} onClick={() => setAllergies((prev) => prev.filter((_, i) => i !== idx))}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-rose-400">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Cuisines you love</p>
+                    <p className="mt-1 text-xs text-zinc-500">Ciel will rotate your favorites so meals stay interesting.</p>
+                  </div>
+                  <span className="text-[11px] text-emerald-400">{favoriteCuisines.length} selected</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {cuisineOptions.map((cuisine) => {
+                    const selected = favoriteCuisines.includes(cuisine);
+                    return (
+                      <button key={cuisine} type="button" aria-pressed={selected}
+                        onClick={() => setFavoriteCuisines((prev) => selected ? prev.filter((item) => item !== cuisine) : [...prev, cuisine])}
+                        className={cn(
+                          'rounded-full border px-3 py-1.5 text-xs transition-colors',
+                          selected
+                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                            : 'border-zinc-700 bg-zinc-900/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                        )}>
+                        {selected && <span className="mr-1">✓</span>}{cuisine}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input type="text" value={cuisineDraft} onChange={(e) => setCuisineDraft(e.target.value)}
+                  placeholder="Add another cuisine, such as Ethiopian"
+                  className="glass-input mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                {favoriteCuisines.some((cuisine) => !cuisineOptions.includes(cuisine as (typeof cuisineOptions)[number])) && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {favoriteCuisines.filter((cuisine) => !cuisineOptions.includes(cuisine as (typeof cuisineOptions)[number])).map((cuisine) => (
+                      <span key={cuisine} className="inline-flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800/60 py-1 pl-2.5 pr-1 text-xs text-zinc-200">
+                        {cuisine}
+                        <button type="button" aria-label={`Remove ${cuisine}`} onClick={() => setFavoriteCuisines((prev) => prev.filter((item) => item !== cuisine))}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-rose-400">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your cooking style</p>
+                <div className="mt-2 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-medium text-text-muted">Cooking experience</label>
+                    <select value={cookingSkill} onChange={(e) => setCookingSkill(e.target.value as 'beginner' | 'intermediate' | 'confident')}
+                      className="glass-input mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                      {cookingSkillOptions.map((option) => <option key={option.value} value={option.value}>{option.label} — {option.desc}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-xs font-medium text-text-muted">Maximum time per dish</label>
+                      <span className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">{maxCookingMinutes} min</span>
                     </div>
-                  )}
+                    <input type="range" min={5} max={180} step={5} value={maxCookingMinutes}
+                      onChange={(e) => setMaxCookingMinutes(e.target.value)} aria-label="Maximum cooking time per dish"
+                      className="mt-3 h-2 w-full cursor-pointer accent-emerald-500" />
+                    <div className="mt-1 flex justify-between text-[10px] text-zinc-600"><span>5 min</span><span>180 min</span></div>
+                  </div>
                 </div>
               </div>
             </div>

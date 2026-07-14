@@ -54,7 +54,9 @@ const UserSchema = new Schema<IUserDocument>(
       },
       goal: {
         type: String,
-        enum: ['lose', 'maintain', 'gain'],
+        // 5-value enum plus legacy 3-value strings so old documents still
+        // validate; reads normalize via lib/goals.ts normalizeGoal().
+        enum: ['lose_fat', 'build_muscle', 'recomp', 'improve_fitness', 'maintain', 'lose', 'gain'],
         default: 'maintain',
       },
       targetWeight: { type: Number, min: 20, max: 500 },
@@ -97,6 +99,12 @@ const UserSchema = new Schema<IUserDocument>(
       dashboardTourComplete: { type: Boolean, default: false },
       // Version of the dashboard tour the user has last completed
       dashboardTourVersion: { type: Number, default: 0 },
+      // Suggest-only nudges; dismissal state so they don't nag
+      nudges: {
+        // targetWeight value at which the target-reached nudge was dismissed;
+        // re-arms automatically when the user sets a new target
+        targetReachedDismissedForTargetWeight: { type: Number, default: null },
+      },
       // Recipient list for reminder emails
       recipientEmails: { type: [String], default: [] },
       // Legacy key retained for backward compatibility
@@ -147,12 +155,27 @@ const UserSchema = new Schema<IUserDocument>(
       foodPreferences: {
         dietaryPreference: {
           type: String,
-          enum: ['no_preference', 'vegetarian', 'non_vegetarian', 'vegan'],
+          enum: ['no_preference', 'vegetarian', 'non_vegetarian', 'eggetarian', 'vegan', 'pescatarian', 'flexitarian'],
           default: 'no_preference',
         },
         allergies: {
           type: [String],
           default: [],
+        },
+        favoriteCuisines: {
+          type: [String],
+          default: [],
+        },
+        cookingSkill: {
+          type: String,
+          enum: ['beginner', 'intermediate', 'confident'],
+          default: 'beginner',
+        },
+        maxCookingMinutes: {
+          type: Number,
+          min: 5,
+          max: 180,
+          default: 30,
         },
       },
       todoTemplates: {

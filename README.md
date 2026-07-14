@@ -59,6 +59,12 @@ A full-stack health tracking web app built with Next.js 15, featuring food loggi
 - Custom workout plan generator
 - Requires OpenAI API key (user provides their own)
 
+### ✨ Ciel
+- A personalized daily health guide for outlooks, meals, workouts, and weekly direction
+- Food plans respect vegetarian, non-vegetarian, eggetarian, vegan, pescatarian, and flexitarian choices
+- Favorite cuisines, allergies, cooking comfort, and maximum cooking time are configured in **Settings → Customizations**
+- Every generated dish includes ingredients, prep/cook time, and step-by-step instructions
+
 ### ⚙️ Settings & Onboarding
 - 4-step onboarding wizard
 - Profile management (height, weight, activity, goal)
@@ -66,6 +72,7 @@ A full-stack health tracking web app built with Next.js 15, featuring food loggi
 - Custom daily targets
 - Metric/Imperial units
 - Notification preferences
+- Food, cuisine, allergy, and cooking preferences for Ciel
 
 ---
 
@@ -285,6 +292,10 @@ All files point to the same `.memory/` system — no duplication.
 ## 📄 License
 
 MIT
+
+## 💙 Inspiration Credit
+
+The name **Ciel** is a fan tribute inspired by *That Time I Got Reincarnated as a Slime* (*Tensura*). The original work, names, and characters belong to their respective creators and rights holders. Arogyamandiram is an independent open-source project and is not affiliated with or endorsed by the franchise.
 
 ---
 

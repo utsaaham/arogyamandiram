@@ -24,12 +24,12 @@ export default function CoachPage() {
   const aiEnabled = user?.settings?.aiEnabled !== false;
 
   return (
-    <DashboardPageShell title="Coach" subtitle="Your day, planned overnight — insights, meals and training tuned to your logs" icon={Sparkles}>
-      <div className="space-y-4">
+    <DashboardPageShell title="Ciel" subtitle="Your day, planned overnight — insights, meals and training tuned to your logs" icon={Sparkles}>
+      <div>
 
         {aiEnabled ? (
           <>
-            <div className="mt-4 mobile-fade-up mobile-dash-px lg:px-0 -mx-4 sm:mx-0">
+            <div className="-mx-4 mt-4 w-[calc(100%+2rem)] max-w-[1680px] mobile-fade-up mobile-dash-px sm:mx-auto sm:w-full lg:px-0">
               <div className="flex gap-2 overflow-x-auto hide-scrollbar px-4 sm:px-0 lg:flex-wrap lg:overflow-visible lg:px-0">
                 {tabs.map((tab) => (
                   <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
@@ -46,7 +46,7 @@ export default function CoachPage() {
               </div>
             </div>
 
-            <div className="mt-4 space-y-4 mobile-fade-up mobile-dash-px lg:px-0">
+            <div className="mx-auto mt-4 w-full max-w-[1680px] space-y-4 mobile-fade-up mobile-dash-px lg:px-0">
               {activeTab === 'overview' && <OverviewTab />}
               {activeTab === 'food'     && <FoodTab />}
               {activeTab === 'workout'  && <WorkoutTab />}
@@ -58,7 +58,7 @@ export default function CoachPage() {
               <Sparkles className="h-10 w-10 text-zinc-600" />
               <p className="text-sm font-medium text-zinc-300">AI features are turned off</p>
               <p className="text-xs text-zinc-500">
-                Your coach needs AI enabled to plan your day. Turn it on in Settings to get daily insights, meal ideas and workouts.
+                Ciel needs AI enabled to plan your day. Turn it on in Settings to get daily insights, meal ideas and workouts.
               </p>
               <Link
                 href="/settings"

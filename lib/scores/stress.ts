@@ -85,6 +85,7 @@ export function computeStress(days: DayInput[], index: number): StressResult {
   return {
     level: levelFor(score),
     score,
-    components: parts.map(({ weight: _w, stress01: _s, ...c }) => c),
+    // Weights stay on the components so attribution can decompose the blend.
+    components: parts.map(({ stress01: _s, ...c }) => c),
   };
 }

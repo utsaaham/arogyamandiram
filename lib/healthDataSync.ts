@@ -261,16 +261,19 @@ async function applyMetrics(
   const activityBlock = record.activity && typeof record.activity === 'object' ? (record.activity as Record<string, unknown>) : null;
   const vitalsBlock = record.vitals && typeof record.vitals === 'object' ? (record.vitals as Record<string, unknown>) : null;
 
-  const metricsUpdate: Record<string, number> = {};
-  if (heartBlock && typeof heartBlock.avgBpm === 'number') metricsUpdate.heartRate = heartBlock.avgBpm;
-  if (heartBlock && typeof heartBlock.restingBpm === 'number') metricsUpdate.restingHeartRate = heartBlock.restingBpm;
-  if (heartBlock && typeof heartBlock.hrvSdnnMs === 'number') metricsUpdate.hrvSdnnMs = heartBlock.hrvSdnnMs;
-  if (activityBlock && typeof activityBlock.steps === 'number') metricsUpdate.steps = activityBlock.steps;
-  if (activityBlock && typeof activityBlock.activeCalories === 'number') metricsUpdate.activeCalories = activityBlock.activeCalories;
-  if (activityBlock && typeof activityBlock.distanceKm === 'number') metricsUpdate.distanceKm = activityBlock.distanceKm;
-  if (vitalsBlock && typeof vitalsBlock.respiratoryRate === 'number') metricsUpdate.respiratoryRate = vitalsBlock.respiratoryRate;
-  if (vitalsBlock && typeof vitalsBlock.wristTempC === 'number') metricsUpdate.wristTempC = vitalsBlock.wristTempC;
-  if (vitalsBlock && typeof vitalsBlock.vo2Max === 'number') metricsUpdate.vo2Max = vitalsBlock.vo2Max;
+  const sampledMetrics: Record<string, number> = {};
+  const cumulativeMetrics: Record<string, number> = {};
+  if (heartBlock && typeof heartBlock.avgBpm === 'number') sampledMetrics.heartRate = heartBlock.avgBpm;
+  if (heartBlock && typeof heartBlock.restingBpm === 'number') sampledMetrics.restingHeartRate = heartBlock.restingBpm;
+  if (heartBlock && typeof heartBlock.hrvSdnnMs === 'number') sampledMetrics.hrvSdnnMs = heartBlock.hrvSdnnMs;
+  if (activityBlock && typeof activityBlock.steps === 'number' && activityBlock.steps > 0) cumulativeMetrics.steps = activityBlock.steps;
+  if (activityBlock && typeof activityBlock.activeCalories === 'number' && activityBlock.activeCalories > 0) cumulativeMetrics.activeCalories = activityBlock.activeCalories;
+  if (activityBlock && typeof activityBlock.distanceKm === 'number' && activityBlock.distanceKm > 0) cumulativeMetrics.distanceKm = activityBlock.distanceKm;
+  if (vitalsBlock && typeof vitalsBlock.respiratoryRate === 'number') sampledMetrics.respiratoryRate = vitalsBlock.respiratoryRate;
+  if (vitalsBlock && typeof vitalsBlock.wristTempC === 'number') sampledMetrics.wristTempC = vitalsBlock.wristTempC;
+  if (vitalsBlock && typeof vitalsBlock.vo2Max === 'number') sampledMetrics.vo2Max = vitalsBlock.vo2Max;
+
+  const metricsUpdate = { ...sampledMetrics, ...cumulativeMetrics };
 
   if (Object.keys(metricsUpdate).length === 0) {
     return { mutated: false, actions };
@@ -279,7 +282,14 @@ async function applyMetrics(
   try {
     await DailyLog.findOneAndUpdate(
       { userId, date: logDate },
-      { $set: metricsUpdate, $setOnInsert: { userId, date: logDate } },
+      {
+        ...(Object.keys(sampledMetrics).length > 0 ? { $set: sampledMetrics } : {}),
+        // Activity totals are cumulative within a calendar day. HealthKit can
+        // briefly return zero or a partial total while sources are refreshing;
+        // never let that erase a higher value already synced for the same day.
+        ...(Object.keys(cumulativeMetrics).length > 0 ? { $max: cumulativeMetrics } : {}),
+        $setOnInsert: { userId, date: logDate },
+      },
       { upsert: true, strict: false }
     );
     for (const [field, val] of Object.entries(metricsUpdate)) {

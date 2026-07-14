@@ -122,7 +122,8 @@ export function computeReadiness(days: DayInput[], index: number): ReadinessResu
     }
   }
 
-  const components = [...parts.map(({ weight: _w, ...c }) => c), ...penalties];
+  // Weights stay on the components so attribution can decompose the blend.
+  const components = [...parts, ...penalties];
 
   // Drivers: the weakest signals (or a positive note when everything is strong)
   const scored = parts.filter((p) => p.score !== null).sort((a, b) => (a.score ?? 0) - (b.score ?? 0));

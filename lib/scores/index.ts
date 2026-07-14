@@ -2,6 +2,8 @@
 // Vitals payload — today's four scores, guidance, trends, and habit insights.
 
 import type { IDailyLog } from '@/types';
+import { attributeScore, type ScoreAttribution } from '@/lib/intelligence/attribution';
+import { baselineOf, column, zScore } from './baselines';
 import { computeGuidance } from './guidance';
 import { computeInsights } from './insights';
 import { computeReadiness } from './readiness';
@@ -24,6 +26,32 @@ export interface VitalsTrendPoint {
   hrvSdnnMs: number | null;
   restingHeartRate: number | null;
   vo2Max: number | null;
+  respiratoryRate: number | null;
+  wristTempC: number | null;
+  mood: number | null;
+}
+
+/** Per-score attribution: why the value, what changed, confidence, fastest lever. */
+export interface VitalsAttribution {
+  readiness: ScoreAttribution;
+  strain: ScoreAttribution;
+  sleep: ScoreAttribution;
+  stress: ScoreAttribution;
+}
+
+/** "Unusual today" callout: a baselined metric sitting |z| > 2 from its own history. */
+export interface AnomalyCallout {
+  key: string;
+  label: string;
+  note: string;
+}
+
+/** One chained-attribution event: a day where a score moved and why. */
+export interface TimelineEvent {
+  date: string;
+  scoreKey: 'readiness' | 'sleep';
+  delta: number;
+  reason: string | null;
 }
 
 export interface VitalsResult {
@@ -33,10 +61,17 @@ export interface VitalsResult {
   sleep: SleepResult;
   stress: StressResult;
   guidance: GuidanceResult;
+  attribution: VitalsAttribution;
+  /** Attribution chained over the last week: what moved and why, day by day. */
+  timeline: TimelineEvent[];
+  /** Metrics sitting far outside their own baseline today (|z| > 2). */
+  anomalies: AnomalyCallout[];
   trends: VitalsTrendPoint[];
   insights: HabitInsight[];
   journal: { habits: string[]; mood: number | null };
 }
+
+export type { ScoreAttribution } from '@/lib/intelligence/attribution';
 
 type LeanLog = Partial<IDailyLog> & { date: string };
 
@@ -112,6 +147,9 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
         hrvSdnnMs: d.hrvSdnnMs ?? null,
         restingHeartRate: d.restingHeartRate ?? null,
         vo2Max: d.vo2Max ?? null,
+        respiratoryRate: d.respiratoryRate ?? null,
+        wristTempC: d.wristTempC ?? null,
+        mood: d.mood ?? null,
       };
     });
 
@@ -122,6 +160,85 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
 
   const todayInput = series[todayIndex];
 
+  // Anomaly detection: the respiratory/wrist-temp z-penalty pattern extended
+  // to every baselined metric — |z| > 2 vs the user's own history flags an
+  // "Unusual today" callout (signal, not diagnosis).
+  const ANOMALY_METRICS: Array<{
+    key: string;
+    label: string;
+    pick: (d: DayInput) => number | undefined;
+    format: (v: number, meanV: number) => string;
+  }> = [
+    { key: 'hrv', label: 'HRV', pick: (d) => d.hrvSdnnMs, format: (v, m) => `HRV ${Math.round(v)} ms vs ~${Math.round(m)} ms usual` },
+    { key: 'restingHr', label: 'Resting heart rate', pick: (d) => d.restingHeartRate, format: (v, m) => `Resting HR ${Math.round(v)} bpm vs ~${Math.round(m)} bpm usual` },
+    { key: 'respiratoryRate', label: 'Respiratory rate', pick: (d) => d.respiratoryRate, format: (v, m) => `Breathing ${v.toFixed(1)}/min vs ~${m.toFixed(1)} usual` },
+    { key: 'wristTemp', label: 'Wrist temperature', pick: (d) => d.wristTempC, format: (v, m) => `Wrist temp ${v.toFixed(1)}°C vs ~${m.toFixed(1)}°C usual` },
+    { key: 'heartRate', label: 'Average heart rate', pick: (d) => d.heartRate, format: (v, m) => `Avg HR ${Math.round(v)} bpm vs ~${Math.round(m)} bpm usual` },
+  ];
+  const anomalies: AnomalyCallout[] = [];
+  for (const metric of ANOMALY_METRICS) {
+    const value = metric.pick(todayInput);
+    if (typeof value !== 'number') continue;
+    const base = baselineOf(column(series, metric.pick), todayIndex);
+    if (!base) continue;
+    const z = zScore(value, base);
+    if (Math.abs(z) > 2) {
+      anomalies.push({
+        key: metric.key,
+        label: metric.label,
+        note: `Unusual today: ${metric.format(value, base.mean)}`,
+      });
+    }
+  }
+
+  // Exact attribution per score: today vs yesterday plus each score's own
+  // recent history (baseline phrasing + confidence).
+  const yesterdayIndex = todayIndex - 1;
+  const attributionFor = (
+    pick: (p: (typeof perDay)[number]) => { score: number | null; components: ReadinessResult['components'] }
+  ) => attributeScore({
+    todayScore: pick(perDay[todayIndex]).score,
+    todayComponents: pick(perDay[todayIndex]).components,
+    yesterdayScore: yesterdayIndex >= 0 ? pick(perDay[yesterdayIndex]).score : null,
+    yesterdayComponents: yesterdayIndex >= 0 ? pick(perDay[yesterdayIndex]).components : null,
+    priorScores: perDay.slice(0, todayIndex).map((p) => pick(p).score),
+  });
+
+  const attribution: VitalsAttribution = {
+    readiness: attributionFor((p) => p.readiness),
+    strain: attributionFor((p) => p.strain),
+    sleep: attributionFor((p) => p.sleep),
+    stress: attributionFor((p) => p.stress),
+  };
+
+  // Timeline: chain day-over-day attribution across the last week — every day
+  // a score moved meaningfully, name the biggest reason.
+  const TIMELINE_DAYS = 7;
+  const TIMELINE_MIN_DELTA = 8;
+  const timeline: TimelineEvent[] = [];
+  for (let i = Math.max(1, series.length - TIMELINE_DAYS); i <= todayIndex; i++) {
+    for (const scoreKey of ['readiness', 'sleep'] as const) {
+      const todayResult = perDay[i][scoreKey];
+      const prevResult = perDay[i - 1][scoreKey];
+      if (todayResult.score === null || prevResult.score === null) continue;
+      const delta = Math.round(todayResult.score - prevResult.score);
+      if (Math.abs(delta) < TIMELINE_MIN_DELTA) continue;
+      const attr = attributeScore({
+        todayScore: todayResult.score,
+        todayComponents: todayResult.components,
+        yesterdayScore: prevResult.score,
+        yesterdayComponents: prevResult.components,
+        priorScores: [],
+      });
+      timeline.push({
+        date: series[i].date,
+        scoreKey,
+        delta,
+        reason: attr.changeVsYesterday.biggestReason,
+      });
+    }
+  }
+
   return {
     date: today,
     readiness: perDay[todayIndex].readiness,
@@ -129,6 +246,9 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
     sleep: perDay[todayIndex].sleep,
     stress: perDay[todayIndex].stress,
     guidance: computeGuidance(todayInput, perDay[todayIndex].readiness),
+    attribution,
+    timeline,
+    anomalies,
     trends,
     insights,
     journal: {

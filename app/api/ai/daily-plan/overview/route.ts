@@ -16,9 +16,12 @@ import { createOpenAiJson } from '@/lib/openaiJson';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
+import { normalizeGoal } from '@/lib/goals';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
+import { getCoachMemoryLines } from '@/lib/intelligence/coachMemory';
 import { writeDebugLog } from '@/lib/debugLogWriter';
 import { computeVitals, toDayInput, type VitalsResult } from '@/lib/scores';
-import { normalizeOutlook, type OutlookData } from '../shared';
+import { normalizeOutlook, deriveTargetGap, type OutlookData } from '../shared';
 import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
 
 export const dynamic = 'force-dynamic';
@@ -134,7 +137,7 @@ export async function GET() {
   }
 }
 
-const SYSTEM_PROMPT = `You are the user's personal health coach writing their Daily Outlook, a WHOOP-style morning briefing. You can see their whole picture: today's computed scores vs their own baselines, two weeks of trends, seven days of logged meals, workouts, water, sleep and weight, habit correlations, and today's generated meal and workout plans. Speak in second person, warm and confident, like a coach who has already read everything. Anchor every claim to their real numbers. Return JSON only with this exact shape:
+const SYSTEM_PROMPT = `You are Ciel, the user's personal health guide, writing their Daily Outlook as a WHOOP-style morning briefing. You can see their whole picture: today's computed scores vs their own baselines, two weeks of trends, seven days of logged meals, workouts, water, sleep and weight, habit correlations, and today's generated meal and workout plans. Speak in second person, warm and confident, like Ciel has already read everything. Anchor every claim to their real numbers. Return JSON only with this exact shape:
 {
   "headline": "one line, max 60 characters, capturing today's readiness story",
   "recoverySummary": "2-3 sentences on how they arrived at today: cite actual values and how they compare to their baseline or trend (for example HRV, resting HR, sleep hours, readiness score). If wearable data is missing, say so plainly and read their logged sleep, food and training instead.",
@@ -160,6 +163,9 @@ Hard rules:
 - "focus" has at most 3 entries. Pick the metrics that most need attention today from the 7-day logs vs targets. Do not pad; 1-2 strong entries beat 3 weak ones.
 - "tonight.sleepNeedHours": start from the sleep target, add up to 1 h when recent nights ran short or today is a push day, subtract nothing. Stay between 6 and 10.
 - Never invent numbers. Every figure you cite must appear in the inputs.
+- inputs.profile.goal is the goal the user chose; inputs.targetGap is where they sit vs their target weight; inputs.weightTrend is the direction the scale is actually moving. If the goal and the trend conflict (for example goal build_muscle while weightTrend is losing), say so plainly with the fix. Never suggest changing the goal.
+- Never claim spot reduction. If profile.fatFocusAreas is set, treat it as where they want to see change; fat comes off the whole body through the overall deficit.
+- inputs.knownPatterns (when present) are durable, statistically confirmed patterns about THIS user. You may reference them to personalize advice, but never restate their numbers incorrectly.
 - Scores of null mean no wearable data, not a bad score. Never scold about missing data more than once.
 - No em dashes anywhere. No medical claims or diagnoses. No "consider" or "try to"; give direct actions.
 - Keep the whole thing tight: this is a briefing they read in 30 seconds with their coffee.`;
@@ -178,7 +184,7 @@ export async function POST(req: NextRequest) {
 
     const [user, vitals, recentLogs, todayPlan] = await Promise.all([
       User.findById(userId)
-        .select('profile.gender profile.age profile.dateOfBirth profile.height profile.weight profile.activityLevel profile.goal profile.targetWeight targets')
+        .select('profile.gender profile.age profile.dateOfBirth profile.height profile.weight profile.activityLevel profile.goal profile.targetWeight profile.fatFocusAreas targets')
         .lean() as Promise<{
           profile?: Record<string, unknown>;
           targets?: Record<string, unknown>;
@@ -209,9 +215,22 @@ export async function POST(req: NextRequest) {
       )
       .lean() as RecentLogLean | null;
 
+    const [weightTrend, knownPatterns] = await Promise.all([
+      getWeightTrendForUser(String(userId)),
+      getCoachMemoryLines(String(userId)).catch(() => [] as string[]),
+    ]);
+    const profileRaw = user?.profile as { goal?: string; weight?: number; targetWeight?: number } | undefined;
+
     const inputs = {
       planDate: today,
-      profile: user?.profile ?? null,
+      profile: user?.profile
+        ? { ...user.profile, goal: normalizeGoal(profileRaw?.goal) }
+        : null,
+      // Read-only signals beside the user-owned goal: where they sit vs their
+      // target and which way the scale is actually moving.
+      targetGap: deriveTargetGap(profileRaw?.weight, profileRaw?.targetWeight),
+      weightTrend,
+      ...(knownPatterns.length > 0 ? { knownPatterns } : {}),
       targets: user?.targets ?? null,
       vitals: compactVitals(vitals),
       todaySoFar: todayLog ? compactLog(todayLog) : null,

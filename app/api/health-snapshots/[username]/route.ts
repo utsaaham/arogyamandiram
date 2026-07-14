@@ -11,14 +11,15 @@ import User from '@/models/User';
 import HealthSnapshot from '@/models/HealthSnapshot';
 import { decrypt } from '@/lib/encryption';
 import { applyHealthRecords } from '@/lib/healthDataSync';
+import { getAuthUserId, isUserId } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 const MAX_RECORDS_PER_PUSH = 30;
 const RETURN_DAYS = 10;
 
-async function resolveUser(username: string, bearer: string) {
-  if (!bearer || !username) return null;
+async function resolveUser(username: string, bearer: string, sessionUserId?: string) {
+  if (!username) return null;
 
   let user: {
     _id: { toString(): string };
@@ -37,8 +38,13 @@ async function resolveUser(username: string, bearer: string) {
   }
   if (!user) return null;
 
+  // The iOS app already has a NextAuth session after login. Accept that
+  // session only when it belongs to the username in this route. Bearer auth
+  // remains supported for headless connector pulls and older app builds.
+  if (sessionUserId && user._id.toString() === sessionUserId) return user;
+
   const encrypted = user.settings?.healthData?.apiKeyEncrypted;
-  if (!encrypted) return null;
+  if (!bearer || !encrypted) return null;
 
   try {
     const key = decrypt(encrypted);
@@ -60,10 +66,12 @@ export async function POST(
 ) {
   const { username } = await params;
   const bearer = extractBearer(req);
+  const authResult = await getAuthUserId();
+  const sessionUserId = isUserId(authResult) ? authResult : undefined;
 
   await connectDB();
 
-  const user = await resolveUser(username, bearer);
+  const user = await resolveUser(username, bearer, sessionUserId);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -150,10 +158,12 @@ export async function GET(
 ) {
   const { username } = await params;
   const bearer = extractBearer(req);
+  const authResult = await getAuthUserId();
+  const sessionUserId = isUserId(authResult) ? authResult : undefined;
 
   await connectDB();
 
-  const user = await resolveUser(username, bearer);
+  const user = await resolveUser(username, bearer, sessionUserId);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
