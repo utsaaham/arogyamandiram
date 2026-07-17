@@ -97,6 +97,15 @@ function median(values: number[]): number {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+/**
+ * True when `b` is exactly the calendar day after `a` (both YYYY-MM-DD).
+ * Feature rows only exist for logged dates, so array adjacency alone would
+ * pair a Monday behavior with a Friday outcome across a logging gap.
+ */
+function isNextDay(a: string, b: string): boolean {
+  return Date.parse(b) - Date.parse(a) === 86_400_000;
+}
+
 const OUTCOME_LABELS: Record<OutcomeKey, string> = {
   readiness: 'next-day readiness',
   sleep: 'sleep score',
@@ -120,9 +129,10 @@ export function computeCorrelations(
     const outcomeStd = std(allOutcomeValues);
 
     for (const spec of FEATURES) {
-      // Pair feature day i with outcome day i+1.
+      // Pair feature day i with outcome day i+1 (calendar-adjacent only).
       const pairs: Array<{ raw: number | boolean; score: number }> = [];
       for (let i = 0; i < rows.length - 1; i++) {
+        if (!isNextDay(rows[i].date, rows[i + 1].date)) continue;
         const raw = spec.value(rows[i]);
         const score = outcomes[i + 1]?.[outcome];
         if (raw === null || score === null || score === undefined) continue;
@@ -194,7 +204,7 @@ const COMPOUND_TEMPLATES: CompoundTemplate[] = [
     outcome: 'sleep',
     when: (r) => (r.lastMealMin === null || r.bedtimeMin === null)
       ? null
-      : r.lastMealMin > 540 /* after ~21:00 */ && r.bedtimeMin > 690 /* after ~23:30 */,
+      : r.lastMealMin > 1020 /* after ~21:00, minutes since 4am */ && r.bedtimeMin > 690 /* after ~23:30 */,
     phrase: 'a late meal followed by a late bedtime',
   },
   {
@@ -216,6 +226,7 @@ function computeCompound(
     const withPattern: number[] = [];
     const withoutPattern: number[] = [];
     for (let i = 0; i < rows.length - 1; i++) {
+      if (!isNextDay(rows[i].date, rows[i + 1].date)) continue;
       const flag = tpl.when(rows[i]);
       const score = outcomes[i + 1]?.[tpl.outcome];
       if (flag === null || score === null || score === undefined) continue;

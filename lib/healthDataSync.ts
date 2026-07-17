@@ -166,10 +166,13 @@ async function applySleep(
     if (stages && typeof stages.coreHours === 'number') stageFields.coreHours = stages.coreHours;
     if (stages && typeof stages.awakeHours === 'number') stageFields.awakeHours = stages.awakeHours;
 
+    // Same duration→quality heuristic the app used when it posted /api/sleep
+    // directly (8h ≈ 4/5), so device-synced nights keep a meaningful quality.
+    const quality = Math.max(1, Math.min(5, Math.round(sleepHours / 2)));
     await DailyLog.findOneAndUpdate(
       { userId, date: logDate },
       {
-        $set: { sleep: { bedtime, wakeTime, duration: sleepHours, quality: 3, notes: '', ...stageFields } },
+        $set: { sleep: { bedtime, wakeTime, duration: sleepHours, quality, notes: '', ...stageFields } },
         $setOnInsert: { userId, date: logDate },
       },
       { new: true, upsert: true }
@@ -197,8 +200,26 @@ async function applyDeviceWorkouts(
 ): Promise<MapperResult> {
   const actions: HealthSyncAction[] = [];
   const rawDeviceWorkouts = Array.isArray(record.workouts) ? record.workouts : [];
+  const seenWorkoutIds = new Set<string>();
   const mappedDeviceWorkouts = rawDeviceWorkouts
     .filter((w) => w && typeof w === 'object')
+    .filter((w) => {
+      const dw = w as Record<string, unknown>;
+      const uuid = typeof dw.uuid === 'string' ? dw.uuid.trim() : '';
+      const startedAt = typeof dw.startedAt === 'string' ? dw.startedAt.trim() : '';
+      const endedAt = typeof dw.endedAt === 'string' ? dw.endedAt.trim() : '';
+      const type = typeof dw.type === 'string' ? dw.type.trim().toLowerCase() : '';
+      const identity = uuid
+        ? `uuid:${uuid}`
+        : startedAt && endedAt
+          ? `session:${type}|${startedAt}|${endedAt}`
+          : '';
+
+      if (!identity) return true;
+      if (seenWorkoutIds.has(identity)) return false;
+      seenWorkoutIds.add(identity);
+      return true;
+    })
     .map((w) => {
       const dw = w as Record<string, unknown>;
       return {
@@ -207,6 +228,9 @@ async function applyDeviceWorkouts(
         caloriesBurned: typeof dw.calories === 'number' ? dw.calories : 0,
         category: deriveWorkoutCategory(typeof dw.type === 'string' ? dw.type : ''),
         source: 'device' as const,
+        ...(typeof dw.uuid === 'string' && dw.uuid.trim() ? { externalId: dw.uuid.trim() } : {}),
+        ...(typeof dw.startedAt === 'string' && dw.startedAt.trim() ? { startedAt: dw.startedAt.trim() } : {}),
+        ...(typeof dw.endedAt === 'string' && dw.endedAt.trim() ? { endedAt: dw.endedAt.trim() } : {}),
         ...(typeof dw.avgHeartRate === 'number' ? { avgHeartRate: dw.avgHeartRate } : {}),
       };
     })
@@ -272,6 +296,9 @@ async function applyMetrics(
   if (vitalsBlock && typeof vitalsBlock.respiratoryRate === 'number') sampledMetrics.respiratoryRate = vitalsBlock.respiratoryRate;
   if (vitalsBlock && typeof vitalsBlock.wristTempC === 'number') sampledMetrics.wristTempC = vitalsBlock.wristTempC;
   if (vitalsBlock && typeof vitalsBlock.vo2Max === 'number') sampledMetrics.vo2Max = vitalsBlock.vo2Max;
+  if (vitalsBlock && typeof vitalsBlock.oxygenSaturationPct === 'number') {
+    sampledMetrics.oxygenSaturationPct = vitalsBlock.oxygenSaturationPct;
+  }
 
   const metricsUpdate = { ...sampledMetrics, ...cumulativeMetrics };
 

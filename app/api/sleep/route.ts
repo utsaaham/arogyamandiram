@@ -43,18 +43,37 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const sleepEntry = {
-      bedtime: String(bedtime),
-      wakeTime: String(wakeTime),
-      duration: dur,
-      quality: q as SleepQuality,
-      notes: notes ? String(notes).slice(0, 500) : '',
-    };
+    // Device-synced stage hours (deep/REM/core/awake) describe the recorded
+    // night. Keep them when this write is the same night (duration unchanged),
+    // clear them when the duration genuinely changed - never silently drop
+    // them by replacing the whole sleep object (that made Vitals flip-flop).
+    const existing = await DailyLog.findOne({ userId, date: logDate })
+      .select('sleep.duration')
+      .lean() as { sleep?: { duration?: number } } | null;
+    const keepStages =
+      typeof existing?.sleep?.duration === 'number' &&
+      Math.abs(existing.sleep.duration - dur) < 0.05;
 
     const log = await DailyLog.findOneAndUpdate(
       { userId, date: logDate },
       {
-        $set: { sleep: sleepEntry },
+        $set: {
+          'sleep.bedtime': String(bedtime),
+          'sleep.wakeTime': String(wakeTime),
+          'sleep.duration': dur,
+          'sleep.quality': q as SleepQuality,
+          'sleep.notes': notes ? String(notes).slice(0, 500) : '',
+        },
+        ...(keepStages
+          ? {}
+          : {
+              $unset: {
+                'sleep.deepHours': '',
+                'sleep.remHours': '',
+                'sleep.coreHours': '',
+                'sleep.awakeHours': '',
+              },
+            }),
         $setOnInsert: { userId, date: logDate },
       },
       { new: true, upsert: true }

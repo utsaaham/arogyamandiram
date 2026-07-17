@@ -82,6 +82,7 @@ export async function GET() {
         {
           date: 1, heartRate: 1, steps: 1, activeCalories: 1,
           restingHeartRate: 1, hrvSdnnMs: 1, respiratoryRate: 1, wristTempC: 1, vo2Max: 1,
+          oxygenSaturationPct: 1,
           sleep: 1, workouts: 1, habits: 1, mood: 1, _id: 0,
         }
       ).sort({ date: 1 }).lean(),
@@ -185,8 +186,10 @@ export async function GET() {
       }
     }
 
-    // Predictions - deterministic and honestly gated.
-    const consistency = computeConsistency(rows);
+    // Predictions - deterministic and honestly gated. Today is excluded:
+    // it's still in progress, so counting it would score every morning as a
+    // missed day and make consistency dip and recover within the same day.
+    const consistency = computeConsistency(rows.filter((r) => r.date !== today));
 
     // Health Score capstone: goal scores aligned to trend dates, then blend.
     const goalScoreByDate = new Map(rows.map((r, i) => [r.date, goalScores[i]?.score ?? null]));

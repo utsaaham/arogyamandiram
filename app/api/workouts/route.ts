@@ -108,11 +108,51 @@ export async function POST(req: NextRequest) {
       notes: workout.notes,
       source: workout.source,
     };
+    if (typeof workout.externalId === 'string' && workout.externalId.trim()) {
+      persisted.externalId = workout.externalId.trim();
+    }
+    if (typeof workout.startedAt === 'string' && workout.startedAt.trim()) {
+      persisted.startedAt = workout.startedAt.trim();
+    }
+    if (typeof workout.endedAt === 'string' && workout.endedAt.trim()) {
+      persisted.endedAt = workout.endedAt.trim();
+    }
     if (typeof workout.planExerciseName === 'string' && workout.planExerciseName.trim()) {
       persisted.planExerciseName = workout.planExerciseName.trim();
     }
 
     await connectDB();
+
+    // Older iOS builds posted a HealthKit snapshot and then appended each of
+    // those workouts through this route. Keep that legacy path idempotent so
+    // it cannot duplicate a device workout already reconciled by the snapshot.
+    if (workout.source === 'device') {
+      const existing = await DailyLog.findOne({ userId, date: logDate }).lean();
+      type ExistingDeviceWorkout = {
+        exercise?: unknown;
+        duration?: unknown;
+        caloriesBurned?: unknown;
+        source?: unknown;
+        externalId?: unknown;
+      };
+      const existingWorkouts = (existing?.workouts ?? []) as ExistingDeviceWorkout[];
+      const incomingExternalId = typeof workout.externalId === 'string' ? workout.externalId.trim() : '';
+      const duplicate = existingWorkouts.some((entry) => {
+        if (entry.source !== 'device') return false;
+        if (incomingExternalId && entry.externalId === incomingExternalId) return true;
+        return normalizeExerciseName(entry.exercise) === normalizeExerciseName(workout.exercise)
+          && Number(entry.duration) === Number(workout.duration)
+          && Number(entry.caloriesBurned ?? 0) === Number(workout.caloriesBurned ?? 0);
+      });
+
+      if (duplicate && existing) {
+        const safe = stripSensitive(existing as unknown as Record<string, unknown>);
+        return maskedResponse(
+          { ...(safe as Record<string, unknown>), isPr: false },
+          { message: 'Workout already synced' }
+        );
+      }
+    }
 
     const log = await DailyLog.findOneAndUpdate(
       { userId, date: logDate },

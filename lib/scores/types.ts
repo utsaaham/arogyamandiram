@@ -13,6 +13,7 @@ export interface DayInput {
   respiratoryRate?: number;
   wristTempC?: number;
   vo2Max?: number;
+  oxygenSaturationPct?: number;
   heartRate?: number; // daily average
   // Activity
   steps?: number;

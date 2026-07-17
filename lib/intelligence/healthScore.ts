@@ -33,9 +33,11 @@ function clamp(v: number, lo = 0, hi = 100): number {
 
 /** Slope of readiness over the window mapped to 0-100 (50 = flat). */
 function trendDirectionScore(trends: VitalsTrendPoint[]): number | null {
+  // x = calendar days, not array index: the trend series only contains logged
+  // dates, so index-as-x would inflate the slope for sparse loggers.
   const pts = trends
-    .map((t, i) => ({ x: i, y: t.readiness }))
-    .filter((p): p is { x: number; y: number } => p.y !== null);
+    .map((t) => ({ x: Date.parse(t.date) / 86_400_000, y: t.readiness }))
+    .filter((p): p is { x: number; y: number } => p.y !== null && Number.isFinite(p.x));
   if (pts.length < 7) return null;
   const n = pts.length;
   const meanX = pts.reduce((a, p) => a + p.x, 0) / n;
@@ -117,23 +119,30 @@ export function computeHealthScore(
   consistency: ConsistencyScores | null,
   goalScores: Array<number | null>
 ): HealthScoreResult {
-  const last30 = trends.slice(-30);
-  const goalLast30 = goalScores.slice(-30);
-  const currentParts = buildComponents(last30, consistency, goalLast30);
+  // Window by calendar date, not row count: the trend series only contains
+  // logged dates, so "last 30 rows" could span months for a sparse logger.
+  const anchor = trends.length > 0 ? Date.parse(trends[trends.length - 1].date) : NaN;
+  const paired = trends.map((t, i) => ({ t, g: goalScores[i] ?? null }));
+  const daysAgo = (t: VitalsTrendPoint) => (anchor - Date.parse(t.date)) / 86_400_000;
+  const current = paired.filter(({ t }) => daysAgo(t) < 30);
+  const previous = paired.filter(({ t }) => daysAgo(t) >= 30 && daysAgo(t) < 60);
+
+  const currentParts = buildComponents(current.map((p) => p.t), consistency, current.map((p) => p.g));
   const score = blend(currentParts);
 
   // Monthly delta: same composite over the previous 30 days (consistency
-  // history isn't stored per-month, so the prior blend omits it - noted
-  // honestly by keying the delta only off shared components).
+  // history isn't stored per-month, so the prior blend omits it). Both blends
+  // are restricted to the components present in BOTH months, otherwise a
+  // signal that appeared or vanished would masquerade as a change.
   let monthlyDelta: number | null = null;
-  const prev30 = trends.slice(-60, -30);
-  if (score !== null && prev30.length >= 15) {
-    const prevParts = buildComponents(prev30, null, goalScores.slice(-60, -30));
-    const sharedKeys = new Set(prevParts.map((p) => p.key));
-    const currentShared = blend(currentParts.filter((p) => sharedKeys.has(p.key)));
-    const prevScore = blend(prevParts);
-    if (prevScore !== null && currentShared !== null) {
-      monthlyDelta = Math.round(currentShared - prevScore);
+  if (score !== null && previous.length >= 15) {
+    const prevParts = buildComponents(previous.map((p) => p.t), null, previous.map((p) => p.g));
+    const currentKeys = new Set(currentParts.map((p) => p.key));
+    const prevKeys = new Set(prevParts.map((p) => p.key));
+    const currentShared = blend(currentParts.filter((p) => prevKeys.has(p.key)));
+    const prevShared = blend(prevParts.filter((p) => currentKeys.has(p.key)));
+    if (prevShared !== null && currentShared !== null) {
+      monthlyDelta = Math.round(currentShared - prevShared);
     }
   }
 
@@ -141,6 +150,6 @@ export function computeHealthScore(
     score,
     components: currentParts,
     monthlyDelta,
-    daysOfData: last30.filter((t) => t.readiness !== null || t.sleep !== null).length,
+    daysOfData: current.filter(({ t }) => t.readiness !== null || t.sleep !== null).length,
   };
 }

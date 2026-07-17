@@ -348,6 +348,10 @@ export interface WorkoutEntry {
   source?: 'manual' | 'device';
   /** Average heart rate during the workout (device-sourced, bpm) */
   avgHeartRate?: number;
+  /** Stable source identifier and time window for device reconciliation. */
+  externalId?: string;
+  startedAt?: string;
+  endedAt?: string;
   notes?: string;
   /** When this log entry corresponds to a planned exercise from DailyPlan.workoutPlan.exercises[].name */
   planExerciseName?: string;
@@ -432,6 +436,7 @@ export interface IDailyLog {
   respiratoryRate?:  number;  // breaths/min
   wristTempC?:       number;  // °C, sleeping wrist temperature
   vo2Max?:           number;  // mL/(kg·min)
+  oxygenSaturationPct?: number; // % from Apple Health blood oxygen samples
   // Habit journal (user-logged, correlated against scores)
   habits?: HabitKey[];
   mood?: number;              // 1-5 subjective rating

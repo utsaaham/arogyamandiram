@@ -32,6 +32,9 @@ export function computeInsights(
       const withoutHabit: number[] = [];
 
       for (let i = 0; i < days.length - 1; i++) {
+        // The day series only contains logged dates - require true calendar
+        // adjacency so a gap doesn't pair a habit with a much later outcome.
+        if (Date.parse(days[i + 1].date) - Date.parse(days[i].date) !== 86_400_000) continue;
         const nextScore = scores[i + 1]?.[metric];
         if (nextScore === null || nextScore === undefined) continue;
         // Only compare against days where the user actually journaled,

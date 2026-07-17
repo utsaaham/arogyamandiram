@@ -135,12 +135,16 @@ export function computeGoalConfidence(
 
 /** Rising strain + falling HRV + accumulating sleep debt over ~2 weeks. */
 export function computeBurnoutRisk(trends: VitalsTrendPoint[]): BurnoutRisk {
-  const recent = trends.slice(-14);
+  // Window and split by calendar date - the trend series only contains logged
+  // dates, so "last 14 rows" could span months for a sparse logger.
+  const anchor = trends.length > 0 ? Date.parse(trends[trends.length - 1].date) : NaN;
+  const recent = trends.filter((t) => (anchor - Date.parse(t.date)) / 86_400_000 < 14);
   if (recent.length < 8) {
     return { level: null, factors: [], reason: 'Needs about two weeks of data to assess.' };
   }
-  const firstHalf = recent.slice(0, Math.floor(recent.length / 2));
-  const secondHalf = recent.slice(Math.floor(recent.length / 2));
+  const midpoint = anchor - 7 * 86_400_000;
+  const firstHalf = recent.filter((t) => Date.parse(t.date) < midpoint);
+  const secondHalf = recent.filter((t) => Date.parse(t.date) >= midpoint);
 
   const factors: string[] = [];
 

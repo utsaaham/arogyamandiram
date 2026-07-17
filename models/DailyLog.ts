@@ -51,6 +51,10 @@ const WorkoutEntrySchema = new Schema(
     source: { type: String, enum: ['manual', 'device'], default: 'manual' },
     // Average heart rate during the workout (device-sourced, bpm)
     avgHeartRate: { type: Number, min: 0, max: 300 },
+    // Stable HealthKit identity and time window used to reconcile repeated syncs.
+    externalId: { type: String },
+    startedAt: { type: String },
+    endedAt: { type: String },
     // When this log entry was logged from a planned exercise card, this stores
     // the canonical plan exercise name so the UI can re-hydrate "Logged" state.
     planExerciseName: { type: String },
@@ -120,6 +124,7 @@ const DailyLogSchema = new Schema<IDailyLogDocument>(
     respiratoryRate:  { type: Number, min: 4, max: 60 },
     wristTempC:       { type: Number, min: 30, max: 45 },
     vo2Max:           { type: Number, min: 10, max: 90 },
+    oxygenSaturationPct: { type: Number, min: 50, max: 100 },
     // Habit journal (user-logged via the Vitals page)
     habits: { type: [String], default: undefined },
     mood:   { type: Number, min: 1, max: 5 },

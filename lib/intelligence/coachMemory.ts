@@ -70,14 +70,15 @@ export async function updateCoachMemory(userId: string, results: CorrelationResu
  */
 export async function getCoachMemoryLines(userId: string): Promise<string[]> {
   await connectDB();
+  // No DB-side limit: confidence sorts alphabetically ('high' < 'low' <
+  // 'medium'), so limiting before the in-memory rank could drop the strongest
+  // medium patterns. The pattern-key space per user is small (~25), so
+  // fetching all active confirmed patterns is cheap.
   const memories = await CoachMemory.find({
     userId,
     active: true,
     timesConfirmed: { $gte: MIN_CONFIRMATIONS },
-  })
-    .sort({ confidence: 1, sampleCount: -1 }) // 'high' < 'low' alphabetically - resort below
-    .limit(MAX_PROMPT_LINES * 2)
-    .lean();
+  }).lean();
 
   const rank = { high: 0, medium: 1, low: 2 } as const;
   return memories

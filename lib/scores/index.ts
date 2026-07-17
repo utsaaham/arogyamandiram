@@ -29,6 +29,7 @@ export interface VitalsTrendPoint {
   respiratoryRate: number | null;
   wristTempC: number | null;
   mood: number | null;
+  oxygenSaturationPct: number | null;
 }
 
 /** Per-score attribution: why the value, what changed, confidence, fastest lever. */
@@ -84,6 +85,7 @@ export function toDayInput(log: LeanLog): DayInput {
     respiratoryRate: log.respiratoryRate,
     wristTempC: log.wristTempC,
     vo2Max: log.vo2Max,
+    oxygenSaturationPct: log.oxygenSaturationPct,
     heartRate: log.heartRate,
     steps: log.steps,
     activeCalories: log.activeCalories,
@@ -150,6 +152,7 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
         respiratoryRate: d.respiratoryRate ?? null,
         wristTempC: d.wristTempC ?? null,
         mood: d.mood ?? null,
+        oxygenSaturationPct: d.oxygenSaturationPct ?? null,
       };
     });
 
@@ -174,6 +177,7 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
     { key: 'respiratoryRate', label: 'Respiratory rate', pick: (d) => d.respiratoryRate, format: (v, m) => `Breathing ${v.toFixed(1)}/min vs ~${m.toFixed(1)} usual` },
     { key: 'wristTemp', label: 'Wrist temperature', pick: (d) => d.wristTempC, format: (v, m) => `Wrist temp ${v.toFixed(1)}°C vs ~${m.toFixed(1)}°C usual` },
     { key: 'heartRate', label: 'Average heart rate', pick: (d) => d.heartRate, format: (v, m) => `Avg HR ${Math.round(v)} bpm vs ~${Math.round(m)} bpm usual` },
+    { key: 'oxygenSaturation', label: 'Blood oxygen', pick: (d) => d.oxygenSaturationPct, format: (v, m) => `Blood oxygen ${v.toFixed(1)}% vs ~${m.toFixed(1)}% usual` },
   ];
   const anomalies: AnomalyCallout[] = [];
   for (const metric of ANOMALY_METRICS) {

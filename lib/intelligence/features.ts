@@ -27,7 +27,7 @@ export interface DailyFeatureRow {
   caloriePctOfTarget: number | null;
   proteinPctOfTarget: number | null;
   hydrationPctOfTarget: number | null;
-  lastMealMin: number | null; // minutes since noon of the latest logged meal
+  lastMealMin: number | null; // minutes since 4am of the latest logged meal (see mealMinutes)
   // Activity
   steps: number | null;
   strainLoadKcal: number | null; // active calories + hand-logged workout kcal
@@ -72,21 +72,35 @@ function pctOf(value: number | undefined, target: number | undefined): number | 
   return Math.round((value / target) * 100);
 }
 
+/**
+ * Meal lateness in minutes since 4am, so a post-midnight snack ranks later
+ * than an evening dinner. bedtimeMinutes' noon wrap fits nights, not meals -
+ * it would rank an 8am breakfast as the latest meal of the day.
+ */
+function mealMinutes(time: string): number | null {
+  const sinceNoon = bedtimeMinutes(time);
+  if (sinceNoon === null) return null;
+  const sinceMidnight = (sinceNoon + 720) % 1440;
+  return (sinceMidnight - 240 + 1440) % 1440;
+}
+
 /** Map one DailyLog to a normalized feature row. Pure. */
 export function toFeatureRow(
   log: FeatureLogLean,
   targets: { dailyCalories?: number; protein?: number; dailyWater?: number }
 ): DailyFeatureRow {
   const date = String(log.date ?? '');
+  // Date-only strings parse as UTC midnight, so read the weekday in UTC too -
+  // local getDay() shifts every date back a day on UTC-negative servers.
   const d = new Date(date);
-  const weekday = Number.isNaN(d.getTime()) ? 0 : d.getDay();
+  const weekday = Number.isNaN(d.getTime()) ? 0 : d.getUTCDay();
 
   const sleepDurationH = typeof log.sleep?.duration === 'number' && log.sleep.duration > 0
     ? log.sleep.duration
     : null;
 
-  const mealMinutes = (log.meals ?? [])
-    .map((m) => (m.time ? bedtimeMinutes(m.time) : null))
+  const mealTimes = (log.meals ?? [])
+    .map((m) => (m.time ? mealMinutes(m.time) : null))
     .filter((v): v is number => v !== null);
 
   const manualWorkoutKcal = (log.workouts ?? [])
@@ -105,7 +119,7 @@ export function toFeatureRow(
     caloriePctOfTarget: pctOf(log.totalCalories, targets.dailyCalories),
     proteinPctOfTarget: pctOf(log.totalProtein, targets.protein),
     hydrationPctOfTarget: pctOf(log.waterIntake, targets.dailyWater),
-    lastMealMin: mealMinutes.length > 0 ? Math.max(...mealMinutes) : null,
+    lastMealMin: mealTimes.length > 0 ? Math.max(...mealTimes) : null,
     steps: typeof log.steps === 'number' ? log.steps : null,
     strainLoadKcal: hasEnergy ? (log.activeCalories ?? 0) + manualWorkoutKcal : null,
     workoutDone: (log.workouts ?? []).length > 0,
