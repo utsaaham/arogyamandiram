@@ -1,5 +1,5 @@
 // ============================================
-// /api/health-metrics — Device health metrics history
+// /api/health-metrics - Device health metrics history
 // ============================================
 // GET ?days=N → last N days of heartRate, steps, activeCalories, distanceKm
 

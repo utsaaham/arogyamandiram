@@ -313,7 +313,7 @@ a{color:inherit;text-decoration:none}
 /* ── Browser window frame ── */
 .mk-browser{width:100%;max-width:920px;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(255,255,255,0.05),0 18px 48px rgba(0,0,0,0.62),0 4px 12px rgba(0,0,0,0.32)}
 .mk-browser::before{display:none}
-/* titlebar — real Chrome light theme (#DEE1E6 titlebar, white active tab) */
+/* titlebar - real Chrome light theme (#DEE1E6 titlebar, white active tab) */
 .mk-chrome{position:relative;z-index:1;background:#dde1e6;border-bottom:none}
 .mk-chrome-titlebar{display:flex;align-items:flex-end;padding:8px 12px 0;gap:0;position:relative;min-height:36px}
 .mk-chrome-tb-right{display:flex;align-items:center;gap:5px;margin-left:auto;padding-bottom:6px;flex-shrink:0}
@@ -451,7 +451,7 @@ a{color:inherit;text-decoration:none}
             <div className="lp-pt" style={{ width: 2, height: 2, opacity: 0.1, top: "60%", right: "20%", animation: "lp-f2 16s ease-in-out infinite" }} />
             <div className="lp-pt" style={{ width: 4, height: 4, opacity: 0.07, top: "45%", left: "70%", animation: "lp-f3 20s ease-in-out infinite" }} />
 
-            {/* App Name — massive t72t-style */}
+            {/* App name - bold, centered, and simple */}
             <div className={rv(hv)}>
               <h1 className="lp-appname">AROGYAMANDIRAM</h1>
             </div>
@@ -461,7 +461,7 @@ a{color:inherit;text-decoration:none}
             </p>
 
             <p className={rv(hv, "lp-d2")} style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: "clamp(20px, 3vw, 34px)", lineHeight: 1.35, color: "var(--t2)", marginTop: 36, maxWidth: 560, position: "relative", zIndex: 1, textAlign: "center" }}>
-              Track calories, water, sleep, workouts and weight with <em style={{ fontStyle: "normal", color: "var(--t1)", fontWeight: 600 }}>one private health hub</em>, powered by AI.
+              Track calories, water, sleep, workouts, and weight in <em style={{ fontStyle: "normal", color: "var(--t1)", fontWeight: 600 }}>one private health hub</em> with help from AI.
             </p>
 
             <div className={`${rv(hv, "lp-d3")} lp-ctas`} style={{ display: "flex", gap: 12, marginTop: 44, position: "relative", zIndex: 1 }}>
@@ -519,7 +519,7 @@ a{color:inherit;text-decoration:none}
                 style={{ width: "100%", height: 590, border: "none", display: "block", pointerEvents: "none", overflow: "hidden" }}
                 title="Dashboard preview"
               />
-              {/* DEAD CODE BELOW — kept for mobile phone mockup reference only, hidden */}
+              {/* DEAD CODE BELOW - kept for mobile phone mockup reference only, hidden */}
               <div style={{ display: "none" }}>
               <div className="mk-inner">
 
@@ -657,7 +657,7 @@ a{color:inherit;text-decoration:none}
                     </div>
                   </div>
 
-                  {/* Stat cards — 8 cards in 4×2 */}
+                  {/* Stat cards - 8 cards in 4×2 */}
                   <div className="mk-stats-grid">
                     {[
                       { paths: ["M12 22a7 7 0 007-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 007 7z"], color: "#22d3ee", val: "0 ML", label: "Water", sub: "2.5 L target" },
@@ -684,7 +684,7 @@ a{color:inherit;text-decoration:none}
                     ))}
                   </div>
 
-                  {/* Bottom: Active Streaks — full width */}
+                  {/* Bottom: Active Streaks - full width */}
                   <div className="mk-bottom-row">
                     <div className="mk-streak-card" style={{ display: "flex", alignItems: "center", gap: 16 }}>
                       {/* Left label */}
@@ -755,7 +755,7 @@ a{color:inherit;text-decoration:none}
           <section className="lp-stats" ref={st}>
             <div className="lp-wrap">
               <div className="lp-stats-row">
-                {[{ n: "150+", l: "Built-in foods" }, { n: "6", l: "Health metrics" }, { n: "AI", l: "Powered insights" }, { n: "100%", l: "Private" }].map((x, i) => (
+                {[{ n: "150+", l: "Built-in foods" }, { n: "6", l: "Health metrics" }, { n: "Smart", l: "Personalized insights" }, { n: "100%", l: "Private" }].map((x, i) => (
                     <div key={x.l} className={`lp-stat ${rv(stv, `lp-d${i + 1}`)}`}>
                       <div className="lp-stat-n">{x.n}</div>
                       <div className="lp-stat-l">{x.l}</div>
@@ -791,11 +791,11 @@ a{color:inherit;text-decoration:none}
             </div>
           </section>
 
-          {/* ═══ AI DEMO ═══ */}
+          {/* ═══ ASSISTANT DEMO ═══ */}
           <section className="lp-ai-sec" ref={ai}>
             <div className="lp-wrap">
               <div className={rv(aiv)} style={{ marginBottom: 48 }}>
-                <p className="lp-slbl">AI-Powered</p>
+                <p className="lp-slbl">Guided by your data</p>
                 <h2 className="lp-stitle">Type naturally. <span className="em">Log instantly.</span></h2>
               </div>
               <div className="lp-ai-grid">

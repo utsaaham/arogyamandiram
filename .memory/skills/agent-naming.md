@@ -6,8 +6,8 @@ How to name agents when you create or rename them in `.memory/agents/`.
 
 **Every agent folder is named after a real human first name.** The folder name is the *person*. The *role* (devops, nextjs full-stack, backend, QA, data, mobile, infra, etc.) lives inside `persona.md`, not in the folder name.
 
-- Folder name: lowercase, ASCII, single word — e.g. `agents/kevin/`
-- Inside `persona.md`: `# Kevin — DevOps Engineer` followed by what he owns
+- Folder name: lowercase, ASCII, single word - e.g. `agents/kevin/`
+- Inside `persona.md`: `# Kevin - DevOps Engineer` followed by what he owns
 - Inside `skills.md`: the technologies this person is responsible for
 
 ## Why human names
@@ -18,8 +18,8 @@ How to name agents when you create or rename them in `.memory/agents/`.
 
 ## How to pick a name
 
-1. Draw from a diverse pool spanning cultures — American, Indian, European, African, East Asian, Middle Eastern, Latin American. Worldwide, not regional.
-2. Names must be distinct within the team — never reuse a name already in `agents/`.
+1. Draw from a diverse pool spanning cultures - American, Indian, European, African, East Asian, Middle Eastern, Latin American. Worldwide, not regional.
+2. Names must be distinct within the team - never reuse a name already in `agents/`.
 3. Prefer common, easy-to-pronounce first names. Skip surnames, nicknames, and anything ambiguous with a technology (`Django`, `Ruby`).
 4. Use `agents/<lowercase>/` for the folder and `Firstname` (title case) inside docs.
 
@@ -49,9 +49,9 @@ The project has a Next.js frontend, a MongoDB backend, and Vercel-based deploys.
 
 ```
 agents/
-  priya/    # persona.md → "Priya — Next.js Fullstack Engineer"
-  mateo/    # persona.md → "Mateo — UI Frontend Engineer"
-  kevin/    # persona.md → "Kevin — DevOps Engineer"
+  priya/    # persona.md → "Priya - Next.js Fullstack Engineer"
+  mateo/    # persona.md → "Mateo - UI Frontend Engineer"
+  kevin/    # persona.md → "Kevin - DevOps Engineer"
 ```
 
 Each `persona.md` states the role. Each `skills.md` lists the technologies and files that person owns. The manager's team roster and task router reference them by name: "Route deployment questions to Kevin."

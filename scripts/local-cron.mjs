@@ -1,5 +1,5 @@
 // ============================================
-// scripts/local-cron.mjs — Local cron simulator
+// scripts/local-cron.mjs - Local cron simulator
 // ============================================
 // Fires local cron endpoints every 15 minutes.
 // Run alongside `next dev` via `npm run dev`.
@@ -35,7 +35,7 @@ const BASE = `http://localhost:${PORT}`;
 const SECRET = process.env.CRON_SECRET ?? '';
 
 if (!SECRET) {
-  log.warn('CRON_SECRET not found — requests will be rejected with 401');
+  log.warn('CRON_SECRET not found - requests will be rejected with 401');
 }
 
 async function runCron(path) {
@@ -67,7 +67,7 @@ async function tick() {
 
 const INTERVAL_MS = 15 * 60 * 1000; // every 15 minutes, same as Vercel
 
-log.info('local cron runner started — first tick in 10s, then every 15 min');
+log.info('local cron runner started - first tick in 10s, then every 15 min');
 setTimeout(async () => {
   await tick();
   setInterval(tick, INTERVAL_MS);

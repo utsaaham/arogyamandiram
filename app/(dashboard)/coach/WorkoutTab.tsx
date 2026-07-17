@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { showToast } from '@/components/ui/Toast';
 import api from '@/lib/apiClient';
 import type { DailyPlanData, WorkoutEntry } from '@/types';
-import { usePlanAutoRefresh } from './usePlanAutoRefresh';
+import { usePlanAutoRefresh } from '@/hooks/usePlanAutoRefresh';
 
 type WorkoutExercise = NonNullable<DailyPlanData['workoutPlan']>['exercises'][number];
 type WorkoutPlan = NonNullable<DailyPlanData['workoutPlan']>;
@@ -92,7 +92,7 @@ function extractSetsAndReps(comment: string, fallbackSets: number): { sets: numb
       return { sets: s, reps: r };
     }
   }
-  // "12 reps" or "12 sec" — single integer that's clearly reps/seconds, not a duration
+  // "12 reps" or "12 sec" - single integer that's clearly reps/seconds, not a duration
   const repsOnly = comment.match(/(\d+)\s*(?:reps?|sec|second)/i);
   if (repsOnly) {
     const n = Number(repsOnly[1]);
@@ -471,16 +471,6 @@ export default function WorkoutTab() {
           {currentWorkoutPlan.description && (
             <p className="mt-0.5 text-xs text-text-muted">{currentWorkoutPlan.description}</p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-zinc-400">
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {currentWorkoutPlan.durationMinutes} min
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Flame className="h-3 w-3 text-rose-400" />
-              ~{currentWorkoutPlan.estimatedCalories} kcal
-            </span>
-          </div>
         </div>
         <button onClick={handleGenerate} disabled={generating}
           className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
@@ -489,25 +479,70 @@ export default function WorkoutTab() {
         </button>
       </div>
 
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded-xl bg-emerald-500/[0.045] p-3">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Progress</p>
+          <p className="mt-1 text-lg font-bold text-emerald-400">{loggedExercises}/{totalExercises}</p>
+          <p className="text-[10px] text-zinc-600">exercises logged</p>
+        </div>
+        <div className="rounded-xl bg-white/[0.025] p-3">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Duration</p>
+          <p className="mt-1 flex items-center gap-1.5 text-lg font-bold text-cyan-400"><Clock className="h-4 w-4" />{currentWorkoutPlan.durationMinutes} min</p>
+        </div>
+        <div className="rounded-xl bg-white/[0.025] p-3">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Estimated burn</p>
+          <p className="mt-1 flex items-center gap-1.5 text-lg font-bold text-orange-400"><Flame className="h-4 w-4" />{currentWorkoutPlan.estimatedCalories} kcal</p>
+        </div>
+        <div className="rounded-xl bg-white/[0.025] p-3">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Intensity</p>
+          <p className="mt-1 text-lg font-bold capitalize text-amber-400">{currentWorkoutPlan.exercises.find((exercise) => exercise.intensity)?.intensity ?? 'Balanced'}</p>
+        </div>
+      </div>
 
-      {/* Exercises */}
+      {/* Exercises - numbered gym-order checklist */}
+      {totalExercises > 0 && (
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold text-zinc-300">Workout sequence</p>
+          <p className="text-[10px] text-zinc-500">Complete in order</p>
+        </div>
+      )}
       <div className="space-y-2">
-        {currentWorkoutPlan.exercises.map((ex, i) => {
+        {(() => {
+          const firstUnloggedIdx = currentWorkoutPlan.exercises.findIndex(
+            (ex, i) => !workoutDrafts[getExerciseDraftKey(ex, i)]?.saved
+          );
+          return currentWorkoutPlan.exercises.map((ex, i) => {
           const key = getExerciseDraftKey(ex, i);
           const draft = workoutDrafts[key];
           const aiTarget = formatAiTarget(ex);
           const showForm = !draft?.saved || draft?.editing;
           const isLogged = draft?.saved && !draft?.editing;
+          const isNext = i === firstUnloggedIdx;
           return (
             <div
               key={i}
-              className="rounded-xl border border-zinc-800 bg-zinc-900/30 px-4 py-3 transition-colors"
+              className={cn(
+                'rounded-2xl border bg-zinc-900/30 px-4 py-4 transition-colors',
+                isNext ? 'border-emerald-500/50 bg-emerald-500/[0.025]' : 'border-zinc-800'
+              )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    {isLogged && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />}
+                    <span
+                      className={cn(
+                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                        isLogged
+                          ? 'bg-emerald-500 text-black'
+                          : isNext
+                            ? 'border border-emerald-400 text-emerald-300'
+                            : 'border border-zinc-700 text-zinc-500'
+                      )}
+                    >
+                      {isLogged ? <CheckCircle2 className="h-3.5 w-3.5" /> : (ex.order ?? i + 1)}
+                    </span>
                     <p className="truncate text-sm font-medium text-text-primary">{ex.name}</p>
+                    {isNext && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">Next</span>}
                     <a
                       href={`https://www.google.com/search?q=${encodeURIComponent('how to perform ' + ex.name)}`}
                       target="_blank" rel="noopener noreferrer"
@@ -520,6 +555,11 @@ export default function WorkoutTab() {
                   {aiTarget && (
                     <p className="mt-1 text-[11px] text-zinc-500">{aiTarget}</p>
                   )}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {ex.category && <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[9px] capitalize text-zinc-500">{ex.category}</span>}
+                    {ex.muscleGroup && <span className="rounded-full bg-violet-500/[0.07] px-2 py-0.5 text-[9px] text-violet-300">{ex.muscleGroup}</span>}
+                    {ex.slot && <span className="rounded-full bg-cyan-500/[0.07] px-2 py-0.5 text-[9px] capitalize text-cyan-300">{ex.slot}</span>}
+                  </div>
                   {ex.steps && ex.steps.length > 0 && showForm && (
                     <ul className="mt-2 space-y-0.5 list-none pl-0">
                       {ex.steps.map((step, si) => (
@@ -538,7 +578,7 @@ export default function WorkoutTab() {
                 )}
               </div>
 
-              {/* You did — free-text comment */}
+              {/* You did - free-text comment */}
               {showForm ? (
                 <div className="mt-2 flex items-center gap-2">
                   <input
@@ -576,7 +616,8 @@ export default function WorkoutTab() {
               {draft?.error && <p className="mt-2 text-xs text-rose-400">{draft.error}</p>}
             </div>
           );
-        })}
+          });
+        })()}
       </div>
 
       </div>

@@ -32,7 +32,7 @@ staleness_days: 7
 
 ```text
 app/
-  (auth)/           # login, register, onboarding — public routes
+  (auth)/           # login, register, onboarding - public routes
   (dashboard)/      # protected pages + layout with sidebar/mobile nav
     dashboard, food, water, weight, workout, sleep, ai, ai-insights,
     achievements, settings, api-keys, preferences, targets, more, project,
@@ -152,7 +152,7 @@ npm run dev
 ## Key Architectural Patterns
 
 - **Server Components** for page shells; **Client Components** for interactive UI
-- **API routes** are the only backend — no separate app server
+- **API routes** are the only backend - no separate app server
 - **Response masking** (`lib/apiMask.ts`): mask before returning user-shaped data
 - **Request sanitization** (`lib/apiClient.ts`): frontend strips blocked fields before sending
 - **Session helpers instead of middleware-first auth**: API routes use `lib/session.ts`; dashboard redirects happen in `DashboardLayoutClient`

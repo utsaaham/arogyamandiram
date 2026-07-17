@@ -1,13 +1,13 @@
 // ============================================
-// /api/ai/food-logger - AI Food Logger (Two-Step SOTA Pipeline)
+// /api/ai/food-logger - Food logger
 // ============================================
-// Architecture: User Text → [Step 1: Parse] → Structured Items → [Step 2: Nutrition] → Final Output
+// Architecture: user text -> parse items -> estimate nutrition -> return final output.
 //
-// Step 1: Food parser only — extracts items (name, quantity, unit). No nutrition. Reduces hallucination.
-// Step 2: Nutrition engine — takes parsed items, uses web_search, computes macros. Deterministic scaling.
+// Step 1: Parse food items only. Extract name, quantity, and unit.
+// Step 2: Estimate nutrition from the parsed items with deterministic scaling.
 //
-// Benefits: smaller prompts, stable parsing, fewer wrong quantities, production-grade pipeline.
-// Requires user's OpenAI API key or server default.
+// Benefits: smaller prompts, stable parsing, fewer wrong quantities.
+// Requires the user's OpenAI API key or the server default.
 
 import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
@@ -17,6 +17,10 @@ import { decrypt } from '@/lib/encryption';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserIdWithBypass, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
+import { normalizeGoal } from '@/lib/goals';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
+import { deriveTargetGap } from '@/app/api/ai/daily-plan/shared';
+import { COACH_TONE } from '@/lib/tone';
 import { writeDebugLog } from '@/lib/debugLogWriter';
 
 export const dynamic = 'force-dynamic';
@@ -46,12 +50,12 @@ async function getOpenAIKey(userId: string): Promise<string | null> {
 }
 
 // ============================================
-// STEP 1 — Meal Understanding (Food Parser)
+// STEP 1 - Meal Understanding (Food Parser)
 // ============================================
 // Only extracts foods. No nutrition, no calories. Reduces hallucination.
 
 const PARSE_INSTRUCTIONS = `
-You are a precision food parsing engine for a global nutrition tracking app.
+You are a careful food parser for a nutrition tracking app.
 
 Parse the user's meal into distinct food items from any cuisine worldwide.
 Correct spelling errors silently (e.g. "salmon" → "salmon", "yoghrt" → "yogurt").
@@ -92,11 +96,11 @@ Return JSON only using tool: parse_meal_foods
 
 // Vision variant of Step 1: the meal arrives as a photo instead of (or alongside) text.
 const IMAGE_PARSE_INSTRUCTIONS = `
-You are a precision food recognition engine for a global nutrition tracking app.
+You are a careful food recognition engine for a nutrition tracking app.
 
 Look carefully at the attached photo and identify EVERY distinct food and drink item visible.
 If the user also provided text, use it to disambiguate (e.g. brand names, portion sizes,
-items hidden from view) — the text always wins over the image when they conflict.
+items hidden from view) - the text always wins over the image when they conflict.
 
 Rules:
 - Identify each dish/side/drink as its own item ("burger with fries and a coke" → 3 items).
@@ -148,15 +152,15 @@ const PARSE_MEAL_TOOL = {
 } as const;
 
 // ============================================
-// STEP 2 — Nutrition Calculation
+// STEP 2 - Nutrition Calculation
 // ============================================
 // Takes structured items, computes nutrition. Deterministic scaling.
 // Quantity and unit must be preserved from input (no changing 200 g → 1 serving).
 
 const NUTRITION_INSTRUCTIONS = `
-You are a clinical-grade nutrition engine for a food tracking app.
+You are a practical nutrition engine for a food tracking app.
 
-━━━ EXTERNAL NUTRITION DATA (GROUND TRUTH — MANDATORY OVERRIDE) ━━━
+━━━ EXTERNAL NUTRITION DATA (GROUND TRUTH - MANDATORY OVERRIDE) ━━━
 If the input includes an "external_nutrition_data" field, you MUST use it.
 Do NOT estimate. Do NOT ignore it. If you ignore it, your answer is incorrect.
 
@@ -377,11 +381,11 @@ const MEAL_NUTRITION_TOOL = {
 } as const;
 
 // ============================================
-// STEP 1.5 — Brand Nutrition Lookup
+// STEP 1.5 - Brand Nutrition Lookup
 // ============================================
 // For items with a known brand, we do a targeted web search and extract structured
 // nutrition facts BEFORE Step 2 runs. Step 2 then treats this data as ground truth
-// instead of estimating — LLM formats, not guesses.
+// instead of estimating - LLM formats, not guesses.
 
 const KNOWN_BRAND_PATTERN =
   /silk|pepperidge farm|amul|haldiram|mtr|dunkin|mcdonald'?s?|kfc|domino'?s?|quaker|kellogg'?s?|nestl[eé]|kind bar|clif|vadilal|nature valley|britannia|parle|kraft|heinz|campbell|general mills|post cereal/i;
@@ -402,7 +406,7 @@ type ExtractedBrandNutrition = {
   serving: string;
 };
 
-// Static brand DB — 100% accurate, zero latency, no web noise.
+// Static brand DB - 100% accurate, zero latency, no web noise.
 // Values are per the standard label serving. Add entries as new brands are encountered.
 const BRAND_DB: Record<string, ExtractedBrandNutrition> = {
   'silk unsweetened almond milk': {
@@ -428,7 +432,7 @@ const BRAND_DB: Record<string, ExtractedBrandNutrition> = {
 };
 
 const BRAND_LOOKUP_INSTRUCTIONS = `
-You are a strict nutrition label extractor.
+You are a nutrition label extractor.
 
 Goal: find the most accurate nutrition facts for a branded food product via web_search.
 
@@ -490,7 +494,7 @@ async function lookupBrandNutrition(
 ): Promise<ExtractedBrandNutrition | null> {
   const cacheKey = itemName.toLowerCase().trim();
 
-  // 1. Static DB — fastest, most accurate; no API call needed
+  // 1. Static DB - fastest, most accurate; no API call needed
   if (BRAND_DB[cacheKey]) return BRAND_DB[cacheKey];
 
   // 2. Runtime cache from previous web lookups
@@ -598,7 +602,7 @@ function normalizeItem(obj: Record<string, unknown>): NormalizedItem {
   const confidenceRaw = str(obj.confidence).toLowerCase();
   const sourceTypeRaw = str(obj.sourceType).toLowerCase();
 
-  // Brand labels use FDA rounding rules and may deduct fiber calories — trust them directly.
+  // Brand labels use FDA rounding rules and may deduct fiber calories - trust them directly.
   // For estimates, recompute from macros for internal consistency.
   const calories = sourceTypeRaw === 'brand_label'
     ? Math.max(0, Math.round(num(obj.calories)))
@@ -803,32 +807,37 @@ function enforceAlmondMilkSanity(item: NormalizedItem): NormalizedItem {
 }
 
 // ============================================
-// STEP 3 — Personalized Feedback (health-aware)
+// STEP 3 - Personalized Feedback (health-aware)
 // ============================================
 // Uses the user's targets and today's log so the feedback reflects where they
 // actually stand for the day, not generic advice. Non-fatal: any failure here
 // simply omits the feedback from the response.
 
 const FEEDBACK_INSTRUCTIONS = `
-You are Kiki, the user's warm, playful, slightly flirty health buddy inside a
-health tracking app. You talk like a sweet friend who happens to know nutrition,
-never like a bot or a clinical coach.
+You are the user's supportive nutrition coach inside a health tracking app.
+${COACH_TONE}
 
 You get: the meal the user just logged (items + totals), their daily targets,
-their goal, and what they have already eaten today BEFORE this meal.
+their goal, where they sit vs their target weight (target_gap), the direction
+their weight is actually moving (weight_trend), and what they have already
+eaten today BEFORE this meal.
+
+When the goal and weight_trend conflict (for example goal build_muscle but
+weight_trend losing), you may use that in point 3: nudge the eating direction
+that serves their goal. Never suggest changing the goal, and never claim food
+or exercise burns fat in one body spot.
 
 Write feedback about this meal in 2-3 short sentences:
-1. One concrete, specific observation about the meal itself (what's lovely
-   about it, or what's a bit heavy: protein, sodium, fiber, sugar).
+1. One concrete, specific observation about the meal itself (what works well,
+   or what's a bit heavy: protein, sodium, fiber, sugar).
 2. How it fits their day: roughly how many calories or how much protein they
-   have left after this meal given their targets, or a gentle heads-up if it
-   nudges them over.
+   have left after this meal given their targets, or a plain heads-up if it
+   pushes them over.
 3. Optionally one small, doable suggestion for the rest of the day.
 
 Voice rules:
-- Warm, cheesy, a little flirty, always kind. Think "so proud of you" energy.
-- Never judgmental, alarmist, or preachy.
-- Sound human: contractions, casual phrasing, no corporate or robotic wording.
+- Warm and human, never judgmental, alarmist, or preachy.
+- Contractions and casual phrasing are fine; no corporate or robotic wording.
 - Never use hyphens or dashes in the text. No bullet points, no markdown, no
   headers, no greetings, and don't recite all the numbers back.
 - At most one emoji, and only if it feels natural.
@@ -842,15 +851,16 @@ async function generateMealFeedback(
 ): Promise<string | null> {
   try {
     await connectDB();
-    const [user, todayLog] = await Promise.all([
-      User.findById(userId).select('profile.goal targets').lean(),
+    const [user, todayLog, weightTrend] = await Promise.all([
+      User.findById(userId).select('profile.goal profile.weight profile.targetWeight targets').lean(),
       DailyLog.findOne({ userId, date: getToday() })
         .select('totalCalories totalProtein totalCarbs totalFat')
         .lean(),
+      getWeightTrendForUser(userId),
     ]);
 
     const targets = (user?.targets ?? {}) as Record<string, number | undefined>;
-    const profile = (user?.profile ?? {}) as { goal?: string };
+    const profile = (user?.profile ?? {}) as { goal?: string; weight?: number; targetWeight?: number };
     const log = (todayLog ?? {}) as Record<string, number | undefined>;
 
     const context = {
@@ -858,7 +868,11 @@ async function generateMealFeedback(
         items: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, calories: i.calories })),
         total,
       },
-      goal: profile.goal ?? 'maintain',
+      goal: normalizeGoal(profile.goal),
+      // Read-only signals: where they sit vs their target weight, and the
+      // direction the scale is actually moving.
+      target_gap: deriveTargetGap(profile.weight, profile.targetWeight),
+      weight_trend: weightTrend,
       daily_targets: {
         calories: targets.dailyCalories ?? 2000,
         protein_g: targets.protein ?? 150,
@@ -924,7 +938,7 @@ export async function POST(req: NextRequest) {
     const apiKey = await getOpenAIKey(userId);
     if (!apiKey) {
       return errorResponse(
-        'OpenAI API key required. Add your key in Settings to enable AI Food Logger.',
+        'OpenAI API key required. Add your key in Settings to turn on Food Logger.',
         403
       );
     }
@@ -933,7 +947,7 @@ export async function POST(req: NextRequest) {
     const requestedAt = new Date().toISOString();
     const startMs = Date.now();
 
-    // ——— STEP 1: Parse meal text and/or photo → structured food items only ———
+    // --- STEP 1: Parse meal text and/or photo → structured food items only ---
     const parseInstructions = imageBase64 ? IMAGE_PARSE_INSTRUCTIONS : PARSE_INSTRUCTIONS;
     const parseInput = imageBase64
       ? [
@@ -979,7 +993,7 @@ export async function POST(req: NextRequest) {
 
       if (status >= 500) {
         return errorResponse(
-          'AI service is temporarily unavailable. Please try again in a few minutes.',
+          'The AI service is taking a short break. Please try again in a few minutes.',
           502
         );
       }
@@ -1065,7 +1079,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ——— STEP 1.5: Brand nutrition lookup (parallel) ———
+    // --- STEP 1.5: Brand nutrition lookup (parallel) ---
     // For items with a known brand, fetch the real label data via web search so
     // Step 2 receives ground truth instead of estimating.
     const brandedItems = parsedItems.filter((item) => KNOWN_BRAND_PATTERN.test(item.name));
@@ -1087,7 +1101,7 @@ export async function POST(req: NextRequest) {
       console.log('[AI Food Logger Step 1.5] External nutrition data:', JSON.stringify(externalNutritionData, null, 2));
     }
 
-    // ——— STEP 2: Compute nutrition for parsed items ———
+    // --- STEP 2: Compute nutrition for parsed items ---
     const nutritionInput = JSON.stringify(
       { items: parsedItems, ...(hasExternalData && { external_nutrition_data: externalNutritionData }) },
       null,
@@ -1133,7 +1147,7 @@ export async function POST(req: NextRequest) {
 
       if (status >= 500) {
         return errorResponse(
-          'AI service is temporarily unavailable. Please try again in a few minutes.',
+          'The AI service is taking a short break. Please try again in a few minutes.',
           502
         );
       }
@@ -1217,7 +1231,7 @@ export async function POST(req: NextRequest) {
         protein,
         carbs,
         fat,
-        // Brand labels use FDA rounding — preserve scaled label calories instead of recomputing.
+        // Brand labels use FDA rounding - preserve scaled label calories instead of recomputing.
         calories: isBrandLabel
           ? Math.round(current.calories * scale)
           : Math.round(protein * 4 + carbs * 4 + fat * 9),
@@ -1324,7 +1338,7 @@ export async function POST(req: NextRequest) {
 
     const total = computeTotal(items);
 
-    // ——— STEP 3: Personalized feedback using the user's targets + today's log ———
+    // --- STEP 3: Personalized feedback using the user's targets + today's log ---
     const feedback = await generateMealFeedback(userId, apiKey, items, total);
 
     const latencyMs = Date.now() - startMs;

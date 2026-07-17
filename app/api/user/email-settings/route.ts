@@ -1,5 +1,5 @@
 // ============================================
-// /api/user/email-settings — Save/delete SMTP + IMAP credentials
+// /api/user/email-settings - Save/delete SMTP + IMAP credentials
 // ============================================
 // Passwords are AES-256 encrypted before storage (same pattern as /api/user/api-keys).
 // Passwords are never returned to the client.

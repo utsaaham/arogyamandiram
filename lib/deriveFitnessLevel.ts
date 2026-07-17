@@ -1,5 +1,5 @@
 // ============================================
-// deriveFitnessLevel — Auto-detect fitness level from workout history
+// deriveFitnessLevel - Auto-detect fitness level from workout history
 // ============================================
 // Called by the nightly cron and optionally after each workout log.
 // Looks at the last 14 days of workout data and classifies the user.
@@ -72,7 +72,7 @@ export async function deriveFitnessLevel(
     else if (level === 'intermediate') level = 'beginner';
   }
 
-  // Persist to user profile (fire and forget — don't block cron)
+  // Persist to user profile (fire and forget - don't block cron)
   await User.updateOne(
     { _id: userId },
     { $set: { 'profile.fitnessLevelDerived': level } }

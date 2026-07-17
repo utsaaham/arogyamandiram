@@ -10,12 +10,14 @@ import type { Types } from 'mongoose';
 
 export interface IDailyPlanDocument extends Document {
   userId: Types.ObjectId;
-  date: string; // 'YYYY-MM-DD' — the day this plan is FOR
+  date: string; // 'YYYY-MM-DD' - the day this plan is FOR
   generatedAt: Date;
   status: 'generating' | 'ready' | 'failed';
   errorMessage?: string;
 
   topInsight?: string; // AI-selected #1 priority for the day
+  /** One-sentence "Today's Body Summary" cached per day by /api/intelligence. */
+  bodySummary?: string;
   /** Per-metric projection cards (sleep/food/water/workout/steps/heartRate/weight). */
   projections?: {
     sleep?:     { headline?: string; coachNote?: string; actions?: string[] };
@@ -25,6 +27,25 @@ export interface IDailyPlanDocument extends Document {
     steps?:     { headline?: string; coachNote?: string; actions?: string[] };
     heartRate?: { headline?: string; coachNote?: string; actions?: string[] };
     weight?:    { headline?: string; coachNote?: string; actions?: string[] };
+  };
+
+  /** WHOOP-style AI morning briefing built from scores + full history. */
+  outlook?: {
+    headline?: string;
+    recoverySummary?: string;
+    today?: {
+      effort?: 'push' | 'maintain' | 'recover' | 'rest';
+      note?: string;
+      activities?: string[];
+      bestWindow?: string;
+    };
+    focus?: { metric?: string; headline?: string; note?: string }[];
+    watchOuts?: string[];
+    tonight?: {
+      sleepNeedHours?: number | null;
+      bedtimeWindow?: string;
+      note?: string;
+    };
   };
 
   foodPlan?: {
@@ -37,6 +58,9 @@ export interface IDailyPlanDocument extends Document {
       fat: number;
       mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
       ingredients: string[];
+      steps: string[];
+      prepMinutes?: number;
+      cookMinutes?: number;
       isVegetarian: boolean;
     }[];
     reasoning?: string;
@@ -108,6 +132,9 @@ const MealSuggestionSchema = new Schema(
     fat: { type: Number, default: 0 },
     mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack'], default: 'snack' },
     ingredients: { type: [String], default: [] },
+    steps: { type: [String], default: [] },
+    prepMinutes: { type: Number, min: 0, max: 600 },
+    cookMinutes: { type: Number, min: 0, max: 600 },
     isVegetarian: { type: Boolean, default: false },
   },
   { _id: false }
@@ -135,6 +162,36 @@ const ProjectionsSchema = new Schema(
   { _id: false }
 );
 
+const OutlookFocusSchema = new Schema(
+  {
+    metric: { type: String, default: '' },
+    headline: { type: String, default: '' },
+    note: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
+const OutlookSchema = new Schema(
+  {
+    headline: { type: String, default: '' },
+    recoverySummary: { type: String, default: '' },
+    today: {
+      effort: { type: String, enum: ['push', 'maintain', 'recover', 'rest'] },
+      note: { type: String, default: '' },
+      activities: { type: [String], default: [] },
+      bestWindow: { type: String, default: '' },
+    },
+    focus: { type: [OutlookFocusSchema], default: [] },
+    watchOuts: { type: [String], default: [] },
+    tonight: {
+      sleepNeedHours: { type: Number, default: null },
+      bedtimeWindow: { type: String, default: '' },
+      note: { type: String, default: '' },
+    },
+  },
+  { _id: false }
+);
+
 const ExerciseSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -142,6 +199,10 @@ const ExerciseSchema = new Schema(
     sets: { type: Number, default: 1 },
     reps: { type: String, default: '1' },
     phase: { type: String, enum: ['warmup', 'strength', 'cardio', 'core', 'mobility', 'cooldown'] },
+    // Strength only: compound lifts sort before accessories
+    slot: { type: String, enum: ['compound', 'accessory'] },
+    // Server-stamped 1..n gym order (stampOrderAndPhase)
+    order: { type: Number },
     durationMinutes: { type: Number },
     restSeconds: { type: Number, default: 60 },
     intensity: { type: String, enum: ['low', 'medium', 'high'] },
@@ -160,7 +221,11 @@ const DailyPlanSchema = new Schema<IDailyPlanDocument>(
     errorMessage: { type: String },
 
     topInsight: { type: String },
+    // One-sentence "Today's Body Summary" (LLM-phrased over deterministic
+    // attribution; cached per day by /api/intelligence)
+    bodySummary: { type: String },
     projections: { type: ProjectionsSchema, default: undefined },
+    outlook: { type: OutlookSchema, default: undefined },
 
     foodPlan: {
       suggestions: { type: [MealSuggestionSchema], default: [] },

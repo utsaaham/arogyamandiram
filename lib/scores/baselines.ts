@@ -51,6 +51,6 @@ export function bedtimeMinutes(bedtime: string): number | null {
     }
   }
   if (h === null || h > 23) return null;
-  // Minutes since noon: 22:30 → 630, 00:30 → 750 — keeps midnight continuous.
+  // Minutes since noon: 22:30 → 630, 00:30 → 750 - keeps midnight continuous.
   return ((h + 12) % 24) * 60 + m;
 }

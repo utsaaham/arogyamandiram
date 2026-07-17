@@ -11,6 +11,7 @@ import {
   Scale,
   Star,
   CheckSquare,
+  Sparkles,
   Settings,
   Link2,
   Code2,
@@ -25,14 +26,14 @@ import { signOut } from 'next-auth/react';
 
 const mobileNav = [
   { href: '/home', icon: LayoutDashboard, label: 'Home' },
-  { href: '/vitals', icon: VitalsIcon, label: 'Vitals' },
-  { href: '/todays-plan', icon: CheckSquare, label: 'Checklist' },
+  { href: '/vitals', icon: VitalsIcon, label: 'Stats' },
+  { href: '/coach', icon: Sparkles, label: 'Ciel' },
   { href: '/water', icon: Droplets, label: 'Water' },
 ];
 
 const moreNav = [
+  { href: '/todays-plan', icon: CheckSquare, label: 'Checklist' },
   { href: '/sleep', icon: Moon, label: 'Sleep' },
-  { href: '/water', icon: Droplets, label: 'Water' },
   { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/weight', icon: Scale, label: 'Weight' },

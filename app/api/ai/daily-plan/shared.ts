@@ -1,11 +1,17 @@
 import type { AiMealSuggestion, AiWorkoutPlan, DailyPlanData } from '@/types';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
+import { normalizeGoal } from '@/lib/goals';
+import type { WeightTrendResult } from '@/lib/weightTrend';
+import type { AdherenceResult, ProgressionBucket } from '@/lib/adherence';
 
 export type FoodRequestBody = {
   lastWeekFoodDetails?: string;
   goal?: string;
   dietaryPreference?: string;
   allergies?: string[];
+  favoriteCuisines?: string[];
+  cookingSkill?: string;
+  maxCookingMinutes?: number;
   targetProteinG?: number;
   targetCalories?: number;
 };
@@ -70,7 +76,9 @@ export type OverviewPromptContext = {
     activityLevel?: string;
     goal?: string;
     targetWeight?: number;
+    fatFocusAreas?: string[];
   } | null;
+  weightTrend?: WeightTrendResult | null;
   targets?: {
     dailyCalories?: number;
     dailyWorkoutMinutes?: number;
@@ -101,6 +109,84 @@ export type OverviewProjectionEntry = {
 };
 
 export type OverviewProjections = Record<OverviewProjectionKey, OverviewProjectionEntry>;
+
+// ─── Daily Outlook (WHOOP-style morning briefing) ────────────────────────────
+
+export type OutlookEffort = 'push' | 'maintain' | 'recover' | 'rest';
+
+export type OutlookFocusEntry = {
+  metric: string;
+  headline: string;
+  note: string;
+};
+
+export type OutlookData = {
+  headline: string;
+  recoverySummary: string;
+  today: {
+    effort: OutlookEffort;
+    note: string;
+    activities: string[];
+    bestWindow: string;
+  };
+  focus: OutlookFocusEntry[];
+  watchOuts: string[];
+  tonight: {
+    sleepNeedHours: number | null;
+    bedtimeWindow: string;
+    note: string;
+  };
+};
+
+const VALID_EFFORTS = new Set<OutlookEffort>(['push', 'maintain', 'recover', 'rest']);
+const VALID_FOCUS_METRICS = new Set(['sleep', 'food', 'water', 'workout', 'steps', 'stress', 'weight']);
+
+export function normalizeOutlook(input: unknown, fallbackEffort?: string): OutlookData {
+  const root = (input && typeof input === 'object') ? input as Record<string, unknown> : {};
+  const todayRaw = (root.today && typeof root.today === 'object') ? root.today as Record<string, unknown> : {};
+  const tonightRaw = (root.tonight && typeof root.tonight === 'object') ? root.tonight as Record<string, unknown> : {};
+
+  const effortRaw = asString(todayRaw.effort).toLowerCase();
+  const fallback = VALID_EFFORTS.has(asString(fallbackEffort).toLowerCase() as OutlookEffort)
+    ? asString(fallbackEffort).toLowerCase() as OutlookEffort
+    : 'maintain';
+  const effort = VALID_EFFORTS.has(effortRaw as OutlookEffort) ? effortRaw as OutlookEffort : fallback;
+
+  const focus = (Array.isArray(root.focus) ? root.focus : [])
+    .map((raw) => {
+      const entry = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
+      const metric = asString(entry.metric).toLowerCase();
+      return {
+        metric: VALID_FOCUS_METRICS.has(metric) ? metric : 'workout',
+        headline: asString(entry.headline),
+        note: asString(entry.note),
+      };
+    })
+    .filter((entry) => entry.headline || entry.note)
+    .slice(0, 3);
+
+  const sleepNeed = toFinite(tonightRaw.sleepNeedHours);
+
+  return {
+    headline: asString(root.headline),
+    recoverySummary: asString(root.recoverySummary),
+    today: {
+      effort,
+      note: asString(todayRaw.note),
+      activities: (Array.isArray(todayRaw.activities) ? todayRaw.activities : [])
+        .map((a) => asString(a)).filter(Boolean).slice(0, 4),
+      bestWindow: asString(todayRaw.bestWindow),
+    },
+    focus,
+    watchOuts: (Array.isArray(root.watchOuts) ? root.watchOuts : [])
+      .map((w) => asString(w)).filter(Boolean).slice(0, 3),
+    tonight: {
+      sleepNeedHours: typeof sleepNeed === 'number' ? clamp(Math.round(sleepNeed * 10) / 10, 5, 12) : null,
+      bedtimeWindow: asString(tonightRaw.bedtimeWindow),
+      note: asString(tonightRaw.note),
+    },
+  };
+}
 
 export type WorkoutRequestBody = {
   lastWeekDetails?: string;
@@ -171,6 +257,11 @@ export type WorkoutPromptContext = {
       skippedWorkoutReason?: string;
     } | null;
   }>;
+  weightTrend?: WeightTrendResult | null;
+  /** Trailing-7-day planned-vs-logged adherence (lib/adherence.ts). */
+  progression?: AdherenceResult | null;
+  /** Durable coach-memory pattern lines (lib/intelligence/coachMemory.ts). */
+  knownPatterns?: string[];
 };
 
 const VALID_MEAL_TYPES = new Set(['breakfast', 'lunch', 'dinner', 'snack']);
@@ -192,6 +283,8 @@ export type ReadinessSignals = {
   avoidHighIntensity: boolean;
   bodyFatPct?: number;
   weightKg?: number;
+  /** Adherence-graduated progression bucket for today's prescription. */
+  progressionBucket?: ProgressionBucket;
 };
 
 /** @deprecated alias for ReadinessSignals; kept for any external callers */
@@ -353,7 +446,7 @@ function sanitizeWorkoutContext(context?: WorkoutPromptContext) {
  * Derive readiness/recovery signals from recent logs.
  *
  * Note: this no longer chooses a training strategy or required muscle-group
- * components — that decision is delegated to the LLM, which is given the full
+ * components - that decision is delegated to the LLM, which is given the full
  * weekly history. Server-side here we only compute objective signals about
  * recovery (protein deficit, sleep, steps) and the time budget for today.
  */
@@ -402,11 +495,15 @@ export function deriveReadinessSignals(
   const includeLightCardio = avgSteps > 0 && avgSteps < 3000;
   const avoidHighIntensity = avgSleepHours < 6;
 
+  const progressionBucket = context?.progression?.bucket;
+
   const readinessLines: string[] = [];
   if (reduceVolume) readinessLines.push('reduced volume because recent protein intake is under 70% of target');
   if (reduceExtraCardio) readinessLines.push('reduced extra cardio because recent steps already exceed target');
   if (includeLightCardio) readinessLines.push('included light cardio because recent step count is low');
   if (avoidHighIntensity) readinessLines.push('avoided high intensity because recent sleep is under 6 hours');
+  if (progressionBucket === 'progress') readinessLines.push('progressed load slightly because the user completed nearly all planned work this week');
+  if (progressionBucket === 'deload') readinessLines.push('deloaded volume because most planned work was missed this week; restart light');
   if (readinessLines.length === 0) readinessLines.push('normal volume and intensity based on current readiness');
 
   return {
@@ -418,6 +515,7 @@ export function deriveReadinessSignals(
     avoidHighIntensity,
     bodyFatPct,
     weightKg: toFinite(sanitized?.profile?.weightKg),
+    ...(progressionBucket ? { progressionBucket } : {}),
   };
 }
 
@@ -428,7 +526,7 @@ export const deriveWorkoutPlanConstraints = deriveReadinessSignals;
  * Derive the user's goal direction from current vs. target weight, falling back
  * to the explicit `profile.goal` field only if weight data is missing.
  *
- * Uses a 0.5 kg deadband — wide enough to absorb day-to-day water-weight noise
+ * Uses a 0.5 kg deadband - wide enough to absorb day-to-day water-weight noise
  * but tight enough that a 1 kg gap from target reads as a real intent to lose
  * (e.g. weight 66, target 65 → "lose").
  */
@@ -446,14 +544,31 @@ export function deriveGoalDirection(
     return 'maintain';
   }
   const fallback = asString(profileGoal).toLowerCase();
-  if (fallback === 'lose' || fallback === 'lose_weight' || fallback === 'fat_loss') return 'lose';
-  if (fallback === 'gain' || fallback === 'gain_weight' || fallback === 'muscle_gain' || fallback === 'bulk') return 'gain';
+  if (fallback === 'lose' || fallback === 'lose_weight' || fallback === 'fat_loss' || fallback === 'lose_fat') return 'lose';
+  if (fallback === 'gain' || fallback === 'gain_weight' || fallback === 'muscle_gain' || fallback === 'bulk' || fallback === 'build_muscle') return 'gain';
   return 'maintain';
+}
+
+export type TargetGap = 'above_target' | 'at_target' | 'below_target' | 'unknown';
+
+/**
+ * Where the user currently sits relative to their target weight - a read-only
+ * state signal for prompts (the goal itself is user-owned and never derived).
+ * Same 0.5 kg deadband as deriveGoalDirection.
+ */
+export function deriveTargetGap(weightKg?: number, targetWeightKg?: number): TargetGap {
+  const weight = toFinite(weightKg);
+  const target = toFinite(targetWeightKg);
+  if (typeof weight !== 'number' || typeof target !== 'number' || target <= 0) return 'unknown';
+  const delta = weight - target;
+  if (delta > 0.5) return 'above_target';
+  if (delta < -0.5) return 'below_target';
+  return 'at_target';
 }
 
 /**
  * Build a compact summary of the recent workout window (yesterday and the day
- * before) for the LLM. Today is intentionally excluded — today's workouts are
+ * before) for the LLM. Today is intentionally excluded - today's workouts are
  * the plan we're about to generate, and today's partial-day nutrition / steps
  * would skew readiness averages.
  */
@@ -521,28 +636,41 @@ export function buildFoodPrompt(body: FoodRequestBody, date: string): string {
   const dietaryPreference = (() => {
     if (dietaryPreferenceRaw === 'vegetarian') return 'Vegetarian';
     if (dietaryPreferenceRaw === 'non_vegetarian') return 'Non-vegetarian';
+    if (dietaryPreferenceRaw === 'eggetarian') return 'Eggetarian (vegetarian foods plus eggs; no meat or fish)';
     if (dietaryPreferenceRaw === 'vegan') return 'Vegan';
+    if (dietaryPreferenceRaw === 'pescatarian') return 'Pescatarian (fish and seafood allowed; no meat or poultry)';
+    if (dietaryPreferenceRaw === 'flexitarian') return 'Flexitarian (mostly plant-based, with occasional meat or fish)';
     return 'No specific preference';
   })();
   const allergies = Array.isArray(body.allergies)
     ? body.allergies.map((entry) => entry.trim()).filter(Boolean)
     : [];
+  const favoriteCuisines = Array.isArray(body.favoriteCuisines)
+    ? body.favoriteCuisines.map((entry) => entry.trim()).filter(Boolean)
+    : [];
+  const cookingSkill = body.cookingSkill?.trim() || 'beginner';
+  const maxCookingMinutes = Number(body.maxCookingMinutes);
   const targetProtein = Number(body.targetProteinG);
   const targetCalories = Number(body.targetCalories);
   const proteinLine = Number.isFinite(targetProtein) && targetProtein > 0
-    ? `Daily protein target: ${Math.round(targetProtein)}g`
+    ? `Profile protein target: ${Math.round(targetProtein)}g. Plan total must be ${Math.round(targetProtein) + 5}-${Math.round(targetProtein) + 10}g (5-10g above target).`
     : 'Daily protein target: not provided';
   const caloriesLine = Number.isFinite(targetCalories) && targetCalories > 0
-    ? `Daily calories target: ${Math.round(targetCalories)} kcal`
+    ? `Profile calorie target: ${Math.round(targetCalories)} kcal. Plan total must be ${Math.round(targetCalories * 0.9)}-${Math.round(targetCalories * 0.95)} kcal (5-10% below target, never drastically low).`
     : 'Daily calories target: not provided';
   return [
     `Plan date: ${date}`,
     `Goal: ${goal}`,
     `Dietary preference: ${dietaryPreference}`,
     `Allergies or avoid list: ${allergies.length > 0 ? allergies.join(', ') : 'None provided'}`,
+    `Favorite cuisines: ${favoriteCuisines.length > 0 ? favoriteCuisines.join(', ') : 'No favorites provided; vary cuisines'}`,
+    `Cooking comfort: ${cookingSkill}`,
+    `Maximum total cooking time per dish: ${Number.isFinite(maxCookingMinutes) && maxCookingMinutes >= 5 ? Math.round(maxCookingMinutes) : 30} minutes`,
+    'Recipe rule: Every suggestion must include a complete ingredient list, short numbered steps, and realistic prepMinutes and cookMinutes.',
     proteinLine,
     caloriesLine,
-    'Protein rule: Keep total daily protein close to the protein target and keep each main meal protein-forward.',
+    'Nutrition quality rule: Favor vegetables, fruit, whole grains, legumes, lean proteins, and unsaturated fats. Include fiber-rich foods in every main meal. Keep highly processed foods, added sugar, and excess sodium low.',
+    'Macro rule: Add every suggestion before responding. The full-day totals must satisfy the protein and calorie ranges above.',
     `Last week food details from user: ${details}`,
   ].join('\n');
 }
@@ -552,11 +680,14 @@ export function buildOverviewPrompt(
   date: string,
   context?: OverviewPromptContext,
 ): string {
-  const goal = body.goal?.trim() || asString(context?.profile?.goal) || 'General health improvement';
+  const goal = body.goal?.trim()
+    || (context?.profile?.goal ? normalizeGoal(context.profile.goal) : '')
+    || 'General health improvement';
   const weightFromBody = Number(body.currentWeightKg);
   const weightKg = Number.isFinite(weightFromBody) && weightFromBody > 0
     ? weightFromBody
     : toFinite(context?.profile?.weight);
+  const targetWeightKg = toFinite(context?.profile?.targetWeight);
 
   const profile = context?.profile
     ? {
@@ -571,7 +702,10 @@ export function buildOverviewPrompt(
         heightCm: toFinite(context.profile.height),
         weightKg,
         activityLevel: asString(context.profile.activityLevel) || undefined,
-        targetWeightKg: toFinite(context.profile.targetWeight),
+        targetWeightKg,
+        ...(Array.isArray(context.profile.fatFocusAreas) && context.profile.fatFocusAreas.length > 0
+          ? { fatFocusAreas: context.profile.fatFocusAreas }
+          : {}),
       }
     : null;
 
@@ -604,6 +738,8 @@ export function buildOverviewPrompt(
   const inputs = {
     planDate: date,
     goal,
+    targetGap: deriveTargetGap(weightKg, targetWeightKg),
+    weightTrend: context?.weightTrend ?? { trend: 'unknown', slopeKgPerWeek: null, samples: 0 },
     profile,
     targets,
     yesterday,
@@ -611,7 +747,7 @@ export function buildOverviewPrompt(
   };
 
   return [
-    'Inputs are provided as a JSON object below. Generate the daily overview using YESTERDAY\'s data only (yesterday.totals, yesterday.meals, yesterday.workouts, yesterday.sleep, yesterday.weightKg) plus the user\'s targets. The UI will prepend "At this rate →" to every projection.headline, so do NOT write that phrase yourself. Every projection.coachNote must reference real numbers or named items from yesterday, and every projection.actions[] step must begin with a verb. Do not invent values that are not in the inputs.',
+    'Inputs are provided as a JSON object below. Generate the daily overview using YESTERDAY\'s data only (yesterday.totals, yesterday.meals, yesterday.workouts, yesterday.sleep, yesterday.weightKg) plus the user\'s targets. The UI will prepend "At this rate →" to every projection.headline, so do NOT write that phrase yourself. Every projection.coachNote must reference real numbers or named items from yesterday, and every projection.actions[] step must begin with a verb. Do not invent values that are not in the inputs. goal is the user\'s chosen goal; targetGap is where they sit vs their target weight; weightTrend is the direction their weight is actually moving. If goal and weightTrend conflict (e.g. goal build_muscle but trend losing), point out the conflict and the fix in plain words. Never claim spot reduction - fat comes off the whole body.',
     JSON.stringify({ inputs }, null, 2),
   ].join('\n');
 }
@@ -654,7 +790,11 @@ export function buildWorkoutPrompt(
   const fitnessLevel = body.fitnessLevel?.trim() || sanitized?.profile?.fitnessLevel || 'beginner';
   const weightKg = sanitized?.profile?.weightKg;
   const targetWeightKg = sanitized?.profile?.targetWeightKg;
-  const goalDirection = deriveGoalDirection(weightKg, targetWeightKg, sanitized?.profile?.goal);
+  // The goal is user-owned; targetGap and weightTrend are the read-only
+  // state/trend signals the coach reasons against it.
+  const userGoal = normalizeGoal(sanitized?.profile?.goal);
+  const targetGap = deriveTargetGap(weightKg, targetWeightKg);
+  const weightTrend = context?.weightTrend ?? null;
   const weeklySummary = buildWeeklyWorkoutSummary(context, date);
 
   const profileForPrompt = sanitized?.profile
@@ -664,10 +804,11 @@ export function buildWorkoutPrompt(
         heightCm: sanitized.profile.heightCm,
         weightKg: sanitized.profile.weightKg,
         activityLevel: sanitized.profile.activityLevel,
-        goal: goalDirection,
+        goal: userGoal,
         targetWeightKg: sanitized.profile.targetWeightKg,
         bodyType: sanitized.profile.bodyType,
         bodyFatPct: sanitized.profile.bodyFatPct,
+        fatFocusAreas: sanitized.profile.fatFocusAreas,
         fitnessLevel: sanitized.profile.fitnessLevel,
         physiqueGoal: sanitized.profile.physiqueGoal,
         workoutLocation: sanitized.profile.workoutLocation,
@@ -676,7 +817,7 @@ export function buildWorkoutPrompt(
     : null;
 
   // Build a per-weekday split map from the rolling window. Only includes days we
-  // have logs for — we don't pre-fill "rest" for missing days, since absent data
+  // have logs for - we don't pre-fill "rest" for missing days, since absent data
   // is not the same as a confirmed rest day.
   const lastWeekSplit: Record<string, string> = {};
   for (const day of weeklySummary.byDay) {
@@ -716,7 +857,10 @@ export function buildWorkoutPrompt(
 
   const inputs = {
     planDate: date,
-    goal: goalDirection,
+    goal: userGoal,
+    targetGap,
+    weightTrend: weightTrend ?? { trend: 'unknown', slopeKgPerWeek: null, samples: 0 },
+    progression: context?.progression ?? { bucket: 'hold', adherencePct: null, plannedCount: 0, completedCount: 0, daysWithPlan: 0 },
     fitnessLevel,
     todayWorkoutTargetMinutes: signals.targetDurationMinutes,
     readinessSignals: signals.readinessAdjustment,
@@ -725,6 +869,7 @@ export function buildWorkoutPrompt(
     targets: sanitized?.targets ?? null,
     recentLogs,
     ...(sanitized?.recentFeedback?.length ? { recentFeedback: sanitized.recentFeedback } : {}),
+    ...(context?.knownPatterns?.length ? { knownPatterns: context.knownPatterns } : {}),
   };
 
   // The model gets a structured JSON object preceded by a one-line directive so
@@ -753,6 +898,11 @@ export function normalizeFoodPlan(input: unknown): NonNullable<DailyPlanData['fo
         ingredients: Array.isArray(meal.ingredients)
           ? meal.ingredients.map((item) => String(item).trim()).filter(Boolean).slice(0, 20)
           : [],
+        steps: Array.isArray(meal.steps)
+          ? meal.steps.map((item) => String(item).trim()).filter(Boolean).slice(0, 12)
+          : [],
+        prepMinutes: clamp(Math.round(asNumber(meal.prepMinutes, 5)), 0, 600),
+        cookMinutes: clamp(Math.round(asNumber(meal.cookMinutes, 10)), 0, 600),
         isVegetarian: Boolean(meal.isVegetarian),
       };
     })
@@ -865,6 +1015,62 @@ function ensureMinCooldown(exercises: WorkoutExercise[]): WorkoutExercise[] {
   return [...stretches, ...required].slice(0, 2);
 }
 
+/**
+ * Compound-lift name fallback, used only when the LLM's `slot` tag is missing
+ * (old plans, partial JSON). New plans carry slot: "compound" | "accessory".
+ */
+const COMPOUND_NAME_RE = /squat|deadlift|bench|overhead press|shoulder press|chest press|leg press|\brow\b|pull.?up|chin.?up|lunge|\bdip\b|clean|snatch|thruster|hip thrust|push.?up/;
+
+function isCompoundStrength(exercise: AiWorkoutPlan['exercises'][number]): boolean {
+  if (exercise.slot === 'compound') return true;
+  if (exercise.slot === 'accessory') return false;
+  return COMPOUND_NAME_RE.test(exercise.name.toLowerCase());
+}
+
+const PHASE_RANK: Record<string, number> = {
+  warmup: 0,
+  strength: 1, // compounds before accessories within strength
+  core: 2,
+  cardio: 3,
+  mobility: 4,
+  cooldown: 5,
+};
+
+/**
+ * Guarantee a `phase` on every exercise, sort into strict gym order
+ * (warmup → compound strength → accessories → core → cardio → cooldown),
+ * and stamp `order: 1..n`. Sorts on the structured phase/category/slot tags;
+ * name matching is only the compound fallback above.
+ */
+export function stampOrderAndPhase(exercises: AiWorkoutPlan['exercises']): AiWorkoutPlan['exercises'] {
+  const withPhase = exercises.map((exercise) => {
+    if (exercise.phase) return exercise;
+    let phase: NonNullable<AiWorkoutPlan['exercises'][number]['phase']>;
+    if (isLikelyWarmup(exercise)) phase = 'warmup';
+    else if (exercise.category === 'strength') phase = 'strength';
+    else if (exercise.category === 'cardio') phase = 'cardio';
+    else if (exercise.category === 'core') phase = 'core';
+    else if (exercise.category === 'flexibility') phase = 'cooldown';
+    else phase = 'strength';
+    return { ...exercise, phase };
+  });
+
+  const ranked = withPhase.map((exercise, idx) => ({ exercise, idx }));
+  ranked.sort((a, b) => {
+    const ra = PHASE_RANK[a.exercise.phase ?? 'strength'] ?? 1;
+    const rb = PHASE_RANK[b.exercise.phase ?? 'strength'] ?? 1;
+    if (ra !== rb) return ra - rb;
+    if (a.exercise.phase === 'strength' && b.exercise.phase === 'strength') {
+      const ca = isCompoundStrength(a.exercise) ? 0 : 1;
+      const cb = isCompoundStrength(b.exercise) ? 0 : 1;
+      if (ca !== cb) return ca - cb;
+    }
+    return a.idx - b.idx; // stable within a phase
+  });
+
+  return ranked.map(({ exercise }, i) => ({ ...exercise, order: i + 1 }));
+}
+
 function enforceWorkoutOrder(exercises: WorkoutExercise[]): WorkoutExercise[] {
   const warmupCandidates: WorkoutExercise[] = [];
   const strength: WorkoutExercise[] = [];
@@ -974,11 +1180,16 @@ export function normalizeWorkoutPlan(input: unknown, signals?: ReadinessSignals)
       const safeCategory = (VALID_CATEGORIES.has(category) ? category : 'strength') as AiWorkoutPlan['exercises'][number]['category'];
       const inferredMuscleGroup = inferMuscleGroup(name, safeCategory);
       const phase = VALID_PHASES.has(phaseRaw) ? (phaseRaw as NonNullable<AiWorkoutPlan['exercises'][number]['phase']>) : undefined;
+      const slotRaw = asString(ex.slot).toLowerCase();
+      const slot = slotRaw === 'compound' || slotRaw === 'accessory'
+        ? (slotRaw as 'compound' | 'accessory')
+        : undefined;
 
       return {
         name,
         ...(steps.length > 0 ? { steps } : {}),
         ...(phase ? { phase } : {}),
+        ...(slot ? { slot } : {}),
         sets: clamp(Math.round(asNumber(ex.sets, 3)), 1, 20),
         reps: asString(ex.reps, '10-12'),
         durationMinutes: clamp(Math.round(asNumber(ex.durationMinutes, 5)), 1, 180),
@@ -995,7 +1206,7 @@ export function normalizeWorkoutPlan(input: unknown, signals?: ReadinessSignals)
   exercises = dedupeExercises(exercises);
 
   // Honour readiness signals (volume/intensity/cardio adjustments). We deliberately
-  // do NOT inject "required" body-part components anymore — the LLM decides.
+  // do NOT inject "required" body-part components anymore - the LLM decides.
   if (signals?.reduceVolume) {
     exercises = exercises.map((exercise) => ({
       ...exercise,
@@ -1035,6 +1246,7 @@ export function normalizeWorkoutPlan(input: unknown, signals?: ReadinessSignals)
 
   exercises = enforceWorkoutOrder(exercises);
   exercises = alignDuration(exercises, signals?.targetDurationMinutes ?? Math.round(asNumber(root.durationMinutes, 30)));
+  exercises = stampOrderAndPhase(exercises);
 
   const durationMinutes = exercises.reduce((sum, exercise) => sum + (exercise.durationMinutes ?? 0), 0);
   const readinessAdjustment = signals?.readinessAdjustment ?? 'normal volume and intensity based on current readiness';

@@ -8,7 +8,7 @@ import { showToast } from '@/components/ui/Toast';
 import { careStatus, cadenceInfo, humanDays, type CareStatus } from '@/lib/careCadence';
 import { removeLoggedMealsByName } from '@/lib/checklistFoodSync';
 import { cn, getToday } from '@/lib/utils';
-import { usePlanAutoRefresh } from './usePlanAutoRefresh';
+import { usePlanAutoRefresh } from '@/hooks/usePlanAutoRefresh';
 
 type TodoTemplate = {
   id: string;

@@ -1,5 +1,5 @@
 // ============================================
-// /api/cron/process-email-replies — Trigger IMAP reply processing
+// /api/cron/process-email-replies - Trigger IMAP reply processing
 // ============================================
 // Called by Vercel Cron every 15 minutes.
 // Delegates to /api/email/process-replies.
@@ -35,5 +35,5 @@ export async function POST(req: NextRequest) {
   return maskedResponse(json);
 }
 
-// Vercel Cron Jobs invoke routes with GET — alias so both GET and POST work
+// Vercel Cron Jobs invoke routes with GET - alias so both GET and POST work
 export { POST as GET };

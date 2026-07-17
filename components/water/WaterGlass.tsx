@@ -116,7 +116,7 @@ export default function WaterGlass({
       vibrate(10);
       const tImpact = setTimeout(() => {
         vibrate(50);
-        // Drop has landed — now commit the level rise.
+        // Drop has landed - now commit the level rise.
         setDisplayPercent(percentRef.current);
       }, T_FALL);
       const tRippleHap = setTimeout(() => vibrate([20, 40, 15]), T_FALL + 260);
@@ -129,7 +129,7 @@ export default function WaterGlass({
       };
     }
     if (!isPouring) prevPouringRef.current = false;
-  // displayPercent intentionally excluded — we only want the rising-edge effect.
+  // displayPercent intentionally excluded - we only want the rising-edge effect.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPouring]);
 

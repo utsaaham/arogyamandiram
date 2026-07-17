@@ -54,12 +54,14 @@ const UserSchema = new Schema<IUserDocument>(
       },
       goal: {
         type: String,
-        enum: ['lose', 'maintain', 'gain'],
+        // 5-value enum plus legacy 3-value strings so old documents still
+        // validate; reads normalize via lib/goals.ts normalizeGoal().
+        enum: ['lose_fat', 'build_muscle', 'recomp', 'improve_fitness', 'maintain', 'lose', 'gain'],
         default: 'maintain',
       },
       targetWeight: { type: Number, min: 20, max: 500 },
       avatarUrl: { type: String, default: '' },
-      // Body composition — used to personalize AI workout + nutrition plans
+      // Body composition - used to personalize AI workout + nutrition plans
       bodyType: { type: String, enum: ['ectomorph', 'mesomorph', 'endomorph'] },
       bodyFat: { type: Number, min: 1, max: 60 },           // body fat percentage
       fatFocusAreas: { type: [String], default: [] },
@@ -78,7 +80,7 @@ const UserSchema = new Schema<IUserDocument>(
     },
     apiKeys: {
       openai:     { type: String, default: '', select: false },  // AES-256 encrypted
-      fdcApiKey:  { type: String, default: '', select: false },  // AES-256 encrypted — USDA FoodData Central
+      fdcApiKey:  { type: String, default: '', select: false },  // AES-256 encrypted - USDA FoodData Central
     },
     settings: {
       theme: { type: String, enum: ['dark', 'light'], default: 'dark' },
@@ -97,6 +99,12 @@ const UserSchema = new Schema<IUserDocument>(
       dashboardTourComplete: { type: Boolean, default: false },
       // Version of the dashboard tour the user has last completed
       dashboardTourVersion: { type: Number, default: 0 },
+      // Suggest-only nudges; dismissal state so they don't nag
+      nudges: {
+        // targetWeight value at which the target-reached nudge was dismissed;
+        // re-arms automatically when the user sets a new target
+        targetReachedDismissedForTargetWeight: { type: Number, default: null },
+      },
       // Recipient list for reminder emails
       recipientEmails: { type: [String], default: [] },
       // Legacy key retained for backward compatibility
@@ -147,12 +155,27 @@ const UserSchema = new Schema<IUserDocument>(
       foodPreferences: {
         dietaryPreference: {
           type: String,
-          enum: ['no_preference', 'vegetarian', 'non_vegetarian', 'vegan'],
+          enum: ['no_preference', 'vegetarian', 'non_vegetarian', 'eggetarian', 'vegan', 'pescatarian', 'flexitarian'],
           default: 'no_preference',
         },
         allergies: {
           type: [String],
           default: [],
+        },
+        favoriteCuisines: {
+          type: [String],
+          default: [],
+        },
+        cookingSkill: {
+          type: String,
+          enum: ['beginner', 'intermediate', 'confident'],
+          default: 'beginner',
+        },
+        maxCookingMinutes: {
+          type: Number,
+          min: 5,
+          max: 180,
+          default: 30,
         },
       },
       todoTemplates: {
@@ -193,14 +216,14 @@ const UserSchema = new Schema<IUserDocument>(
         lastSyncStatus:      { type: String, enum: ['ok', 'error', ''], default: '' },
         lastSyncError:       { type: String, default: '' },
       },
-      // SMTP/IMAP settings for email reminders — passwords are AES-256 encrypted
+      // SMTP/IMAP settings for email reminders - passwords are AES-256 encrypted
       emailSettings: {
         smtp: {
           host:     { type: String, default: '' },
           port:     { type: Number, default: 587 },
           secure:   { type: Boolean, default: false },
           user:     { type: String, default: '' },
-          pass:     { type: String, default: '' },  // AES-256 encrypted — stripped in maskUser + toJSON
+          pass:     { type: String, default: '' },  // AES-256 encrypted - stripped in maskUser + toJSON
           fromName: { type: String, default: 'ArogyaMandiram' },
         },
         imap: {
@@ -208,7 +231,7 @@ const UserSchema = new Schema<IUserDocument>(
           port:   { type: Number, default: 993 },
           secure: { type: Boolean, default: true },
           user:   { type: String, default: '' },
-          pass:   { type: String, default: '' },  // AES-256 encrypted — stripped in maskUser + toJSON
+          pass:   { type: String, default: '' },  // AES-256 encrypted - stripped in maskUser + toJSON
         },
       },
     },

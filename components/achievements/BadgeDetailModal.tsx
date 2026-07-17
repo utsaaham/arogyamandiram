@@ -65,7 +65,7 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   });
 }
 
-/** Square 1080×1080 — for downloads, feed posts. */
+/** Square 1080×1080 - for downloads, feed posts. */
 async function renderBadgeSquarePng(badgeId: string): Promise<Blob> {
   const { img, cleanup } = await loadBadgeImage(badgeId);
   try {

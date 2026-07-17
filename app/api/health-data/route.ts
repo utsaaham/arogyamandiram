@@ -1,5 +1,5 @@
 // ============================================
-// /api/health-data — Health data sync settings + manual sync trigger
+// /api/health-data - Health data sync settings + manual sync trigger
 // ============================================
 // GET  → return current health data config (endpoint, enabled, interval, last sync)
 // POST → save config (endpoint, apiKey, enabled, syncIntervalMinutes)

@@ -1,5 +1,5 @@
 // ============================================
-// /api/scores/journal — Vitals habit journal
+// /api/scores/journal - Vitals habit journal
 // ============================================
 // POST { habits: HabitKey[], mood?: 1-5, date?: YYYY-MM-DD } → upserts the
 // day's DailyLog with the logged habits. Defaults to today.

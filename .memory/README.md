@@ -1,7 +1,7 @@
 # Memory System
 
 This is the canonical overview of the `.memory/` system for Arogyamandiram.
-Every AI tool — Claude Code, Cursor, Copilot, Gemini, Cline, Windsurf, Continue — loads this after reading `project-memory.md`.
+Every AI tool - Claude Code, Cursor, Copilot, Gemini, Cline, Windsurf, Continue - loads this after reading `project-memory.md`.
 
 ---
 
@@ -21,13 +21,13 @@ Every AI tool — Claude Code, Cursor, Copilot, Gemini, Cline, Windsurf, Continu
 ## Read Order
 
 ### First time here?
-1. `context/index.md` — project overview and file map
-2. `context/active-context.md` — current sprint and recent changes
-3. `agents/index.md` — find the right agent for your task
-4. `manager/manager.md` — understand coordination
+1. `context/index.md` - project overview and file map
+2. `context/active-context.md` - current sprint and recent changes
+3. `agents/index.md` - find the right agent for your task
+4. `manager/manager.md` - understand coordination
 
 ### Returning agent?
-1. `context/active-context.md` — check what changed since last time
+1. `context/active-context.md` - check what changed since last time
 2. Load only what your task needs (see below)
 
 ### For a coding task
@@ -67,7 +67,7 @@ See `skills/agent-naming.md` for the full rule and name seed pool.
 
 ## Staying up to date with upstream Gnanam
 
-This memory system is based on [Gnanam](https://github.com/utsaaham/gnanam) — an evolving open spec. Rules, naming conventions, and tool stubs change over time. **At most once every 2 weeks**, any agent working here should check the upstream repo and pull in scaffolding updates.
+This memory system is based on [Gnanam](https://github.com/utsaaham/gnanam) - an evolving open spec. Rules, naming conventions, and tool stubs change over time. **At most once every 2 weeks**, any agent working here should check the upstream repo and pull in scaffolding updates.
 
 ### Upstream check log
 
@@ -77,9 +77,9 @@ Agents update this table after checking the upstream repo. If the most recent ro
 |-----------------------------|-------------------------------------------|------------|---------------------------|--------|
 | 2026-04-15 | 2026-04-15 | claude-sonnet-4-6 | main | applied: added .windsurfrules, upstream check log, updated agent-naming.md |
 
-- **Last pulled** — date an agent fetched the upstream files and diffed them against this project.
-- **Last web search** — date an agent searched for recent changes, release notes, or issues in the upstream repo (a lighter check when a full pull isn't possible).
-- **Result** — `no changes`, `applied: <summary>`, or `skipped: <reason>`.
+- **Last pulled** - date an agent fetched the upstream files and diffed them against this project.
+- **Last web search** - date an agent searched for recent changes, release notes, or issues in the upstream repo (a lighter check when a full pull isn't possible).
+- **Result** - `no changes`, `applied: <summary>`, or `skipped: <reason>`.
 
 Keep the last 3–5 rows. Trim older ones.
 
@@ -93,11 +93,11 @@ Keep the last 3–5 rows. Trim older ones.
    - The 4 tool stubs at repo root (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.github/copilot-instructions.md`)
 2. Diff them against this project's copies.
 3. If the upstream structure, naming rules, or stub template has changed, apply the update here.
-4. **Preserve all populated project content.** Updates only touch scaffolding — templates, rules, meta-skills, and tool stubs. The project-specific content in `context/`, populated agents, skills, and rules stays yours.
+4. **Preserve all populated project content.** Updates only touch scaffolding - templates, rules, meta-skills, and tool stubs. The project-specific content in `context/`, populated agents, skills, and rules stays yours.
 5. Record the upstream check date in the table above.
 
 ### When to skip the check
 
 - It's been less than 2 weeks since the last check.
 - The task at hand is urgent and scaffolding drift won't affect it.
-- You don't have web access — note this and move on; the next agent can check.
+- You don't have web access - note this and move on; the next agent can check.

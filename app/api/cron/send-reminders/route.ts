@@ -1,5 +1,5 @@
 // ============================================
-// /api/cron/send-reminders — Scheduled reminder emails
+// /api/cron/send-reminders - Scheduled reminder emails
 // ============================================
 // Called by Vercel Cron regularly (every 15 minutes).
 // Dispatches reminder emails based on each user's timezone,
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
     const notifications = settings.notifications as Record<string, boolean> | undefined;
     const reminderSchedule = (settings.reminderSchedule as Record<string, unknown> | undefined) ?? {};
 
-    // Skip users without a configured timezone — no default fallback
+    // Skip users without a configured timezone - no default fallback
     const timezone = getValidTimezone(reminderSchedule.timezone as string | undefined);
     if (!timezone) continue;
 
@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
       dueReminderTypes.push('water');
     }
 
-    // Meal reminders — only if user has configured that time
+    // Meal reminders - only if user has configured that time
     if (mealTimes.breakfast && isDueInWindow(localNow.hour, localNow.minute, mealTimes.breakfast)
       && !sameLocalDate(lastSentAt.breakfast, timezone, now)) {
       dueReminderTypes.push('breakfast');
@@ -218,21 +218,21 @@ export async function POST(req: NextRequest) {
       dueReminderTypes.push('dinner');
     }
 
-    // Sleep — only if user has configured sleepTime
+    // Sleep - only if user has configured sleepTime
     const sleepTime = reminderSchedule.sleepTime as string | undefined;
     if (sleepTime && isDueInWindow(localNow.hour, localNow.minute, sleepTime)
       && !sameLocalDate(lastSentAt.sleep, timezone, now)) {
       dueReminderTypes.push('sleep');
     }
 
-    // Workout — only if user has configured workoutTime
+    // Workout - only if user has configured workoutTime
     const workoutTime = reminderSchedule.workoutTime as string | undefined;
     if (workoutTime && isDueInWindow(localNow.hour, localNow.minute, workoutTime)
       && !sameLocalDate(lastSentAt.workout, timezone, now)) {
       dueReminderTypes.push('workout');
     }
 
-    // WeighIn — only if user has configured weighInTime
+    // WeighIn - only if user has configured weighInTime
     const weighInTime = reminderSchedule.weighInTime as string | undefined;
     if (weighInTime && isDueInWindow(localNow.hour, localNow.minute, weighInTime)
       && !sameLocalDate(lastSentAt.weighIn, timezone, now)) {
@@ -281,5 +281,5 @@ export async function POST(req: NextRequest) {
   return maskedResponse({ sent, errors, usersFound: users.length, at: now.toISOString() });
 }
 
-// Vercel Cron Jobs invoke routes with GET — alias so both GET and POST work
+// Vercel Cron Jobs invoke routes with GET - alias so both GET and POST work
 export { POST as GET };

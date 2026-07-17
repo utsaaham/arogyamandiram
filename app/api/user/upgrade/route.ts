@@ -1,5 +1,5 @@
 // ============================================
-// POST /api/user/upgrade — Convert guest to full account
+// POST /api/user/upgrade - Convert guest to full account
 // ============================================
 
 import { NextRequest } from 'next/server';
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   const usernameConflict = await User.findOne({ username: usernameTrimmed });
   if (usernameConflict) return errorResponse('Username is already taken', 409);
 
-  // Apply upgrade — pre-save hook will hash the password
+  // Apply upgrade - pre-save hook will hash the password
   user.email = emailTrimmed;
   user.password = password;
   user.username = usernameTrimmed;

@@ -9,7 +9,7 @@ updated_by: codex-gpt-5
 
 ## What It Is
 
-**Arogyamandiram** is a health and wellness web app with a premium dashboard UX, AI-assisted logging, personalized plans, reminders, and habit gamification. It focuses on everyday health workflows: meals, hydration, workouts, sleep, weight, todos, and external health-data sync.
+**Arogyamandiram** is a health and wellness web app with a clean dashboard UX, AI-assisted logging, personalized plans, reminders, and habit gamification. It focuses on everyday health workflows: meals, hydration, workouts, sleep, weight, todos, and external health-data sync.
 
 ## Who It's For
 

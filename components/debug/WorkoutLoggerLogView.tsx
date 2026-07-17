@@ -60,7 +60,7 @@ export default function WorkoutLoggerLogView({
       <div className="w-full">
         <PipelineZone label="Input" open={isOpen('input')} onToggle={() => handleToggle('input')}>
           <div className="rounded border border-[#1e1e1e] bg-black/20 p-3">
-            <Step2ResponseBlock raw={requestText || '—'} isJson={false} />
+            <Step2ResponseBlock raw={requestText || '-'} isJson={false} />
           </div>
         </PipelineZone>
       </div>
@@ -81,14 +81,14 @@ export default function WorkoutLoggerLogView({
           <div>
             <p className="mb-1.5 text-[10px] font-medium uppercase tracking-widest text-zinc-500">Instructions</p>
             <div className="rounded border border-[#1e1e1e] bg-black/20 p-3">
-              <Step2ResponseBlock raw={log.instructions ?? '—'} isJson={false} />
+              <Step2ResponseBlock raw={log.instructions ?? '-'} isJson={false} />
             </div>
           </div>
           <StepDivider />
           <div>
             <p className="mb-1.5 text-[10px] font-medium uppercase tracking-widest text-zinc-500">User Message</p>
             <div className="rounded border border-[#1e1e1e] bg-black/20 p-3">
-              <Step2ResponseBlock raw={log.userMessage ?? '—'} isJson={false} />
+              <Step2ResponseBlock raw={log.userMessage ?? '-'} isJson={false} />
             </div>
           </div>
         </PipelineZone>
@@ -101,7 +101,7 @@ export default function WorkoutLoggerLogView({
           <div>
             <p className="mb-1.5 text-[10px] font-medium uppercase tracking-widest text-zinc-500">Raw Response</p>
             <div className="rounded border border-[#1e1e1e] bg-black/20 p-3">
-              <Step2ResponseBlock raw={rawResponse || '—'} isJson={true} />
+              <Step2ResponseBlock raw={rawResponse || '-'} isJson={true} />
             </div>
           </div>
           <StepDivider />
@@ -121,12 +121,12 @@ export default function WorkoutLoggerLogView({
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px]">
             <div className="flex flex-col">
               <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Model</span>
-              <span className="font-mono text-zinc-300">{meta.model ?? '—'}</span>
+              <span className="font-mono text-zinc-300">{meta.model ?? '-'}</span>
             </div>
             <div className="h-8 w-px bg-[#1e1e1e]" aria-hidden />
             <div className="flex flex-col">
               <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Latency</span>
-              <span className="font-mono text-zinc-300">{meta.latencyMs != null ? `${meta.latencyMs}ms` : '—'}</span>
+              <span className="font-mono text-zinc-300">{meta.latencyMs != null ? `${meta.latencyMs}ms` : '-'}</span>
             </div>
             <div className="h-8 w-px bg-[#1e1e1e]" aria-hidden />
             <div className="flex flex-col">
@@ -136,7 +136,7 @@ export default function WorkoutLoggerLogView({
             <div className="h-8 w-px bg-[#1e1e1e]" aria-hidden />
             <div className="flex flex-col">
               <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Timestamp</span>
-              <span className="font-mono text-zinc-300">{meta.timestamp ?? '—'}</span>
+              <span className="font-mono text-zinc-300">{meta.timestamp ?? '-'}</span>
             </div>
           </div>
         </PipelineZone>

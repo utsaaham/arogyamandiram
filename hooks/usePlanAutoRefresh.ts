@@ -16,12 +16,18 @@ export function usePlanAutoRefresh(load: Loader): void {
         void load();
       }
     };
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void load();
+      }
+    }, 60_000);
 
     window.addEventListener('focus', onFocus);
     window.addEventListener('orchestrator:log-updated', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
+      window.clearInterval(interval);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('orchestrator:log-updated', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);

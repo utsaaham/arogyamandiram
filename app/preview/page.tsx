@@ -342,7 +342,7 @@ export default function PreviewPage() {
         )}
       </main>
 
-      {/* Red panda mascot — bottom-right corner */}
+      {/* Red panda mascot - bottom-right corner */}
       <img
         src="/red-panda.png"
         alt="red panda"

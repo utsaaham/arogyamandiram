@@ -7,9 +7,12 @@ import User from '@/models/User';
 import { decrypt } from '@/lib/encryption';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { calculateIdealWeight } from '@/lib/health';
+import { normalizeGoal } from '@/lib/goals';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
 import type { UserTargets } from '@/types';
 import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
+import { COACH_TONE } from '@/lib/tone';
 
 type OpenAIUsage = {
   prompt_tokens?: number;
@@ -142,7 +145,7 @@ export function clampTargets(
   };
 }
 
-const SYSTEM_PROMPT = `You are a certified nutritionist and fitness expert for Arogyamandiram. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Generate a personalized health plan based on the user's profile. Respond ONLY with valid JSON in this exact shape (no markdown, no extra text):
+const SYSTEM_PROMPT = `You are a certified nutritionist and fitness expert for Arogyamandiram. ${COACH_TONE} Generate a personalized health plan based on the user's profile. Respond ONLY with valid JSON in this exact shape (no markdown, no extra text):
 {
   "targets": {
     "dailyCalories": number (kcal, 1200-5000),
@@ -214,11 +217,13 @@ export async function generateHealthPlanTargets(userId: string): Promise<Generat
   const weight = latestLoggedWeight ?? profile.weight ?? 70;
   const gender = profile.gender ?? 'male';
   const activityLevel = profile.activityLevel ?? 'moderate';
-  const goal = profile.goal ?? 'maintain';
+  const goal = normalizeGoal(profile.goal);
   const targetWeight = profile.targetWeight;
 
+  const weightTrend = await getWeightTrendForUser(userId);
+
   const requestedAt = new Date().toISOString();
-  const userPrompt = `User: ${profile.name ?? 'User'}, ${age} years, ${gender}, ${height} cm, ${weight} kg. Activity: ${activityLevel}. Goal: ${goal}.${targetWeight != null ? ` Target weight: ${targetWeight} kg.` : ''} Generate the health plan JSON.`;
+  const userPrompt = `User: ${profile.name ?? 'User'}, ${age} years, ${gender}, ${height} cm, ${weight} kg. Activity: ${activityLevel}. Goal: ${goal} (user-chosen).${targetWeight != null ? ` Target weight: ${targetWeight} kg.` : ''} Weight trend: ${weightTrend.trend}${weightTrend.slopeKgPerWeek != null ? ` (${weightTrend.slopeKgPerWeek} kg/week)` : ''}. Generate the health plan JSON.`;
 
   const ai = await callOpenAI(apiKey, SYSTEM_PROMPT, userPrompt);
   const result = ai.parsed;

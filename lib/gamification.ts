@@ -3,6 +3,7 @@ import DailyLog from '@/models/DailyLog';
 import User from '@/models/User';
 import { getBadgeDefinition } from '@/lib/badgeDefinitions';
 import { computeDailyXp } from '@/lib/xp';
+import { computeVitals, toDayInput } from '@/lib/scores';
 import type {
   IDailyLog,
   UserAchievements,
@@ -42,6 +43,8 @@ function createEmptyStreaks(): UserStreaks {
       weight: 0,
       steps: 0,
       waterGoal: 0,
+      protein: 0,
+      recovery: 0,
     },
     best: {
       logging: 0,
@@ -53,6 +56,8 @@ function createEmptyStreaks(): UserStreaks {
       weight: 0,
       steps: 0,
       waterGoal: 0,
+      protein: 0,
+      recovery: 0,
     },
     starts: {},
   };
@@ -68,6 +73,11 @@ function isCalorieSuccess(log: IDailyLog, targets: UserTargets): boolean {
 function isWaterSuccess(log: IDailyLog, targets: UserTargets): boolean {
   if (!targets.dailyWater || targets.dailyWater <= 0) return false;
   return log.waterIntake >= targets.dailyWater;
+}
+
+function isProteinSuccess(log: IDailyLog, targets: UserTargets): boolean {
+  if (!targets.protein || targets.protein <= 0) return false;
+  return (log.totalProtein ?? 0) >= targets.protein;
 }
 
 function isSleepSuccess(log: IDailyLog, targets: UserTargets): boolean {
@@ -94,7 +104,7 @@ function isWeightSuccess(log: IDailyLog): boolean {
   return typeof log.weight === 'number';
 }
 
-// Per-habit "logged at all" predicates — used by streak counters so any
+// Per-habit "logged at all" predicates - used by streak counters so any
 // logged activity for a habit keeps that habit's streak alive. Distinct
 // from the strict isXxxSuccess goal checks, which still gate isPerfectDay.
 function hasCaloriesLog(log: IDailyLog): boolean {
@@ -178,7 +188,7 @@ export async function calculateStreaks(
       $lte: formatISO(today, { representation: 'date' }),
     },
   })
-    .select('date totalCalories waterIntake sleep.duration sleep.bedtime sleep.wakeTime caloriesBurned workouts._id weight steps')
+    .select('date totalCalories totalProtein waterIntake sleep.duration sleep.bedtime sleep.wakeTime caloriesBurned workouts.duration workouts.caloriesBurned workouts.avgHeartRate workouts.source weight steps restingHeartRate hrvSdnnMs heartRate activeCalories')
     .sort({ date: 1 })
     .lean<IDailyLog[]>();
 
@@ -192,6 +202,23 @@ export async function calculateStreaks(
     byDate.set(log.date, log);
   }
 
+  // Recovery streak: a day succeeds when its readiness score sits at or above
+  // the mean of its own prior (≤14-day) readiness history - self-relative,
+  // like every other Vitals baseline. Needs ≥3 prior scored days.
+  const todayKey = formatISO(today, { representation: 'date' });
+  const vitalsSeries = computeVitals(logs.map(toDayInput), todayKey, daysBack + 1);
+  const recoveryOkByDate = new Map<string, boolean>();
+  vitalsSeries.trends.forEach((t, i) => {
+    if (t.readiness === null) return;
+    const prior = vitalsSeries.trends
+      .slice(Math.max(0, i - 14), i)
+      .map((x) => x.readiness)
+      .filter((v): v is number => v !== null);
+    if (prior.length < 3) return;
+    const mean = prior.reduce((a, b) => a + b, 0) / prior.length;
+    recoveryOkByDate.set(t.date, t.readiness >= mean);
+  });
+
   let currentDate = today;
   let keepLogging = true;
   let keepHealthy = true;
@@ -202,6 +229,8 @@ export async function calculateStreaks(
   let keepWeight = true;
   let keepSteps = true;
   let keepWaterGoal = true;
+  let keepProtein = true;
+  let keepRecovery = true;
 
   // Track the first calendar day included in the *current* streak run
   // for each habit so the UI can say "Streak started Feb 12".
@@ -214,17 +243,19 @@ export async function calculateStreaks(
   let startWeight: string | undefined;
   let startSteps: string | undefined;
   let startWaterGoal: string | undefined;
+  let startProtein: string | undefined;
+  let startRecovery: string | undefined;
 
-  // 24-hour grace: "today" never breaks the streak — user has until end of day.
+  // 24-hour grace: "today" never breaks the streak - user has until end of day.
   // Streak only breaks *tomorrow* if they didn't complete today (see e.g. Duolingo, Snapchat).
-  while (keepLogging || keepHealthy || keepCalories || keepWater || keepWorkout || keepSleep || keepWeight || keepSteps || keepWaterGoal) {
+  while (keepLogging || keepHealthy || keepCalories || keepWater || keepWorkout || keepSleep || keepWeight || keepSteps || keepWaterGoal || keepProtein || keepRecovery) {
     const dateKey = formatISO(currentDate, { representation: 'date' });
     const log = byDate.get(dateKey);
     const isToday = isSameDay(currentDate, today);
 
     if (!log) {
       if (isToday) {
-        // Grace: today not over yet — skip today, count streak from yesterday backward
+        // Grace: today not over yet - skip today, count streak from yesterday backward
         currentDate = subDays(currentDate, 1);
         if (currentDate < fromDate) break;
         continue;
@@ -242,6 +273,8 @@ export async function calculateStreaks(
     const activeDay = hasAnyActivity(log);
     const perfectDay = isPerfectDay(log, targets);
     const waterGoalMet = isWaterSuccess(log, targets);
+    const proteinMet = isProteinSuccess(log, targets);
+    const recoveryMet = recoveryOkByDate.get(dateKey) === true;
 
     // If today has a log but failed, still give grace (don't break until tomorrow)
     const effectiveLoggingOk = activeDay || isToday;
@@ -253,6 +286,8 @@ export async function calculateStreaks(
     const effectiveWeightOk = weightLogged || isToday;
     const effectiveStepsOk = stepsLogged || isToday;
     const effectiveWaterGoalOk = waterGoalMet || isToday;
+    const effectiveProteinOk = proteinMet || isToday;
+    const effectiveRecoveryOk = recoveryMet || isToday;
 
     if (keepLogging && activeDay) {
       streaks.current.logging += 1;
@@ -317,6 +352,20 @@ export async function calculateStreaks(
       keepWaterGoal = false;
     }
 
+    if (keepProtein && proteinMet) {
+      streaks.current.protein = (streaks.current.protein ?? 0) + 1;
+      startProtein = dateKey;
+    } else if (!effectiveProteinOk) {
+      keepProtein = false;
+    }
+
+    if (keepRecovery && recoveryMet) {
+      streaks.current.recovery = (streaks.current.recovery ?? 0) + 1;
+      startRecovery = dateKey;
+    } else if (!effectiveRecoveryOk) {
+      keepRecovery = false;
+    }
+
     currentDate = subDays(currentDate, 1);
     if (currentDate < fromDate) break;
   }
@@ -331,6 +380,8 @@ export async function calculateStreaks(
   let runWeight = 0;
   let runSteps = 0;
   let runWaterGoal = 0;
+  let runProtein = 0;
+  let runRecovery = 0;
 
   for (const log of logs) {
     const caloriesLogged = hasCaloriesLog(log);
@@ -340,6 +391,8 @@ export async function calculateStreaks(
     const weightLogged = hasWeightLog(log);
     const stepsLogged = hasStepsLog(log);
     const waterGoalMet = isWaterSuccess(log, targets);
+    const proteinMet = isProteinSuccess(log, targets);
+    const recoveryMet = recoveryOkByDate.get(log.date) === true;
 
     const activeDay = hasAnyActivity(log);
     const perfectDay = isPerfectDay(log, targets);
@@ -353,6 +406,8 @@ export async function calculateStreaks(
     runWeight = weightLogged ? runWeight + 1 : 0;
     runSteps = stepsLogged ? runSteps + 1 : 0;
     runWaterGoal = waterGoalMet ? runWaterGoal + 1 : 0;
+    runProtein = proteinMet ? runProtein + 1 : 0;
+    runRecovery = recoveryMet ? runRecovery + 1 : 0;
 
     streaks.best.logging = Math.max(streaks.best.logging, runLogging);
     streaks.best.healthy = Math.max(streaks.best.healthy, runHealthy);
@@ -363,6 +418,8 @@ export async function calculateStreaks(
     streaks.best.weight = Math.max(streaks.best.weight, runWeight);
     streaks.best.steps = Math.max(streaks.best.steps ?? 0, runSteps);
     streaks.best.waterGoal = Math.max(streaks.best.waterGoal ?? 0, runWaterGoal);
+    streaks.best.protein = Math.max(streaks.best.protein ?? 0, runProtein);
+    streaks.best.recovery = Math.max(streaks.best.recovery ?? 0, runRecovery);
   }
 
   // Attach optional start dates only when the streak is non-zero.
@@ -376,6 +433,8 @@ export async function calculateStreaks(
     weight: streaks.current.weight > 0 ? startWeight : undefined,
     steps: (streaks.current.steps ?? 0) > 0 ? startSteps : undefined,
     waterGoal: (streaks.current.waterGoal ?? 0) > 0 ? startWaterGoal : undefined,
+    protein: (streaks.current.protein ?? 0) > 0 ? startProtein : undefined,
+    recovery: (streaks.current.recovery ?? 0) > 0 ? startRecovery : undefined,
   };
 
   return streaks;
@@ -730,6 +789,45 @@ export async function calculateAchievements(
         const first = badgeFirstEarned[badgeId];
         awardBadge(badgeId, existingBadgeIds, newBadges, nowIso, first);
       }
+    }
+  }
+
+  // ----- Protein / recovery streaks -----
+  for (const t of [7, 14, 30]) {
+    if ((streaks.current.protein ?? 0) >= t) {
+      awardBadge(`streak_protein_${t}`, existingBadgeIds, newBadges, nowIso);
+    }
+  }
+  for (const t of [7, 14]) {
+    if ((streaks.current.recovery ?? 0) >= t) {
+      awardBadge(`streak_recovery_${t}`, existingBadgeIds, newBadges, nowIso);
+    }
+  }
+
+  // ----- Best week ever: current trailing 7 days beat every earlier 7-day window -----
+  {
+    const workoutsByDate = new Map<string, number>();
+    for (const log of logsList) {
+      workoutsByDate.set(log.date, (log.workouts?.length ?? 0));
+    }
+    const countWindow = (endDate: Date): number => {
+      let count = 0;
+      for (let offset = 0; offset < 7; offset++) {
+        const key = formatISO(subDays(endDate, offset), { representation: 'date' });
+        count += (workoutsByDate.get(key) ?? 0) > 0 ? 1 : 0;
+      }
+      return count;
+    };
+    const todayDate = startOfDay(todayOverride ? parseISO(todayOverride) : new Date());
+    const currentWeek = countWindow(todayDate);
+    let bestPrior = 0;
+    for (const dateKey of dateKeys) {
+      const end = parseISO(dateKey);
+      if (end >= subDays(todayDate, 6)) continue; // windows overlapping the current week don't count
+      bestPrior = Math.max(bestPrior, countWindow(end));
+    }
+    if (currentWeek >= 4 && currentWeek > bestPrior) {
+      awardBadge('milestone_best_week', existingBadgeIds, newBadges, nowIso);
     }
   }
 

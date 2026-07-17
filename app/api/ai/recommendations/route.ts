@@ -1,8 +1,8 @@
 // ============================================
-// /api/ai/recommendations - AI-Powered Suggestions
+// /api/ai/recommendations - Personalized suggestions
 // ============================================
-// Uses OpenAI GPT for personalized recommendations.
-// Requires user's OpenAI API key or server default.
+// Uses OpenAI GPT for recommendations based on the user's own data.
+// Requires the user's OpenAI API key or the server default.
 
 import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
@@ -13,8 +13,12 @@ import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday, getYesterday, getAgeFromDateOfBirth, toLocalDateString } from '@/lib/utils';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
+import { normalizeGoal } from '@/lib/goals';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
+import { deriveTargetGap } from '@/app/api/ai/daily-plan/shared';
 import { computeVitals, toDayInput } from '@/lib/scores';
 import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
+import { COACH_TONE } from '@/lib/tone';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +73,7 @@ async function callOpenAI(
     }
 
     if (status >= 500) {
-      throw new Error('AI service is temporarily unavailable. Please try again in a few minutes.');
+      throw new Error('The AI service is taking a short break. Please try again in a few minutes.');
     }
 
     throw new Error(rawMessage || `OpenAI API error: ${status}`);
@@ -100,7 +104,7 @@ export async function POST(req: NextRequest) {
     const apiKey = await resolveOpenAIKey(userId);
     if (!apiKey) {
       return errorResponse(
-        'OpenAI API key required. Add your key in Settings to enable AI features.',
+        'OpenAI API key required. Add your key in Settings to turn on AI features.',
         403
       );
     }
@@ -116,6 +120,7 @@ export async function POST(req: NextRequest) {
       : (profile.age ?? 0);
     const latestLoggedWeight = await getLatestLoggedWeight(userId);
     const currentWeight = latestLoggedWeight ?? profile.weight;
+    const weightTrend = await getWeightTrendForUser(userId);
 
     // Get recent logs for context (meal, workout, sleep use last 7 days; insights uses period-specific range)
     const recentLogs =
@@ -126,8 +131,9 @@ export async function POST(req: NextRequest) {
     // Privacy: never send name or email - only anonymized health metrics.
     const buildProfileContext = (recommendationType: string) => {
       const base = [
-        `User profile (anonymized): age ${age}y, gender ${profile.gender ?? '—'}, height ${profile.height ?? '—'}cm, current weight ${currentWeight ?? '—'}kg.`,
-        `Activity ${profile.activityLevel ?? '—'}, goal ${profile.goal ?? '—'}, target weight ${profile.targetWeight ?? '—'}kg.`,
+        `User profile (anonymized): age ${age}y, gender ${profile.gender ?? '-'}, height ${profile.height ?? '-'}cm, current weight ${currentWeight ?? '-'}kg.`,
+        `Activity ${profile.activityLevel ?? '-'}, goal ${profile.goal ? normalizeGoal(profile.goal) : '-'}, target weight ${profile.targetWeight ?? '-'}kg.`,
+        `Weight signals (read-only): ${deriveTargetGap(currentWeight, profile.targetWeight)} vs target; trend ${weightTrend.trend}${weightTrend.slopeKgPerWeek != null ? ` (${weightTrend.slopeKgPerWeek} kg/week)` : ''}. The goal is the user's choice - if the trend conflicts with it, mention the fix, never suggest changing the goal. Never claim spot reduction.`,
       ];
 
       if (recommendationType === 'meal') {
@@ -135,16 +141,16 @@ export async function POST(req: NextRequest) {
           `Nutrition targets: ${targets.dailyCalories} kcal, protein ${targets.protein}g, carbs ${targets.carbs}g, fat ${targets.fat}g, water ${targets.dailyWater}ml.`
         );
       } else if (recommendationType === 'sleep') {
-        base.push(`Sleep target: ${targets.sleepHours ?? '—'} hours.`);
+        base.push(`Sleep target: ${targets.sleepHours ?? '-'} hours.`);
       } else {
         base.push(
           `Daily targets: ${targets.dailyCalories} kcal, protein ${targets.protein}g, carbs ${targets.carbs}g, fat ${targets.fat}g, water ${targets.dailyWater}ml.`
         );
         base.push(
-          `Extended targets: ideal weight ${targets.idealWeight ?? '—'}kg, workout ${targets.dailyWorkoutMinutes ?? '—'} min/day, burn ${targets.dailyCalorieBurn ?? '—'} kcal/day, sleep ${targets.sleepHours ?? '—'}h, steps ${(targets as { dailySteps?: number }).dailySteps ?? 8000}/day.`
+          `Extended targets: ideal weight ${targets.idealWeight ?? '-'}kg, workout ${targets.dailyWorkoutMinutes ?? '-'} min/day, burn ${targets.dailyCalorieBurn ?? '-'} kcal/day, sleep ${targets.sleepHours ?? '-'}h, steps ${(targets as { dailySteps?: number }).dailySteps ?? 8000}/day.`
         );
         base.push(
-          `Body composition: type ${profile.bodyType ?? '—'}, body fat ${profile.bodyFat != null ? profile.bodyFat + '%' : '—'}, fitness level ${profile.fitnessLevelDerived ?? profile.fitnessLevelUser ?? '—'}, focus areas: ${profile.fatFocusAreas?.join(', ') ?? '—'}.`
+          `Body composition: type ${profile.bodyType ?? '-'}, body fat ${profile.bodyFat != null ? profile.bodyFat + '%' : '-'}, fitness level ${profile.fitnessLevelDerived ?? profile.fitnessLevelUser ?? '-'}, focus areas: ${profile.fatFocusAreas?.join(', ') ?? '-'}.`
         );
       }
 
@@ -421,7 +427,7 @@ export async function POST(req: NextRequest) {
 
     switch (type) {
       case 'meal': {
-        const systemPrompt = `You are a friendly nutritionist for Arogyamandiram. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Suggest meals that fit the user's dietary needs. Prioritize filling yesterday's protein and calorie gaps when recent data is available. Always respond with JSON: { "suggestions": [{ "name": string, "description": string, "calories": number, "protein": number, "carbs": number, "fat": number, "mealType": "breakfast"|"lunch"|"dinner"|"snack", "ingredients": string[], "isVegetarian": boolean }] }. Include 4-6 suggestions and tailor them to the user's preferences and goals.`;
+        const systemPrompt = `Write like a practical nutrition coach for Arogyamandiram. ${COACH_TONE} Suggest meals that fit the user's dietary needs. If recent data shows protein or calorie gaps, use that as the starting point. Always respond with JSON: { "suggestions": [{ "name": string, "description": string, "calories": number, "protein": number, "carbs": number, "fat": number, "mealType": "breakfast"|"lunch"|"dinner"|"snack", "ingredients": string[], "isVegetarian": boolean }] }. Include 4-6 suggestions and keep them tied to the user's preferences and goals.`;
         const userPrompt = `${buildProfileContext('meal')}\n${recentContext}\nToday's date: ${getToday()}\n${context.mealType ? `Suggest for: ${context.mealType}` : 'Suggest meals for the full day'}\n${context.preferences ? `Preferences: ${context.preferences}` : ''}`;
         const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
         result = ai.parsed;
@@ -429,7 +435,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'workout': {
-        const systemPrompt = `You are a friendly fitness trainer for Arogyamandiram. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Create a workout plan based on user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided.
+        const systemPrompt = `Write like a practical fitness coach for Arogyamandiram. ${COACH_TONE} Create a workout plan based on the user's goal, fitness level, and their recommended daily workout duration and calorie burn goal when provided.
 Always respond with JSON:
 { "plan": { "name": string, "description": string, "progressionTip": string, "exercises": [{ "name": string, "sets": number, "reps": string, "durationMinutes": number, "restSeconds": number, "intensity": "low"|"medium"|"high", "category": "cardio"|"strength"|"flexibility"|"sports" }], "estimatedCalories": number, "durationMinutes": number } }.
 Rules:
@@ -537,7 +543,7 @@ Rules:
                 `Tracking data for selected period (${startDate} to ${endDate})`
               );
         const periodLabel = periodLabels[period] ?? 'weekly';
-        const systemPrompt = `You are a sharp but friendly health analyst for Arogyamandiram. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Analyze the user's tracking data and provide actionable insights.
+        const systemPrompt = `Write like a clear, grounded health coach for Arogyamandiram. ${COACH_TONE} Analyze the user's tracking data and provide actionable insights.
 Sleep quality is on a 1-5 scale (1=poor, 5=excellent).
 Always respond with JSON:
 { "insights": [{ "title": string, "description": string, "type": "success"|"warning"|"info"|"tip", "metric": string, "value": string, "priority": "high"|"medium"|"low" }] }.
@@ -579,7 +585,7 @@ Rules:
       }
 
       case 'sleep': {
-        const systemPrompt = `You are a friendly sleep coach for Arogyamandiram. Write every user-facing sentence like a warm human coach: plain everyday words, encouraging, a little playful when it fits. Never use em dashes. Analyze the user's sleep data (duration, quality, consistency of bed/wake times) and their target sleep hours. Always respond with JSON: { "summary": string, "tips": [{ "title": string, "description": string }] }. Provide 4-6 personalized tips. Include advice on: bedtime routine, caffeine cutoff, screen time, consistency, sleep environment, or stress if relevant. Be encouraging. If they have little or no sleep data, give general evidence-based sleep hygiene tips.`;
+        const systemPrompt = `Write like a practical sleep coach for Arogyamandiram. ${COACH_TONE} Analyze the user's sleep data (duration, quality, consistency of bed and wake times) and their target sleep hours. Always respond with JSON: { "summary": string, "tips": [{ "title": string, "description": string }] }. Provide 4-6 personalized tips. Include advice on bedtime routine, caffeine cutoff, screen time, consistency, sleep environment, or stress if relevant. Be encouraging. If they have little or no sleep data, give general evidence-based sleep hygiene tips.`;
         const userPrompt = `${buildProfileContext('sleep')}\n${recentContext}\nProvide personalized sleep analysis and actionable tips.`;
         const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
         result = ai.parsed;

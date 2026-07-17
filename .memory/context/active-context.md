@@ -1,8 +1,8 @@
 ---
 name: active-context
 type: context
-last_updated: 2026-07-01
-updated_by: claude-fable-5
+last_updated: 2026-07-14
+updated_by: codex-gpt-5
 staleness_days: 3
 ---
 
@@ -12,44 +12,78 @@ staleness_days: 3
 
 `feature/dev-01-minmial-changes-sprint-apr-22-26`
 
-## What's Being Worked On (as of 2026-07-01)
+## What's Being Worked On (as of 2026-07-14)
 
-**Vitals feature (WHOOP-style daily scores)** — plan in `docs/arogyam-scores-plan.md` (renamed from `whoop-life-feature-analysis.md`). Built in one pass across both repos:
+**iOS web-parity completion + Apple Health design pass (2026-07-14, claude-fable-5)** - Closed the remaining web→iOS gaps on top of the earlier parity rebuild: Ciel keeps the web's 3 segments (Overview/Food/Workout) with the **weekly recap embedded as one card at the top of Overview** (GET `/api/coach/weekly-summary`, refresh via `?refresh=1`: adherence bar, weight delta, strongest lift, protein days, next-week line) — user explicitly corrected an initial 4th-tab version because web has no Weekly tab. Overview order mirrors web DOM: banner → weekly recap → priority card (CoachStore now also fetches `/api/intelligence`) → readiness hero → outlook. iOS VitalsView sections rebuilt to match the web page composition exactly: Overview = anomalies → readiness hero (guidance chip+reason inside) → priority → body summary → Health/Goal score pair → stacked strain/sleep/stress compact cards with component notes + HR-zone chips; Recovery = detailed sleep/stress + HRV/RHR 14-day charts; Performance = detailed strain + strain/VO₂ 14-day charts; Insights = triggers panel (triggers+compound, "N patterns found") → this-week timeline → consistency → habit insights. Blood Oxygen kept as an extra Trends metric (web doesn't render it yet). Also plan feedback parity (workout difficulty too_easy/just_right/too_hard + skip reason chips, per-meal thumbs-down → `dislikedFoods`, all via POST `/api/ai/daily-plan/feedback`). Settings gained the web Food Preferences card (dietaryPreference ×7, allergies tag input, favoriteCuisines chips incl. custom preservation, cookingSkill segmented, maxCookingMinutes slider 5–180 → `settings.foodPreferences`) and editable water quick-adds (`settings.customizations.water.quickAmountsMl`). Home gained Fiber (25g) macro bar and a Recent Badges strip. **Design system**: `Theme.swift` moved from hardcoded hex to dynamic system colors (grouped backgrounds, label hierarchy, systemRed/Mint/etc.), forced `.preferredColorScheme(.light)` removed → full dark-mode support; fonts run through `UIFontMetrics` for Dynamic Type; dead `glassCard(tint:)` param now renders a 7% wash; Vitals section picker unified with the Ciel/Checklist wash-pill style; Ciel generate CTA gradient and Home XP/avatar gradients flattened to solid fills; tab-bar glass tint made adaptive. Kiki mascot and chat persona intentionally untouched. Verified with three incremental `xcodebuild` simulator builds (all green). Runtime verification against a seeded dev DB still pending (as before).
+
+**iOS Apple Health UX + web feature parity (2026-07-14, codex-gpt-5)** - Rebuilt native Vitals around the web app's current intelligence contract: iOS now fetches `/api/scores` and `/api/intelligence` together and exposes the same six sections (Overview, Recovery, Performance, Insights, Predictions, Trends), explainable score sheets, day-over-day/baseline/confidence context, anomalies, goal and health scores, best-next-action, consistency, correlations, timeline, predictions, HR zones, and the full trend set. Settings now owns the same five-value health goal selector as web and saves through `PUT /api/user`, recalculating targets. Ciel gained the target-weight celebration/suggested-goal flow and respects server-stamped workout order/slot fields. Blood oxygen now flows from HealthKit through the sync payload/DailyLog/score trends into the iOS trend picker. Bottom navigation uses readable Apple-style Summary / Vitals / Ciel / Browse labels with selection accessibility. Existing light grouped surfaces and system-color design tokens remain the shared native visual language. Verified with `npx tsc --noEmit` and an iOS 26.5 simulator `xcodebuild` for arm64 and x86_64.
+
+**Apple Watch workout deduplication (2026-07-14, codex-gpt-5)** - Fixed the iOS hourly sync posting each HealthKit workout twice: the snapshot already reconciles device workouts into `DailyLog`, so `AutoSyncService` no longer appends the same entries through `/api/workouts`. Workout HealthKit queries now require the workout to start inside the requested calendar day and dedupe repeated UUID/session windows. The server persists HealthKit identity/time fields, dedupes snapshot entries, and makes legacy device posts idempotent for older iOS builds. Existing duplicated device entries are removed on the next snapshot reconciliation; manual workouts remain untouched. Verified with `npx tsc --noEmit` and an iOS simulator `xcodebuild`.
+
+**Ciel food customization + recipes (2026-07-14, codex-gpt-5)** - Settings → Customizations now stores an expanded dietary choice (`no_preference|vegetarian|non_vegetarian|eggetarian|vegan|pescatarian|flexitarian`), multiple favorite cuisines, allergies, cooking comfort, and maximum cooking minutes. Interactive and nightly food-plan generation both consume these settings. Meal suggestions now persist ingredients, numbered steps, prep time, and cook time; web and iOS Food plan cards reveal the recipe. User-facing Coach navigation/page copy is renamed to **Ciel** on web and iOS while `/coach` routes and internal model names remain stable. README includes the Tensura inspiration credit. Verified with `npx tsc --noEmit`, `npm run build`, and an iOS simulator `xcodebuild`.
+
+**Three-workstream build (plan: `~/.curo-app/plans/glistening-whistling-quokka.md`) - web side COMPLETE (2026-07-13, claude-fable-5).** tsc + `next build` + iOS simulator build all green. Runtime verification against a seeded dev DB still pending; iOS parity (C3) is the remaining workstream.
+
+- **A1 Goal ownership**: `Goal` type is now the 5-value enum (`lose_fat|build_muscle|recomp|improve_fitness|maintain`); new `lib/goals.ts` (`normalizeGoal`, `isAcceptedGoalInput`, `goalCalorieAdjustment` with dynamic recomp from bodyFat, `goalToLegacyDirection`, `GOAL_OPTIONS`). All auto-writes of `profile.goal` removed (`lib/goalSync.ts` DELETED; weight POST + user PUT/GET no longer derive it); PUT `/api/user` accepts goal (normalized, validated) and recomputes targets with stored-profile fallback so a goal-only change recalculates. GET emits legacy `profile.goalDirection` alias for old iOS builds. User schema enum keeps legacy strings. Settings: Goal card moved to Body Composition tab (clickable, per-card Save); onboarding has 5 options. `lib/health.ts` + `mealIdeasService.computeMealTargets` share `goalCalorieAdjustment`.
+- **A2 signals in prompts**: `fatFocusAreas` now reaches prompts (workout profileForPrompt, overview, recommendations, cron) with no-spot-reduction rules + good/bad examples; new `lib/weightTrend.ts` (least-squares, ±0.2 kg/wk, ≥3 pts) + `deriveTargetGap` in daily-plan `shared.ts`; goal+targetGap+weightTrend fed to workout/outlook/food-logger/recommendations/cron/aiHealthPlan; coach flags goal-vs-trend conflicts, never suggests changing the goal.
+- **A3 ordering**: `ExerciseSchema` gained `order` + `slot`(compound/accessory); `stampOrderAndPhase()` in shared.ts (phase-guaranteed, warmup→compound→accessory→core→cardio→cooldown, tag-based with name fallback) runs at the end of `normalizeWorkoutPlan`; cron now routes workoutPlan through `normalizeWorkoutPlan` (bypass fixed); WorkoutTab renders a numbered do-in-order checklist (badge filled when logged, next highlighted).
+- **A4 progression**: new `lib/adherence.ts` (7-day planned-vs-logged, planExerciseName exact + fuzzy fallback, warmup/cooldown excluded; ≥90 progress / 60–89 hold / <60 deload / no history hold); workout route window widened 2→7 days; bucket feeds readiness signals + a progression policy block in the system prompt.
+- **A5 nudge**: `settings.nudges.targetReachedDismissedForTargetWeight` (schema + PUT branch + type); `GoalReachedBanner` on Coach Overview (lose_fat + weight ≤ target, suggest Recomp/Build Muscle, dismissal keyed to targetWeight). No BMI guard by explicit user decision.
+- **A6 Weekly tab** (user-approved name "Weekly"): `models/WeeklySummary.ts` (cached userId+weekEnd), `GET /api/coach/weekly-summary` (rolling 7d ending yesterday; adherence reuse, weight delta, strongest-lift delta from `workouts.weight`, protein days; AI next-week line with deterministic fallback; `?refresh=1`), 4th Coach tab `WeeklyTab.tsx`.
+- **B (Vitals Intelligence, scope frozen)**: new `lib/intelligence/` layer - `attribution.ts` (exact decomposition; ScoreComponent now carries `weight`; contributions sum to score - unit-verified), `features.ts` (per-day normalized rows + consistency; compute-on-read, no cache collection yet), `correlations.ts` (all-feature binarized insights, ranked triggers by effect size, fixed compound templates, weekday/weekend feature; guardrails ≥3/side + Δ≥5 - noise-silence unit-verified), `goalScore.ts` (per-goal weighted behavior composite), `priority.ts` (one action with the user's actual gap number), `predictions.ts` (goal ETA/confidence/burnout/recovery forecast - arithmetic unit-verified, honestly gated), `healthScore.ts` (30d capstone composite + monthly delta), `coachMemory.ts` + `models/CoachMemory.ts` (patterns persist after 2 confirmations, decay after 14d unconfirmed; injected into workout/outlook/weekly prompts as `knownPatterns`). `computeVitals` now returns `attribution`, `timeline` (day-over-day biggest reasons), `anomalies` (|z|>2 callouts), extended trends (respiratory/wristTemp/mood). New `GET /api/intelligence` ties it together (+ cached one-sentence bodySummary on DailyPlan). `/vitals` rebuilt: six-section tab bar synced to `?tab=` (Overview/Recovery/Performance/Insights/Predictions/Trends), tap-to-explain `ScoreExplainModal`, What-Changed arrows, baseline phrasing, confidence chips, numeric stress index, `AiPeriodInsights` (first UI for the orphaned insights endpoint), Health/Goal Score cards, PriorityCard (also on Coach Overview). Gamification gained protein + recovery streaks and best-week badge.
+- **C1 tone**: `FLIRTY_OPENERS` replaced with `ACTION_OPENERS` (one per type, no gendered variants; `getReminderTemplate` gender param inert); new `lib/tone.ts` `COACH_TONE` imported by all 8 AI prompt sites; food-logger Kiki persona rewritten. iOS `NotificationService.swift` Copy rewritten action-first (audience param inert).
+- **C2 iOS bug fixed**: `AppShell` owns `morePath: NavigationPath`, resets it whenever More is selected; `MoreView` uses `NavigationLink(value:)` + `navigationDestination` over a `MoreDestination` enum.
+- **C3 (remaining)**: iOS parity - 5-value goal selector, ordered checklist in CoachView, target-reached banner, VitalsView six-section IA + new intelligence payloads (VitalsModels extensions), SpO₂ sync payload + `lib/healthDataSync.ts` mapping.
+
+**WHOOP-style Daily Outlook + nav restructure (2026-07-02, claude-fable-5)** - Coach Overview rebuilt as a WHOOP-style briefing on both apps; based on web research of WHOOP's Daily Outlook / Recovery / Strain / Sleep Coach:
+- **Backend**: `/api/ai/daily-plan/overview` rewritten. POST now feeds the AI the full picture: computed Vitals (`computeVitals` over 45d - readiness/strain/sleep/stress + drivers + guidance band + habit insights + 14d trends), last 7 days of compact logs, today-so-far, targets, profile, and today's generated food/workout plans. Returns/stores a structured `outlook` on DailyPlan (headline, recoverySummary, today{effort=guidance.band, note, activities, bestWindow}, focus[≤3], watchOuts, tonight{sleepNeedHours, bedtimeWindow, note}); also mirrors headline into `topInsight`, `$unset`s legacy `projections`. GET returns `{outlook, status, generatedAt}`. `normalizeOutlook` + `OutlookData` in `daily-plan/shared.ts`; `outlook` added to DailyPlan model + `DailyPlanData` type. Old 7-projection generation is gone; nightly cron untouched (outlook is generated on demand via the button)
+- **Web**: `coach/OverviewTab.tsx` rebuilt - readiness dial hero (ProgressRing, green ≥67 / amber ≥40 / rose bands, matching /vitals conventions), guidance chip, strain/sleep/stress mini dials from `/api/scores` (live even without outlook), Daily Outlook narrative card with Today/activities chips, watch-outs (amber), focus cards, Tonight (indigo) + regenerate. Health Blueprint grid + projections UI removed
+- **iOS**: CoachView overview segment rebuilt the same way (reuses `VitalsModels`, `ProgressRing`, `Theme.scoreColor/guidanceColor/stressColor`); CoachStore now also fetches `/api/scores`; outlook models added (`CoachOutlook` etc.)
+- **Nav restructure (user-approved)**: iOS tab bar is now Home, Vitals("Stats"), Coach, More (+ Kiki) - Checklist removed from the bar and added as the first card in MoreView (`AppTab.checklist` case deleted). Web mobile bottom bar is now Home, Vitals("Stats" label), Coach, Water + More; Checklist moved into the more sheet. Desktop sidebar unchanged
+- Both builds verified (tsc + next build; xcodebuild simulator)
+
+**Coach page - AI daily plan gets its own home (2026-07-02, claude-fable-5)** - user-approved name: "Coach". The AI daily-plan sections (Overview / Food / Workout, backed by `/api/ai/daily-plan/*`) moved out of the Checklist page into a dedicated Coach page on both apps; backend untouched:
+- **Web**: new `app/(dashboard)/coach/page.tsx` (tabs Overview/Food/Workout, AI-disabled empty state linking to Settings); `OverviewTab/FoodTab/WorkoutTab` moved from `todays-plan/` to `coach/`; `usePlanAutoRefresh` moved to `hooks/`; `todays-plan/page.tsx` now only To-dos + Care (aiEnabled gating no longer needed there). Nav: Coach (Sparkles icon) added to Sidebar after Home; in MobileNav bottom bar Coach replaced Water (Water stays in the more sheet). tsc + `next build` verified
+- **iOS**: new `Features/Coach/CoachView.swift` (plan models + CoachStore + gold-tinted segment picker; copy says "your coach" instead of Kiki); `ChecklistView.swift` trimmed to To-dos + Care only; `AppTab.coach` pane added in AppShell and FloatingTabBar (sparkles icon, gold tint, 5 tabs + Kiki now). xcodebuild simulator build verified
+
+## Previous work (as of 2026-07-01)
+
+**Vitals feature (WHOOP-style daily scores)** - plan in `docs/arogyam-scores-plan.md` (renamed from `whoop-life-feature-analysis.md`). Built in one pass across both repos:
 - **iOS** (`../ArogyaM-iOS-v1`): HealthKit now also reads HRV SDNN, resting HR, respiratory rate, sleeping wrist temperature, VO2 max; payload gained `heart.restingBpm`/`heart.hrvSdnnMs`, optional `vitals` block, per-workout `avgHeartRate`; build verified
 - **Sync + schema**: `DailyLog` gained `restingHeartRate`, `hrvSdnnMs`, `respiratoryRate`, `wristTempC`, `vo2Max`, `habits` (HabitKey[]), `mood`, sleep stage hours, workout `avgHeartRate`; `lib/healthDataSync.ts` maps all of it
-- **Score engine**: `lib/scores/` — pure functions computing Readiness / Strain (+HR zones) / Sleep / Stress vs. 14-day personal baselines, Push/Maintain/Recover/Rest guidance, habit-correlation insights; weights renormalize when signals are missing
+- **Score engine**: `lib/scores/` - pure functions computing Readiness / Strain (+HR zones) / Sleep / Stress vs. 14-day personal baselines, Push/Maintain/Recover/Rest guidance, habit-correlation insights; weights renormalize when signals are missing
 - **API**: `GET /api/scores`, `POST /api/scores/journal`; client methods `api.getScores()` / `api.logScoresJournal()`
-- **Page**: `/vitals` (nav in Sidebar + MobileNav; Water moved to mobile "more" sheet) — readiness hero ring, guidance band, score grid, habit journal modal, trends, insights, non-diagnostic disclaimer
+- **Page**: `/vitals` (nav in Sidebar + MobileNav; Water moved to mobile "more" sheet) - readiness hero ring, guidance band, score grid, habit journal modal, trends, insights, non-diagnostic disclaimer
 - **AI wiring**: `/api/ai/recommendations` context includes rhr/hrv/habits/mood rows + today's computed Vitals summary
 - Later phases: Wellness Age, BP log, labs, native iOS scores
 
-**UX pass (2026-07-01, claude-fable-5)** — habits moved to Food, checklist cadences, humanized copy:
+**UX pass (2026-07-01, claude-fable-5)** - habits moved to Food, checklist cadences, humanized copy:
 - **Vitals icon**: new custom `components/ui/VitalsIcon.tsx` (heart + contained pulse, lucide-compatible props) used in Sidebar, MobileNav, and the /vitals header; `HeartPulse` removed there
-- **Habits relocated**: the habit journal (chips + mood) moved off /vitals into `components/food/HabitsCard.tsx` on /food (right column, replacing the old "Logged Meals" panel — meals remain under the left "Logged" tab). Card also shows auto-tracked rows (water / sleep / meals / movement) from `useDailyLog` + `getTargetsForUser`; movement combines watch `activeCalories` with non-device workout calories. /vitals now shows today's habits read-only with a link to /food; same `POST /api/scores/journal` API
+- **Habits relocated**: the habit journal (chips + mood) moved off /vitals into `components/food/HabitsCard.tsx` on /food (right column, replacing the old "Logged Meals" panel - meals remain under the left "Logged" tab). Card also shows auto-tracked rows (water / sleep / meals / movement) from `useDailyLog` + `getTargetsForUser`; movement combines watch `activeCalories` with non-device workout calories. /vitals now shows today's habits read-only with a link to /food; same `POST /api/scores/journal` API
 - **Strain fix**: `lib/scores/strain.ts` active-energy component now uses watch activeCalories + hand-logged (source !== 'device') workout calories, baseline computed on the combined series; `DayInput.workouts[].source` added
 - **Checklist cadences**: care-category todo templates gained `cadence` (weekly/biweekly/monthly/quarterly/yearly; `lib/careCadence.ts`, User schema + templates API updated). `GET /api/todos` returns `lastDone` per care item (scans recent DailyLog completions). `TodosTab` is cycle-aware for Care (due/overdue/done states, amber "you forgot" nudge banners) and daily to-dos support a time-of-day with past-time nudges; settings TodoForm gained cadence picker + time input. Standalone /todos page (unlinked) filters care items out
 - **Copy pass**: removed em dashes from user-visible strings app-wide and softened "AI"-flavored phrasing (tour, landing, toasts, share text, metadata)
 
-**UX pass round 2 (2026-07-01, claude-fable-5)** — settings checklist split, Safari save fix, backend tone:
+**UX pass round 2 (2026-07-01, claude-fable-5)** - settings checklist split, Safari save fix, backend tone:
 - **Settings Checklist tab** now has To-dos / Care sub-tabs (`TodosSettingsTab` `section` state); Care add-form is fixed to category care with the cadence picker (no category grid), To-dos form has the category grid minus care plus the time input. `TodoForm` takes a `mode` prop
 - **Safari save bug fixed**: `apiFetch` now reads response as text and JSON.parses defensively (Safari's `res.json()` threw "The string did not match the expected pattern." on odd bodies and the raw message leaked into toasts); network errors return friendly copy instead of `err.message`. `toTimeInputValue()` in settings normalizes legacy freetext times to strict HH:mm for the time input
 - **Food todo edits re-parse nutrition**: `handleSaveEdit` re-runs `api.logFoodText` when a food template's title/note changed and sends fresh `baseItems`; templates PUT accepts `baseItems`. Verified end-to-end against the running dev server (port 30000) with a curl session
 - **Backend tone pass**: `lib/scores/guidance.ts` reasons rewritten warm/no-em-dash; AI system prompts (recommendations ×4, health-check, daily-plan overview/food/workout, aiHealthPlan, mealIdeasService) now carry a "write like a warm human coach, never use em dashes" rule and dash-free examples; orchestrator confirm summaries and checklist API error messages humanized
 - Note: a test user `claude-test-todo@example.com` was created in the dev DB for API verification
 
-**iOS nav restructure + new native screens (2026-07-01, claude-fable-5)** — the user's "mobile" nav request was about the iOS app (`../ArogyaM-iOS-v1`); built natively with existing web APIs only (no backend changes), build verified:
-- **Tab bar**: `AppShell.swift`/`FloatingTabBar.swift` — water tab replaced by checklist (`checklist` SF symbol, purple); tabs now Home, Vitals, Checklist, More
+**iOS nav restructure + new native screens (2026-07-01, claude-fable-5)** - the user's "mobile" nav request was about the iOS app (`../ArogyaM-iOS-v1`); built natively with existing web APIs only (no backend changes), build verified:
+- **Tab bar**: `AppShell.swift`/`FloatingTabBar.swift` - water tab replaced by checklist (`checklist` SF symbol, purple); tabs now Home, Vitals, Checklist, More
 - **New `Features/Checklist/ChecklistView.swift`**: segmented To-dos / Care / Overview / Food / Workout. To-dos+Care use `GET/POST /api/todos` (optimistic toggle; care cadence status mirrors `lib/careCadence.ts`); Overview/Food/Workout render the AI daily plan read-only via `/api/ai/daily-plan/{overview,food,workout}` with "Kiki writes one overnight" empty states
 - **New screens** (all styled like WaterView, store-per-view pattern, Swift Charts): `Sleep/SleepView` (log bedtime/wake/quality → POST /api/sleep, 14-day bars), `Workout/WorkoutView` (log via POST /api/workouts, strength fields conditional, 7-day bars), `Weight/WeightView` (POST /api/weight, 90-day line + goal rule), `Achievements/AchievementsView` (level ring, streak grid, badges from /api/achievements), `Project/ProjectView` (static GitHub card), `Settings/SettingsView` (profile/targets read-only + Reminders link + server URL)
 - **MoreView order**: Sleep, Water, Food, Workout, Weight, Achievements, Health Sync, Project, Settings, Log Out (Reminders now lives inside Settings)
 
-**Mobile web nav restructure (2026-07-01, claude-fable-5)** — per user's requested mobile layout (web app):
+**Mobile web nav restructure (2026-07-01, claude-fable-5)** - per user's requested mobile layout (web app):
 - Bottom bar is 5 slots: Home, Vitals, Checklist (`/todays-plan`), Water, More (user later asked to add Water back)
 - **Bottom tabs** (`components/layout/MobileNav.tsx`): Home, Vitals, Checklist (`/todays-plan`), More. Sleep/Food/Water moved out of the bottom bar
 - **More sheet + `/more` page** now share the same list/order: Sleep, Water, Food, Workout, Weight, Achievements, Health Sync (`/settings?tab=health-data`), Project, Settings, Sign Out. `/more` page's Checklist card and hide-sleep-on-mobile filter removed; new `more-card-water/food/healthsync` themes in `app/globals.css`
 - Desktop Sidebar intentionally untouched
 
-**UX pass round 3 (2026-07-01, claude-fable-5)** — food photo logging, Kiki chat composer, email reminders master switch:
+**UX pass round 3 (2026-07-01, claude-fable-5)** - food photo logging, Kiki chat composer, email reminders master switch:
 - **Food photos → nutrition**: `/api/ai/food-logger` now accepts `imageBase64`/`imageMimeType`; Step 1 uses a vision parse (`IMAGE_PARSE_INSTRUCTIONS`, gpt-4o multimodal input) when a photo is attached, Step 2 nutrition pipeline unchanged. New Step 3 `generateMealFeedback` pulls the user's targets + today's DailyLog and returns a short personalized `feedback` string (Kiki voice, non-fatal on failure). Orchestrator forwards the image to food-logger (base64 kept out of debug logs via `imageAttached` flag) and surfaces `feedback` in the result
 - **iOS composer redesign** (`Features/AI/AIAssistantView.swift`): ChatGPT-style card with "Log your steps?" placeholder, + button = PhotosPicker (no permission string needed), mic = live dictation via new `Features/AI/SpeechRecognizer.swift` (SFSpeechRecognizer + AVAudioEngine; NSMicrophone/NSSpeechRecognition strings added to Info.plist), send arrow replaces mic when there's content, disclaimer caption below. Attached image previews in the composer and renders in the user bubble
 - **iOS food confirm card**: `PendingFoodLog`/`PendingFoodItem` parsed from orchestrator `foodItems`/`foodTotal`; card shows per-item macros + total, meal-type chips (hour-based default), confirm posts each item to `/api/daily-log/meal`. Kiki mascot kept (user explicitly said do not remove)
@@ -57,17 +91,17 @@ staleness_days: 3
 - **Email reminders master toggle**: `settings.emailRemindersEnabled` (User model + types + PUT /api/user whitelist); gates in `/api/email/send-reminder` (test emails still allowed) and early-continue in `/api/cron/send-reminders`; toggle bar styled like "Use AI features" added below it on Settings → Customizations
 - Verified: `tsc --noEmit` clean, iOS simulator build succeeded
 
-**UX pass round 4 (2026-07-01, claude-fable-5)** — camera, meal times, gendered Kiki, dose times, care anchoring:
+**UX pass round 4 (2026-07-01, claude-fable-5)** - camera, meal times, gendered Kiki, dose times, care anchoring:
 - **iOS + button**: confirmation dialog with Take Photo (new `Features/AI/CameraPicker.swift`, UIImagePickerController, NSCameraUsageDescription added) or Choose from Library (`.photosPicker` modifier)
 - **Meal time question**: orchestrator food summary now asks "what time did you have it?"; iOS FoodConfirmCard gained an hourAndMinute DatePicker and web ConfirmFoodItems a time input; `time` ("HH:mm") threads through confirmFood → `/api/daily-log/meal` on both platforms (context/ConversationHistory/MessageBubble/sidebar/ai-page signatures updated)
 - **Web image chat fixes**: orchestrator vision input wrapped in `{role:'user', content:[...]}` (bare content-part array was 400ing → "AI classification failed"); CommandInput downscales photos to 1280px JPEG 0.7 client side; user's photo now renders in the chat bubble (`ConversationEntry.userImage` data URL)
 - **Gender-aware Kiki** (`profile.gender` → male/female/neutral): iOS `KikiAudience` in NotificationService (fetched from /api/user at reschedule, cached in UserDefaults) with flirty per-audience line sets for water/meals/todos; web email reminders get a flirty gendered opener (FLIRTY_OPENERS in lib/email/templates.ts, gender param threaded from send-reminder route)
 - **Per-dose times**: todoTemplates schema + templates API gained `times: [String]` (dose-indexed, dose 1 synced to legacy `time`); settings TodoForm shows one time input per dose when frequency > 1; TodosTab and /todos expand doses with their own time so late-nudges are per dose
-- **Hourly forgot nudges (iOS)**: scheduleTodoNudges rewritten — per unchecked dose: on-time nudge + hourly flirty "you forgot" pokes (max 5, until 22:00, budget-capped at 32 requests to respect iOS's 64 pending limit)
+- **Hourly forgot nudges (iOS)**: scheduleTodoNudges rewritten - per unchecked dose: on-time nudge + hourly flirty "you forgot" pokes (max 5, until 22:00, budget-capped at 32 requests to respect iOS's 64 pending limit)
 - **Care items**: form asks "When did you last do this?" (date, optional) with next-due preview; API records a completion on that date so the existing lastDone/careStatus pipeline anchors the cycle; iOS schedules a daily 10:00 flirty reminder while a care item is due/overdue (careIsDue mirrors lib/careCadence windows)
 - Verified: `tsc --noEmit` clean, iOS simulator build succeeded
 
-**Minimal Changes Sprint (Apr 22 – 26 line)** — Dashboard analytics/visualization, gamification (streaks + badge sharing), health-data sync hardening, expanded nutrient tracking, and AI insight/projection refinements.
+**Minimal Changes Sprint (Apr 22 – 26 line)** - Dashboard analytics/visualization, gamification (streaks + badge sharing), health-data sync hardening, expanded nutrient tracking, and AI insight/projection refinements.
 
 Recent changes since the 2026-05-02 refresh (branch `feature/dev-01-minmial-changes-sprint-apr-22-26`):
 - **Dashboard analytics + charts**: Period filters across health/sleep/water/food/weight modules with period-specific data fetching and goal tracking; `ActivityRings` and `Sparkline` components; redesigned health card layout with metric summaries (`7f20eaf`, `7d4098d`)
@@ -85,7 +119,7 @@ Recent changes since the 2026-05-02 refresh (branch `feature/dev-01-minmial-chan
 
 ## Prior Sprint Work (as of 2026-04-15 → 2026-05-02)
 
-**Minor Updates Sprint** — Email reminders, AI daily plans, cleanup, recommendations, and repo-shape alignment.
+**Minor Updates Sprint** - Email reminders, AI daily plans, cleanup, recommendations, and repo-shape alignment.
 
 Recent changes since the last broad memory refresh:
 - **Global positioning cleanup**: Removed country-specific marketing and AI prompt wording from README, landing page, dashboard tour, food empty state, metadata keywords, and meal-plan/recommendation prompts so Arogyamandiram reads as a worldwide health app
@@ -111,11 +145,11 @@ Recent changes since the last broad memory refresh:
 
 ## Active Focus Areas
 
-1. **Email reminders** — SMTP/IMAP, cron-driven, user preference-controlled
-2. **AI Daily Plans** — nightly generated, stored in `DailyPlan`
-3. **AI Recommendations + Orchestrator** — personalized suggestions and command routing
-4. **Fitness level auto-detection** — drives AI plan personalization
-5. **Memory/docs refresh** — align agent docs and skill docs with the real repo
+1. **Email reminders** - SMTP/IMAP, cron-driven, user preference-controlled
+2. **AI Daily Plans** - nightly generated, stored in `DailyPlan`
+3. **AI Recommendations + Orchestrator** - personalized suggestions and command routing
+4. **Fitness level auto-detection** - drives AI plan personalization
+5. **Memory/docs refresh** - align agent docs and skill docs with the real repo
 
 ## Recent Sprint History
 
@@ -123,10 +157,10 @@ Recent changes since the last broad memory refresh:
 |--------|--------|-------|
 | Apr 22–26 (current) | `feature/dev-01-minmial-changes-sprint-apr-22-26` | Dashboard analytics/charts, streaks + badge sharing, health-sync hardening, nutrient tracking, projections |
 | Mar 26 | `feature/dev-01-minor-updates-sprint-mar-26` | Email reminders, AI daily plans, cleanup |
-| Mar 8 (merged #93) | `feature/dev-01-uiux-sprint-march-8th` | UI/UX standardization — MERGED |
+| Mar 8 (merged #93) | `feature/dev-01-uiux-sprint-march-8th` | UI/UX standardization - MERGED |
 | Mar 5 | `feature/dev-01-ai-improvements-sprint-march-5` | AI feature improvements |
 | Mar 5 | `feature/dev-01-minor-fixes-sprint-march-5` | Bug fixes |
-| Feb 28 | `feature/dev-01-ai-powered-sprint-feb-28` | AI-powered features |
+| Feb 28 | `feature/dev-01-ai-powered-sprint-feb-28` | AI-assisted features |
 | Feb 23 | `feature/dev-01-gamification-sprint-feb-23` | Streaks, badges, XP |
 
 ## What's Next (likely)

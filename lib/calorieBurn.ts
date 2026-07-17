@@ -16,7 +16,7 @@ const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
 };
 
 /**
- * BMR (Basal Metabolic Rate) — calories burned at complete rest.
+ * BMR (Basal Metabolic Rate) - calories burned at complete rest.
  * Mifflin–St Jeor equation (used by MyFitnessPal, Fitbit, etc.).
  * @param weightKg - weight in kg
  * @param heightCm - height in cm
@@ -35,7 +35,7 @@ export function bmrMifflinStJeor(
 }
 
 /**
- * TDEE (Total Daily Energy Expenditure) — daily burn including non-exercise activity.
+ * TDEE (Total Daily Energy Expenditure) - daily burn including non-exercise activity.
  * TDEE = BMR × activity multiplier.
  */
 export function tdee(bmr: number, activityLevel: ActivityLevel): number {

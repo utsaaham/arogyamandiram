@@ -1,6 +1,6 @@
 // Stress estimate (Low / Moderate / High): inferred from HR elevation, HRV
 // suppression, and accumulated sleep debt vs. the user's own baselines.
-// Explicitly an estimate — never presented as a diagnosis.
+// Explicitly an estimate - never presented as a diagnosis.
 
 import { baselineOf, column, zScore } from './baselines';
 import { clamp, type DayInput, type ScoreComponent, type StressLevel, type StressResult } from './types';
@@ -85,6 +85,7 @@ export function computeStress(days: DayInput[], index: number): StressResult {
   return {
     level: levelFor(score),
     score,
-    components: parts.map(({ weight: _w, stress01: _s, ...c }) => c),
+    // Weights stay on the components so attribution can decompose the blend.
+    components: parts.map(({ stress01: _s, ...c }) => c),
   };
 }

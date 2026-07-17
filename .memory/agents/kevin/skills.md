@@ -1,5 +1,5 @@
 ---
-name: DevOps Agent — Skills
+name: DevOps Agent - Skills
 last_updated: 2026-04-15
 updated_by: codex-gpt-5
 ---
@@ -8,11 +8,11 @@ updated_by: codex-gpt-5
 
 ## Technologies Owned
 
-- **Vercel** — Next.js deployment, env var management, cron config
-- **MongoDB Atlas** — cloud database, connection string management
-- **Next.js build/runtime** — `next dev`, `next build`, `next start`, env-driven porting
-- **Cron runtime** — Vercel cron + `scripts/local-cron.mjs`
-- **Environment management** — `.env.local` for dev, Vercel dashboard for prod
+- **Vercel** - Next.js deployment, env var management, cron config
+- **MongoDB Atlas** - cloud database, connection string management
+- **Next.js build/runtime** - `next dev`, `next build`, `next start`, env-driven porting
+- **Cron runtime** - Vercel cron + `scripts/local-cron.mjs`
+- **Environment management** - `.env.local` for dev, Vercel dashboard for prod
 
 ## Key Configuration
 

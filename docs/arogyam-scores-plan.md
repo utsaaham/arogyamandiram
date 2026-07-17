@@ -1,7 +1,7 @@
-# ArogyaM Scores — One-Page Plan
+# ArogyaM Scores - One-Page Plan
 
 Last updated: July 1, 2026
-Replaces: `whoop-life-feature-analysis.md` (WHOOP hardware rows and regulated medical features removed — see "Removed from scope" at the bottom).
+Replaces: `whoop-life-feature-analysis.md` (WHOOP hardware rows and regulated medical features removed - see "Removed from scope" at the bottom).
 
 ArogyaM builds a WHOOP-style daily scores experience as **one page** in the web app, powered by Apple Health data pushed from the ArogyaM iOS app.
 
@@ -9,19 +9,19 @@ ArogyaM builds a WHOOP-style daily scores experience as **one page** in the web 
 
 ## The Page: **Vitals**
 
-One page, one daily loop — it answers "how much capacity do I have today, and what should I do with it?"
+One page, one daily loop - it answers "how much capacity do I have today, and what should I do with it?"
 
 Route: `/vitals` · Nav label: **Vitals** · Tagline on page: *"Your daily scores"*
 
 ### Page layout (top to bottom)
 
-1. **Readiness** (hero ring, 0–100) — the readiness/recovery score. One score, not two: WHOOP's "Recovery" and the doc's earlier "Readiness" measured the same thing, so they are merged.
-2. **Today's Guidance** — Push / Maintain / Recover band with a one-line plain-language driver (e.g. "Low HRV and short sleep — take it easy today"). Feeds the existing workout AI readiness signals.
-3. **Score grid** — three cards:
-   - **Strain** (0–100) — cardiovascular load so far today
-   - **Sleep** (0–100) — last night's sleep performance
+1. **Readiness** (hero ring, 0–100) - the readiness/recovery score. One score, not two: WHOOP's "Recovery" and the doc's earlier "Readiness" measured the same thing, so they are merged.
+2. **Today's Guidance** - Push / Maintain / Recover band with a one-line plain-language driver (e.g. "Low HRV and short sleep - take it easy today"). Feeds the existing workout AI readiness signals.
+3. **Score grid** - three cards:
+   - **Strain** (0–100) - cardiovascular load so far today
+   - **Sleep** (0–100) - last night's sleep performance
    - **Stress** (Low / Moderate / High estimate)
-4. **Trends** — 7/30-day charts for each score (reuses the existing `MetricChart` component and period-filter pattern).
+4. **Trends** - 7/30-day charts for each score (reuses the existing `MetricChart` component and period-filter pattern).
 
 ---
 
@@ -53,9 +53,9 @@ The iOS app (`ArogyaM-iOS-v1`) pushes an 8-day payload to `POST /api/health-snap
 | **Respiratory rate** | ➕ add to iOS app | Readiness |
 | **Sleeping wrist temperature** | ➕ add to iOS app (Watch Series 8+ only, optional) | Readiness |
 
-New payload fields are optional — old app builds keep syncing fine.
+New payload fields are optional - old app builds keep syncing fine.
 
-## iOS app ("watch page") role — v1
+## iOS app ("watch page") role - v1
 
 The iOS app stays the **data collector**, nothing more in v1:
 
@@ -71,8 +71,8 @@ Later (v2, optional): show the four scores natively in the iOS app by reading th
 
 1. **iOS**: new HealthKit read types + payload fields.
 2. **Web sync**: `DailyLog` schema + `applyMetrics` mapping for the new fields.
-3. **Score engine**: `lib/scores/` — baselines helper + `readiness.ts`, `strain.ts`, `sleep.ts`, `stress.ts`.
-4. **API**: `GET /api/scores` — all four scores + guidance + 7/30-day trends in one response.
+3. **Score engine**: `lib/scores/` - baselines helper + `readiness.ts`, `strain.ts`, `sleep.ts`, `stress.ts`.
+4. **API**: `GET /api/scores` - all four scores + guidance + 7/30-day trends in one response.
 5. **Page**: `/vitals` page with hero ring, guidance, score grid, trends (glass-card / bento style).
 
 ---
@@ -83,9 +83,9 @@ Later (v2, optional): show the four scores natively in the iOS app by reading th
 - **Sync** (`lib/healthDataSync.ts` + `models/DailyLog.ts`): new DailyLog fields `restingHeartRate`, `hrvSdnnMs`, `respiratoryRate`, `wristTempC`, `vo2Max`, `habits`, `mood`, sleep stage hours, workout `avgHeartRate`.
 - **Engine** (`lib/scores/`): `baselines.ts` (14-day rolling personal baselines), `readiness.ts`, `strain.ts` (with HR zones), `sleep.ts`, `stress.ts`, `guidance.ts`, `insights.ts` (habit correlations), `index.ts` (`computeVitals`). Pure functions; weights renormalize when signals are missing.
 - **API**: `GET /api/scores` (scores + guidance + 30-day trends + insights + today's journal), `POST /api/scores/journal` (habits + mood).
-- **Page**: `/vitals` — Readiness hero ring, Today's Guidance band, Strain/Sleep/Stress grid with HR zone chips, habit journal modal, 7D/1M trends (readiness, strain, sleep, stress, HRV, resting HR), habit insights, non-diagnostic disclaimer. Nav entries added to Sidebar + MobileNav.
+- **Page**: `/vitals` - Readiness hero ring, Today's Guidance band, Strain/Sleep/Stress grid with HR zone chips, habit journal modal, 7D/1M trends (readiness, strain, sleep, stress, HRV, resting HR), habit insights, non-diagnostic disclaimer. Nav entries added to Sidebar + MobileNav.
 - **AI coach wiring**: `/api/ai/recommendations` context now includes resting HR, HRV, habits, mood per day plus today's computed Vitals scores and guidance.
-- **iOS Vitals v2 (July 1, 2026)**: the iOS app now shows the four scores natively — new Vitals tab (`Features/Vitals/VitalsView.swift`) reads `GET /api/scores` and renders the Readiness hero ring, guidance band, Strain/Sleep/Stress grid, HR zone chips, 7D/1M Swift Charts trends (readiness, strain, sleep, stress, HRV, resting HR), habit insights, and the non-diagnostic disclaimer. Home shows a Readiness glance card. Whole app restyled to iOS 26 Liquid Glass (`glassEffect` cards/buttons/tab bar over an ambient color field). Local water + meal reminder notifications added (`Core/Notifications/NotificationService.swift`, tunable in a Reminders sheet from Home).
+- **iOS Vitals v2 (July 1, 2026)**: the iOS app now shows the four scores natively - new Vitals tab (`Features/Vitals/VitalsView.swift`) reads `GET /api/scores` and renders the Readiness hero ring, guidance band, Strain/Sleep/Stress grid, HR zone chips, 7D/1M Swift Charts trends (readiness, strain, sleep, stress, HRV, resting HR), habit insights, and the non-diagnostic disclaimer. Home shows a Readiness glance card. Whole app restyled to iOS 26 Liquid Glass (`glassEffect` cards/buttons/tab bar over an ambient color field). Local water + meal reminder notifications added (`Core/Notifications/NotificationService.swift`, tunable in a Reminders sheet from Home).
 
 ## Kept for later phases
 
@@ -96,10 +96,10 @@ Later (v2, optional): show the four scores natively in the iOS app by reading th
 | Blood pressure log | BP Log | Manual entry / cuff import via HealthKit |
 | Lab uploads | Labs | Manual first; partnerships later |
 
-~~Native scores in iOS app (Vitals v2)~~ — built July 1, 2026 (see above).
+~~Native scores in iOS app (Vitals v2)~~ - built July 1, 2026 (see above).
 
 ## Removed from scope (was in the WHOOP analysis)
 
-- Hardware-only: WHOOP MG device, 14+ day battery, wireless PowerPack, premium bands, screenless design, haptic alarm, priority support, lifetime warranty.
+- Hardware-only: WHOOP MG device, 14+ day battery, wireless PowerPack, bands, screenless design, haptic alarm, priority support, lifetime warranty.
 - Regulated medical: ECG capture, AFib detection, wrist blood-pressure measurement, sleep apnea detection, any diagnosis/treatment features.
 - Third-party: Strava integration (revisit on demand).

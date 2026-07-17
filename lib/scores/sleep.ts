@@ -69,6 +69,7 @@ export function computeSleep(days: DayInput[], index: number): SleepResult {
 
   return {
     score,
-    components: parts.map(({ weight: _w, ...c }) => c),
+    // Weights stay on the components so attribution can decompose the blend.
+    components: parts,
   };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 // Today's habits, living right next to your food. Auto-tracked rows fill in
-// on their own (water, sleep, meals, movement — watch data included), and the
+// on their own (water, sleep, meals, movement - watch data included), and the
 // quick-tap chips below feed the Vitals habit insights.
 
 import { useEffect, useRef, useState } from 'react';

@@ -60,6 +60,18 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   { id: 'streak_weight_50', name: 'Scale Titan', description: 'Logged your weight 50 days in a row.', icon: '🎚️', category: 'milestone' },
   { id: 'streak_weight_100', name: 'Scale Legend', description: '100 consecutive days of weight logging.', icon: '🏆', category: 'milestone' },
 
+  // ----- Protein streaks -----
+  { id: 'streak_protein_7', name: 'Protein Pro', description: 'Hit your protein target 7 days in a row.', icon: '🥚', category: 'milestone' },
+  { id: 'streak_protein_14', name: 'Protein Champion', description: 'Hit your protein target 14 days in a row.', icon: '🍗', category: 'milestone' },
+  { id: 'streak_protein_30', name: 'Protein Master', description: 'Hit your protein target 30 days in a row.', icon: '🏆', category: 'milestone' },
+
+  // ----- Recovery streaks -----
+  { id: 'streak_recovery_7', name: 'Recovery Champion', description: 'Readiness at or above your own baseline 7 days in a row.', icon: '🔋', category: 'milestone' },
+  { id: 'streak_recovery_14', name: 'Recovery Master', description: 'Readiness at or above your own baseline 14 days in a row.', icon: '⚡', category: 'milestone' },
+
+  // ----- Best week -----
+  { id: 'milestone_best_week', name: 'Best Week Ever', description: 'Your most complete training week yet - more workouts in 7 days than any week before.', icon: '🚀', category: 'milestone' },
+
   // ----- Milestones (totals) -----
   { id: 'milestone_meals_50', name: '50 Meals', description: 'Logged 50 meals.', icon: '🍽️', category: 'milestone' },
   { id: 'milestone_meals_100', name: '100 Meals', description: 'Logged 100 meals.', icon: '🥗', category: 'milestone' },

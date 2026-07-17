@@ -67,8 +67,10 @@ export interface DailyLogData {
   totalSugar?: number;
   totalSodium?: number;
   caloriesBurned: number;
+  heartRate?: number;
   activeCalories?: number;
   steps?: number;
+  distanceKm?: number;
   habits?: string[];
   mood?: number;
   notes?: string;

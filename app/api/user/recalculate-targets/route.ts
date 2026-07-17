@@ -8,6 +8,7 @@ import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { generateTargets } from '@/lib/health';
+import { normalizeGoal } from '@/lib/goals';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function POST() {
     const user = await User.findById(userId).lean();
     if (!user) return errorResponse('User not found', 404);
 
-    const profile = user.profile as { weight?: number; height?: number; gender?: string; activityLevel?: string; goal?: string; dateOfBirth?: Date; age?: number } | undefined;
+    const profile = user.profile as { weight?: number; height?: number; gender?: string; activityLevel?: string; goal?: string; dateOfBirth?: Date; age?: number; bodyFat?: number } | undefined;
     if (!profile) return errorResponse('Complete your profile first', 400);
 
     let age: number;
@@ -48,7 +49,8 @@ export async function POST() {
       age,
       gender as 'male' | 'female' | 'other',
       activityLevel as 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active',
-      goal as 'lose' | 'maintain' | 'gain'
+      normalizeGoal(goal),
+      profile.bodyFat
     );
 
     const updated = await User.findByIdAndUpdate(

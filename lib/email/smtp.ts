@@ -1,5 +1,5 @@
 // ============================================
-// SMTP Email Sender — nodemailer wrapper
+// SMTP Email Sender - nodemailer wrapper
 // ============================================
 // Accepts a user's decrypted SMTP config from Preferences.
 // Callers are responsible for decrypting the password before passing it in.

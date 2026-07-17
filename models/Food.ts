@@ -25,7 +25,7 @@ export interface IFoodDocument extends Document {
   isVegan: boolean;
   tags: string[];
   source: string;
-  expiresAt: Date;  // TTL index — MongoDB auto-deletes after this timestamp
+  expiresAt: Date;  // TTL index - MongoDB auto-deletes after this timestamp
   measures: { label: string; grams: number }[]; // natural serving options from USDA
 }
 

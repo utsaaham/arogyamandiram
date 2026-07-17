@@ -1,16 +1,16 @@
 ---
 state: populated
 created: 2026-03-26
-last_updated: 2026-07-01
-last_read: 2026-07-01
-updated_by: claude-opus-4-8
+last_updated: 2026-07-14
+last_read: 2026-07-14
+updated_by: codex-gpt-5
 staleness_days: 3
 ---
 
 # Project Memory
 
 > This is the entry point for any AI agent working on this project.
-> Every tool — Cursor, Claude Code, Windsurf, Cline, Copilot, Gemini, Codex — starts here.
+> Every tool - Cursor, Claude Code, Windsurf, Cline, Copilot, Gemini, Codex - starts here.
 > Do NOT start working without reading this file and `.memory/README.md`.
 
 ---
@@ -19,7 +19,7 @@ staleness_days: 3
 
 | Section | Last Updated | Updated By | Stale After | Status |
 |---------|-------------|------------|-------------|--------|
-| context/ | 2026-07-01 | claude-fable-5 | 3 days | Current |
+| context/ | 2026-07-14 | codex-gpt-5 | 3 days | Current |
 | agents/ | 2026-04-15 | codex-gpt-5 | 7 days | Current |
 | skills/ | 2026-04-15 | codex-gpt-5 | 10 days | Current |
 | rules/ | 2026-03-26 | claude-sonnet-4-6 | 14 days | Current |
@@ -29,14 +29,14 @@ staleness_days: 3
 
 ## Before You Do Anything
 
-1. Read `.memory/README.md` — folder map and full read order
-2. Read `context/active-context.md` — current sprint and recent changes
-3. Read `agents/index.md` — find the right agent for your task
+1. Read `.memory/README.md` - folder map and full read order
+2. Read `context/active-context.md` - current sprint and recent changes
+3. Read `agents/index.md` - find the right agent for your task
 4. Load the agent's skills + rules before writing any code
 
 ## Key Things Every Agent Must Know
 
-- All API responses go through **`lib/apiMask.ts`** — never return raw DB documents
+- All API responses go through **`lib/apiMask.ts`** - never return raw DB documents
 - API routes typically gate access through **`lib/session.ts`** helpers (`getAuthUserId`, `getAuthUserIdWithBypass`)
 - Protected app navigation is enforced in **`components/layout/DashboardLayoutClient.tsx`**; there is currently no root `middleware.ts`
 - Food search is **Mongo cache first + USDA FoodData Central fallback**, not Edamam

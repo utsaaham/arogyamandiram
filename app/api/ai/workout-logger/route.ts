@@ -320,7 +320,7 @@ export async function POST(req: NextRequest) {
 
       if (status >= 500) {
         return errorResponse(
-          'AI service is temporarily unavailable. Please try again in a few minutes.',
+          'The AI service is taking a short break. Please try again in a few minutes.',
           502
         );
       }

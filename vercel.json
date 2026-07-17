@@ -5,6 +5,10 @@
     {
       "path": "/api/cron/cleanup-guest-accounts",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/generate-daily-plans",
+      "schedule": "55 23 * * *"
     }
   ]
 }

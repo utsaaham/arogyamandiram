@@ -6,6 +6,7 @@
 
 import type { Gender, ActivityLevel, Goal, UserTargets, UserProfile } from '@/types';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
+import { goalCalorieAdjustment, normalizeGoal } from '@/lib/goals';
 
 // Activity level multipliers (Harris-Benedict revised)
 const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
@@ -14,13 +15,6 @@ const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   moderate: 1.55,       // Moderate exercise 3-5 days/week
   active: 1.725,        // Hard exercise 6-7 days/week
   very_active: 1.9,     // Very hard exercise, physical job
-};
-
-// Calorie adjustment based on goal
-const GOAL_ADJUSTMENTS: Record<Goal, number> = {
-  lose: -500,           // 500 cal deficit (~0.5 kg/week loss)
-  maintain: 0,
-  gain: 400,            // 400 cal surplus (~0.35 kg/week gain)
 };
 
 /**
@@ -53,10 +47,15 @@ export function calculateTDEE(bmr: number, activityLevel: ActivityLevel): number
 }
 
 /**
- * Calculate daily calorie target based on goal.
+ * Calculate daily calorie target based on goal. Recomp adjusts dynamically
+ * from body fat (see goalCalorieAdjustment), so pass bodyFat/gender when known.
  */
-export function calculateCalorieTarget(tdee: number, goal: Goal): number {
-  const target = tdee + GOAL_ADJUSTMENTS[goal];
+export function calculateCalorieTarget(
+  tdee: number,
+  goal: Goal,
+  profile?: { bodyFat?: number | null; gender?: string | null }
+): number {
+  const target = tdee + goalCalorieAdjustment(goal, profile);
   // Minimum safe calorie intake
   return Math.max(target, 1200);
 }
@@ -74,17 +73,22 @@ export function calculateMacros(
   let fatRatio: number;
 
   switch (goal) {
-    case 'lose':
+    case 'lose_fat':
       // High protein to preserve muscle during deficit
       proteinRatio = 0.35;
       fatRatio = 0.30;
       break;
-    case 'gain':
+    case 'build_muscle':
       // Balanced with emphasis on carbs for energy
       proteinRatio = 0.30;
       fatRatio = 0.25;
       break;
-    default: // maintain
+    case 'recomp':
+      // Highest protein - building muscle while near maintenance
+      proteinRatio = 0.40;
+      fatRatio = 0.25;
+      break;
+    default: // improve_fitness, maintain
       proteinRatio = 0.30;
       fatRatio = 0.30;
   }
@@ -137,9 +141,11 @@ export function calculateIdealWeight(height: number, gender: Gender): number {
  */
 export function calculateDailyWorkoutMinutes(goal: Goal, activityLevel: ActivityLevel): number {
   const byGoal: Record<Goal, number> = {
-    lose: 45,
+    lose_fat: 45,
+    build_muscle: 40,
+    recomp: 45,
+    improve_fitness: 40,
     maintain: 30,
-    gain: 40,
   };
   let mins = byGoal[goal];
   if (activityLevel === 'sedentary' || activityLevel === 'light') mins = Math.min(mins + 10, 60);
@@ -152,9 +158,11 @@ export function calculateDailyWorkoutMinutes(goal: Goal, activityLevel: Activity
  */
 export function calculateDailyCalorieBurn(goal: Goal): number {
   const byGoal: Record<Goal, number> = {
-    lose: 450,
+    lose_fat: 450,
+    build_muscle: 250,
+    recomp: 400,
+    improve_fitness: 350,
     maintain: 300,
-    gain: 250,
   };
   return byGoal[goal];
 }
@@ -179,11 +187,12 @@ export function generateTargets(
   age: number,
   gender: Gender,
   activityLevel: ActivityLevel,
-  goal: Goal
+  goal: Goal,
+  bodyFat?: number | null
 ): UserTargets {
   const bmr = calculateBMR(weight, height, age, gender);
   const tdee = calculateTDEE(bmr, activityLevel);
-  const dailyCalories = calculateCalorieTarget(tdee, goal);
+  const dailyCalories = calculateCalorieTarget(tdee, goal, { bodyFat, gender });
   const macros = calculateMacros(dailyCalories, weight, goal);
   const dailyWater = calculateWaterTarget(weight, activityLevel);
   const idealWeight = calculateIdealWeight(height, gender);
@@ -236,7 +245,7 @@ export function getTargetsForUser(user: UserWithTargets | null | undefined): Use
   const height = p.height > 0 ? p.height : 0;
   const gender = p.gender as Gender | undefined;
   const activityLevel = p.activityLevel as ActivityLevel | undefined;
-  const goal = p.goal as Goal | undefined;
+  const goal = p.goal ? normalizeGoal(p.goal as string) : undefined;
 
   let age: number;
   if (p.dateOfBirth) {
@@ -257,5 +266,5 @@ export function getTargetsForUser(user: UserWithTargets | null | undefined): Use
     return DEFAULT_TARGETS;
   }
 
-  return generateTargets(weight, height, age, gender, activityLevel, goal);
+  return generateTargets(weight, height, age, gender, activityLevel, goal, p.bodyFat);
 }

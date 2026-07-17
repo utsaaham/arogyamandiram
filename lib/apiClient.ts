@@ -127,6 +127,13 @@ export const api = {
       body: JSON.stringify({}),
     }),
 
+  // Coach weekly recap (rolling 7 days ending yesterday; cached server-side)
+  getWeeklySummary: (refresh = false) =>
+    apiFetch(`/coach/weekly-summary${refresh ? '?refresh=1' : ''}`),
+
+  // Deterministic intelligence layer: Goal Score, consistency, triggers
+  getIntelligence: () => apiFetch('/intelligence'),
+
   // API Keys (sent via dedicated secure endpoint)
   saveApiKeys: (keys: { openai?: string; fdcApiKey?: string }) =>
     apiFetch('/user/api-keys', {
@@ -134,7 +141,7 @@ export const api = {
       body: JSON.stringify(keys),
     }),
 
-  // Email Settings (SMTP + IMAP — passwords are encrypted server-side)
+  // Email Settings (SMTP + IMAP - passwords are encrypted server-side)
   saveEmailSettings: (body: {
     smtp?: {
       host?: string; port?: number; secure?: boolean;

@@ -28,6 +28,7 @@ interface MetricChartProps {
   targetLabel?: string;
   formatX?: (val: string) => string;
   formatY?: (val: number) => string;
+  showGrid?: boolean;
 }
 
 const defaultFormatX = (d: string) => {
@@ -48,6 +49,7 @@ export default function MetricChart({
   formatY,
   gradientFrom,
   gradientTo,
+  showGrid = true,
 }: MetricChartProps) {
   if (data.length === 0) {
     return (
@@ -86,7 +88,7 @@ export default function MetricChart({
           )}
         </defs>
 
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />}
 
         <XAxis
           dataKey="date"

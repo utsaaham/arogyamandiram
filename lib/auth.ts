@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
             isGuest: true,
           };
         } catch (err) {
-          // Race-condition duplicate — another request created this guest simultaneously
+          // Race-condition duplicate - another request created this guest simultaneously
           if ((err as { code?: number }).code === 11000) {
             const race = await User.findOne({ guestFingerprint: fingerprint })
               .select('+guestFingerprint')

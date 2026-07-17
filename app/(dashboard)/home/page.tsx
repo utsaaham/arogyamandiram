@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ProgressRing from '@/components/ui/ProgressRing';
 import WaterGlass from '@/components/water/WaterGlass';
@@ -41,7 +41,7 @@ const M_COLORS = {
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
-  const { log, loading: logLoading } = useDailyLog();
+  const { log, loading: logLoading, refetch: refetchDailyLog } = useDailyLog();
   const { achievements } = useAchievements();
   const [mounted, setMounted] = useState(false);
   const [healthMetrics, setHealthMetrics] = useState<{
@@ -53,13 +53,35 @@ export default function DashboardPage() {
 
   useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
+  const loadHealthMetrics = useCallback(() => {
     api.getHealthMetricsHistory(1).then((res) => {
-      if (res.success && res.data?.today) {
-        setHealthMetrics(res.data.today);
+      if (res.success) {
+        setHealthMetrics(res.data?.today ?? null);
       }
     }).catch(() => {});
   }, []);
+
+  const refreshWearableMetrics = useCallback(() => {
+    loadHealthMetrics();
+    refetchDailyLog();
+  }, [loadHealthMetrics, refetchDailyLog]);
+
+  useEffect(() => {
+    refreshWearableMetrics();
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') refreshWearableMetrics();
+    };
+    const interval = window.setInterval(refreshIfVisible, 60_000);
+    window.addEventListener('focus', refreshWearableMetrics);
+    document.addEventListener('visibilitychange', refreshIfVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshWearableMetrics);
+      document.removeEventListener('visibilitychange', refreshIfVisible);
+    };
+  }, [refreshWearableMetrics]);
 
 
   const loading = userLoading || logLoading || !mounted;
@@ -82,6 +104,17 @@ export default function DashboardPage() {
   }
 
   const targets = getTargetsForUser(user ?? undefined);
+  const preferPopulated = (primary?: number, fallback?: number) => {
+    if (typeof primary === 'number' && primary > 0) return primary;
+    if (typeof fallback === 'number' && fallback > 0) return fallback;
+    return primary ?? fallback;
+  };
+  const wearableMetrics = {
+    heartRate: preferPopulated(healthMetrics?.heartRate, log?.heartRate),
+    steps: preferPopulated(healthMetrics?.steps, log?.steps),
+    activeCalories: preferPopulated(healthMetrics?.activeCalories, log?.activeCalories),
+    distanceKm: preferPopulated(healthMetrics?.distanceKm, log?.distanceKm),
+  };
   const totalCal = log?.totalCalories || 0;
   const burned = log?.caloriesBurned || 0;
   const remaining = Math.max(targets.dailyCalories - totalCal, 0);
@@ -135,7 +168,7 @@ export default function DashboardPage() {
 
         {/* Bento grid */}
         <div className="bento-grid">
-          {/* Streaks — pinned to top */}
+          {/* Streaks - pinned to top */}
           <div className="bento-streaks">
             <StreakCard
               streaks={achievements?.streaks}
@@ -231,7 +264,7 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<Moon className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+              value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '-'}
               label="Sleep"
               sub={log?.sleep ? `${log.sleep.quality}/5 quality` : '8h target'}
               valueColor="text-accent-violet"
@@ -241,9 +274,9 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<Footprints className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={healthMetrics?.steps != null ? formatNumber(healthMetrics.steps) : '—'}
+              value={wearableMetrics.steps != null ? formatNumber(wearableMetrics.steps) : '-'}
               label="Steps"
-              sub={healthMetrics?.steps != null ? `of ${formatNumber(targets.dailySteps ?? 8000)} goal` : 'No device data'}
+              sub={wearableMetrics.steps != null ? `of ${formatNumber(targets.dailySteps ?? 8000)} goal` : 'No device data'}
               valueColor="text-accent-emerald"
               labelClassName="text-text-secondary"
               iconBg=""
@@ -251,9 +284,9 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<HeartPulse className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={healthMetrics?.heartRate != null ? String(healthMetrics.heartRate) : '—'}
+              value={wearableMetrics.heartRate != null ? String(wearableMetrics.heartRate) : '-'}
               label="Heart Rate"
-              sub={healthMetrics?.heartRate != null ? 'bpm' : 'No device data'}
+              sub={wearableMetrics.heartRate != null ? 'bpm' : 'No device data'}
               valueColor="text-accent-rose"
               labelClassName="text-text-secondary"
               iconBg=""
@@ -261,9 +294,9 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<Activity className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={healthMetrics?.activeCalories != null ? formatNumber(healthMetrics.activeCalories) : '—'}
+              value={wearableMetrics.activeCalories != null ? formatNumber(wearableMetrics.activeCalories) : '-'}
               label="Active Cal"
-              sub={healthMetrics?.activeCalories != null ? 'kcal burned' : 'No device data'}
+              sub={wearableMetrics.activeCalories != null ? 'kcal burned' : 'No device data'}
               valueColor="text-accent-amber"
               labelClassName="text-text-secondary"
               iconBg=""
@@ -271,9 +304,9 @@ export default function DashboardPage() {
             />
             <StatMini
               icon={<MapPin className="h-6 w-6 text-text-secondary" strokeWidth={1.8} />}
-              value={healthMetrics?.distanceKm != null ? `${healthMetrics.distanceKm.toFixed(1)}` : '—'}
+              value={wearableMetrics.distanceKm != null ? wearableMetrics.distanceKm.toFixed(1) : '-'}
               label="Distance"
-              sub={healthMetrics?.distanceKm != null ? `of ${targets.idealDistance ?? 5} km goal` : 'No device data'}
+              sub={wearableMetrics.distanceKm != null ? `of ${targets.idealDistance ?? 5} km goal` : 'No device data'}
               valueColor="text-accent-cyan"
               labelClassName="text-text-secondary"
               iconBg=""
@@ -286,13 +319,13 @@ export default function DashboardPage() {
 
       {/* ─── Mobile (design layout) ─── */}
       <div className="mobile-dash cards-stack-mobile lg:hidden">
-        {/* Header — TopBar-style card */}
+        {/* Header - TopBar-style card */}
         <div className={cn('mobile-fade-up mobile-dash-px pt-0 pb-3')} style={{ animationDelay: '0ms' }}>
           <div
             className="card-glow relative w-full overflow-hidden rounded-[22px] px-5 pt-5 pb-[18px]"
             style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
           >
-            {/* Row 1: Greeting + Avatar — T centered with left text block */}
+            {/* Row 1: Greeting + Avatar - T centered with left text block */}
             <div className="flex justify-between items-center">
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-text-secondary text-[22px] font-extrabold leading-tight" style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}>
@@ -315,7 +348,7 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {/* Avatar — larger, shifted slightly left */}
+              {/* Avatar - larger, shifted slightly left */}
               <Link href="/settings" className="shrink-0 active:opacity-90 transition-opacity -translate-x-3" aria-label="Open settings">
                 <div
                   className="w-[76px] h-[76px] rounded-full flex items-center justify-center text-[24px] font-black"
@@ -448,7 +481,7 @@ export default function DashboardPage() {
             <div className="stat-card-sleep">
               <StatMini
                 icon={<Moon className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '—'}
+                value={log?.sleep ? `${log.sleep.duration.toFixed(1)}h` : '-'}
                 label="Sleep"
                 sub="of 8h target"
                 valueColor="text-accent-violet"
@@ -471,9 +504,9 @@ export default function DashboardPage() {
             <div className="stat-card-water">
               <StatMini
                 icon={<Footprints className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={healthMetrics?.steps != null ? formatNumber(healthMetrics.steps) : '—'}
+                value={wearableMetrics.steps != null ? formatNumber(wearableMetrics.steps) : '-'}
                 label="Steps"
-                sub={healthMetrics?.steps != null ? `of ${formatNumber(targets.dailySteps ?? 8000)}` : 'No data'}
+                sub={wearableMetrics.steps != null ? `of ${formatNumber(targets.dailySteps ?? 8000)}` : 'No data'}
                 valueColor="text-accent-emerald"
                 labelClassName="text-text-secondary"
                 iconBg=""
@@ -483,9 +516,9 @@ export default function DashboardPage() {
             <div className="stat-card-burned">
               <StatMini
                 icon={<HeartPulse className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={healthMetrics?.heartRate != null ? String(healthMetrics.heartRate) : '—'}
+                value={wearableMetrics.heartRate != null ? String(wearableMetrics.heartRate) : '-'}
                 label="Heart Rate"
-                sub={healthMetrics?.heartRate != null ? 'bpm' : 'No data'}
+                sub={wearableMetrics.heartRate != null ? 'bpm' : 'No data'}
                 valueColor="text-accent-rose"
                 labelClassName="text-text-secondary"
                 iconBg=""
@@ -495,9 +528,9 @@ export default function DashboardPage() {
             <div className="stat-card-meals">
               <StatMini
                 icon={<Activity className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={healthMetrics?.activeCalories != null ? formatNumber(healthMetrics.activeCalories) : '—'}
+                value={wearableMetrics.activeCalories != null ? formatNumber(wearableMetrics.activeCalories) : '-'}
                 label="Active Cal"
-                sub={healthMetrics?.activeCalories != null ? 'kcal' : 'No data'}
+                sub={wearableMetrics.activeCalories != null ? 'kcal' : 'No data'}
                 valueColor="text-accent-amber"
                 labelClassName="text-text-secondary"
                 iconBg=""
@@ -507,9 +540,9 @@ export default function DashboardPage() {
             <div className="stat-card-sleep">
               <StatMini
                 icon={<MapPin className="h-8 w-8 text-text-secondary" strokeWidth={1.8} />}
-                value={healthMetrics?.distanceKm != null ? `${healthMetrics.distanceKm.toFixed(1)}km` : '—'}
+                value={wearableMetrics.distanceKm != null ? `${wearableMetrics.distanceKm.toFixed(1)}km` : '-'}
                 label="Distance"
-                sub={healthMetrics?.distanceKm != null ? `of ${targets.idealDistance ?? 5} km` : 'No data'}
+                sub={wearableMetrics.distanceKm != null ? `of ${targets.idealDistance ?? 5} km` : 'No data'}
                 valueColor="text-accent-cyan"
                 labelClassName="text-text-secondary"
                 iconBg=""
@@ -754,7 +787,7 @@ function StreakCard({
 
   return (
     <div className="streak-card card-glow flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-      {/* Label + hint — full width on mobile, fixed-width on desktop */}
+      {/* Label + hint - full width on mobile, fixed-width on desktop */}
       <div className="sm:shrink-0 sm:w-[220px]">
         <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted mb-1">
           Active Streaks
@@ -789,7 +822,7 @@ function StreakCard({
         )}
       </div>
 
-      {/* Day dots — full-width row on mobile, shrunk column on desktop */}
+      {/* Day dots - full-width row on mobile, shrunk column on desktop */}
       <div className="grid w-full grid-cols-7 gap-1.5 sm:flex sm:w-auto sm:shrink-0">
         {DAY_LABELS.map((lbl, i) => (
           <div key={i} className={`sdot !w-full sm:!w-9 ${i === displayDayIndex ? 'sdot-today' : ''}`}>

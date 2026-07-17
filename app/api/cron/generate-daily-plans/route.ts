@@ -1,5 +1,5 @@
 // ============================================
-// /api/cron/generate-daily-plans — Nightly plan generation
+// /api/cron/generate-daily-plans - Nightly plan generation
 // ============================================
 // Called by Vercel Cron at 23:55 daily.
 // For each user with an OpenAI key: analyzes today's logs, derives fitness
@@ -15,10 +15,13 @@ import { createOpenAiJson } from '@/lib/openaiJson';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getToday, getAgeFromDateOfBirth } from '@/lib/utils';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
+import { normalizeGoal } from '@/lib/goals';
+import { getWeightTrendForUser } from '@/lib/weightTrend';
+import { deriveTargetGap, normalizeFoodPlan, normalizeWorkoutPlan } from '@/app/api/ai/daily-plan/shared';
 import { deriveFitnessLevel } from '@/lib/deriveFitnessLevel';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes — needed for large user bases
+export const maxDuration = 300; // 5 minutes - needed for large user bases
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -50,15 +53,25 @@ async function generateForUser(
     fat?: number; idealWeight?: number; dailyWorkoutMinutes?: number;
     dailyCalorieBurn?: number; sleepHours?: number;
   };
-  const foodPreferences = (user.settings as { foodPreferences?: { dietaryPreference?: string; allergies?: string[] } } | undefined)?.foodPreferences;
+  const foodPreferences = (user.settings as { foodPreferences?: {
+    dietaryPreference?: string;
+    allergies?: string[];
+    favoriteCuisines?: string[];
+    cookingSkill?: string;
+    maxCookingMinutes?: number;
+  } } | undefined)?.foodPreferences;
   const dietaryPreference = foodPreferences?.dietaryPreference || 'no_preference';
   const allergies = Array.isArray(foodPreferences?.allergies) ? foodPreferences.allergies : [];
+  const favoriteCuisines = Array.isArray(foodPreferences?.favoriteCuisines) ? foodPreferences.favoriteCuisines : [];
+  const cookingSkill = foodPreferences?.cookingSkill || 'beginner';
+  const maxCookingMinutes = Number(foodPreferences?.maxCookingMinutes) || 30;
 
   const age = profile.dateOfBirth
     ? getAgeFromDateOfBirth(profile.dateOfBirth)
     : (profile.age ?? 0);
   const latestWeight = await getLatestLoggedWeight(userId);
   const currentWeight = latestWeight ?? profile.weight;
+  const weightTrend = await getWeightTrendForUser(userId);
 
   // Derive fitness level
   const fitnessLevel = await deriveFitnessLevel(userId);
@@ -115,9 +128,10 @@ async function generateForUser(
   const weeklyWeightChangeKg = avgDeficit !== 0 ? Number((-(avgDeficit * 7 / 7700)).toFixed(2)) : 0;
 
   const profileContext = [
-    `Profile: age ${age}y, gender ${profile.gender ?? '—'}, height ${profile.height ?? '—'}cm, weight ${currentWeight ?? '—'}kg.`,
-    `Goal: ${profile.goal ?? '—'}, target weight ${profile.targetWeight ?? '—'}kg, activity ${profile.activityLevel ?? '—'}.`,
-    `Body: type ${profile.bodyType ?? '—'}, body fat ${profile.bodyFat != null ? profile.bodyFat + '%' : '—'}, fitness ${fitnessLevel}, focus areas: ${profile.fatFocusAreas?.join(', ') || '—'}.`,
+    `Profile: age ${age}y, gender ${profile.gender ?? '-'}, height ${profile.height ?? '-'}cm, weight ${currentWeight ?? '-'}kg.`,
+    `Goal: ${profile.goal ? normalizeGoal(profile.goal) : '-'}, target weight ${profile.targetWeight ?? '-'}kg, activity ${profile.activityLevel ?? '-'}.`,
+    `Weight signals (read-only): ${deriveTargetGap(currentWeight, profile.targetWeight)} vs target; trend ${weightTrend.trend}${weightTrend.slopeKgPerWeek != null ? ` (${weightTrend.slopeKgPerWeek} kg/week)` : ''}.`,
+    `Body: type ${profile.bodyType ?? '-'}, body fat ${profile.bodyFat != null ? profile.bodyFat + '%' : '-'}, fitness ${fitnessLevel}, focus areas: ${profile.fatFocusAreas?.join(', ') || '-'}.`,
     `Targets: ${targets.dailyCalories ?? 2000} kcal, protein ${targets.protein ?? 150}g, water ${targets.dailyWater ?? 2500}ml, workout ${targets.dailyWorkoutMinutes ?? 30}min, sleep ${targets.sleepHours ?? 8}h.`,
   ].join('\n');
 
@@ -130,13 +144,13 @@ async function generateForUser(
       })))}`
     : 'No recent tracking data.';
 
-  const systemPrompt = `You are an elite AI health coach for Arogyamandiram. Generate a complete personalized daily health plan.
+  const systemPrompt = `You are Ciel, Arogyamandiram's personal health guide. Generate a complete personalized daily health plan.
 
 IMPORTANT: Respond with this exact JSON:
 {
   "topInsight": "One sentence: the #1 priority for the user tomorrow",
   "foodPlan": {
-    "suggestions": [{ "name": string, "description": string, "calories": number, "protein": number, "carbs": number, "fat": number, "mealType": "breakfast"|"lunch"|"dinner"|"snack", "ingredients": [string], "isVegetarian": boolean }],
+    "suggestions": [{ "name": string, "description": string, "calories": number, "protein": number, "carbs": number, "fat": number, "mealType": "breakfast"|"lunch"|"dinner"|"snack", "ingredients": ["quantity + ingredient"], "steps": ["short cooking step in order"], "prepMinutes": number, "cookMinutes": number, "isVegetarian": boolean }],
     "reasoning": "1-2 sentences explaining WHY this food plan"
   },
   "workoutPlan": {
@@ -147,7 +161,9 @@ IMPORTANT: Respond with this exact JSON:
   "prediction": { "weeklyWeightChangeKg": number, "projectedWeightKg": number, "basis": string }
 }
 
-Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, adjust workout intensity based on difficulty feedback, protein-focused if gap > 20g.`;
+Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, adjust workout intensity based on difficulty feedback. Every dish needs complete ingredients and clear cooking steps.
+Food totals must provide 5-10g MORE protein than the profile protein target and 5-10% FEWER calories than the profile calorie target. Do not create a larger deficit. Favor vegetables, fruit, whole grains, legumes, lean proteins, and unsaturated fats; keep processed foods, added sugar, and excess sodium low.
+The goal is the user's choice - plan FOR it. If the weight trend conflicts with the goal (e.g. goal build_muscle but trend losing), mention the fix in the reasoning, never suggest changing the goal. Focus areas mean extra strength volume for the muscles there - never claim spot fat reduction.`;
 
   const userPrompt = [
     profileContext,
@@ -155,9 +171,11 @@ Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, ad
     `Today's intake: ${todayCalories} kcal, ${todayProtein}g protein. Protein gap: ${proteinGap}g.`,
     `Dietary preference: ${dietaryPreference}.`,
     `Allergies or foods to avoid: ${allergies.length > 0 ? allergies.join(', ') : 'None provided'}.`,
+    `Favorite cuisines: ${favoriteCuisines.length > 0 ? favoriteCuisines.join(', ') : 'No favorites provided; vary cuisines'}.`,
+    `Cooking comfort: ${cookingSkill}. Maximum total cooking time per dish: ${maxCookingMinutes} minutes.`,
     dislikedFoods.length > 0 ? `Avoid foods: ${dislikedFoods.join(', ')}.` : '',
-    lastDifficulty === 'too_hard' ? 'Last workout was too hard — suggest lighter/recovery session.' : '',
-    lastDifficulty === 'too_easy' ? 'Last workout was too easy — increase difficulty slightly.' : '',
+    lastDifficulty === 'too_hard' ? 'Last workout was too hard - suggest lighter/recovery session.' : '',
+    lastDifficulty === 'too_easy' ? 'Last workout was too easy - increase difficulty slightly.' : '',
     avgCalories > 0 ? `Avg intake: ${Math.round(avgCalories)} kcal/day. ${avgDeficit > 0 ? 'Deficit' : 'Surplus'}: ${Math.abs(Math.round(avgDeficit))} kcal/day.` : '',
     `Plan date: ${tomorrowDate}`,
   ].filter(Boolean).join('\n');
@@ -171,7 +189,7 @@ Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, ad
     apiKey,
     systemPrompt,
     userPrompt,
-    maxTokens: 2500,
+    maxTokens: 4500,
   });
 
   // Build prediction with fallback math
@@ -182,6 +200,7 @@ Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, ad
       ? `Based on ${recentLogs.length}-day avg: ${Math.round(avgCalories)} kcal/day (${Math.abs(Math.round(avgDeficit))} kcal ${avgDeficit > 0 ? 'deficit' : 'surplus'})`
       : 'Insufficient data for prediction',
   };
+  const foodPlan = normalizeFoodPlan(parsed.foodPlan ?? {});
 
   await DailyPlan.findOneAndUpdate(
     { userId, date: tomorrowDate },
@@ -190,9 +209,11 @@ Rules: 4-6 food suggestions across multiple meal types, avoid disliked foods, ad
         status: 'ready',
         generatedAt: new Date(),
         topInsight: parsed.topInsight ?? null,
-        'foodPlan.suggestions': parsed.foodPlan?.suggestions ?? [],
-        'foodPlan.reasoning': parsed.foodPlan?.reasoning ?? null,
-        workoutPlan: parsed.workoutPlan ?? null,
+        'foodPlan.suggestions': foodPlan.suggestions,
+        'foodPlan.reasoning': foodPlan.reasoning ?? null,
+        // Same normalization as the interactive route: ordering, phases,
+        // order stamps, calorie sanity - the cron path must not bypass it.
+        workoutPlan: parsed.workoutPlan ? normalizeWorkoutPlan(parsed.workoutPlan) : null,
         prediction,
         fitnessLevelDerived: fitnessLevel,
         generationContext,
@@ -268,3 +289,5 @@ export async function POST(req: NextRequest) {
     ...(errors.length > 0 ? { errors: errors.slice(0, 5) } : {}), // cap error list
   });
 }
+
+export { POST as GET };

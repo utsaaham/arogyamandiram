@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Sanitize meal: only include fields expected by MealEntrySchema.
-    // Exclude "weight" — DailyLog.weight is body weight (kg, min 20); meal "weight" is food weight (g)
+    // Exclude "weight" - DailyLog.weight is body weight (kg, min 20); meal "weight" is food weight (g)
     // and must not be applied to the document's top-level weight field.
     const {
       weight: _omitWeight,

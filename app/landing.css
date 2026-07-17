@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   AROGYAMANDIRAM — Landing Page Styles
+   AROGYAMANDIRAM - Landing Page Styles
    Inspired by: Linear, t72t, x.ai, zbs.capital
    ═══════════════════════════════════════════════ */
 
@@ -45,7 +45,7 @@ a { color: inherit; text-decoration: none; }
 .lp-wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
 
 /* ══════════════════════════
-   HERO — t72t / x.ai style
+   HERO - t72t / x.ai style
    ══════════════════════════ */
 
 .lp-hero {
@@ -60,7 +60,7 @@ a { color: inherit; text-decoration: none; }
     overflow: hidden;
 }
 
-/* Radial glow behind hero text — single, restrained */
+/* Radial glow behind hero text - single, restrained */
 .lp-hero-glow {
     position: absolute;
     top: 50%; left: 50%;
@@ -71,7 +71,7 @@ a { color: inherit; text-decoration: none; }
     z-index: 0;
 }
 
-/* Animated grid pattern — Linear inspired */
+/* Animated grid pattern - Linear inspired */
 .lp-hero-grid {
     position: absolute;
     inset: 0;
@@ -85,7 +85,7 @@ a { color: inherit; text-decoration: none; }
     z-index: 0;
 }
 
-/* App name — massive display type like t72t */
+/* App name - massive display type like t72t */
 .lp-appname {
     font-family: var(--font-display), sans-serif;
     font-weight: 800;
@@ -121,7 +121,7 @@ a { color: inherit; text-decoration: none; }
     z-index: 1;
 }
 
-/* Headline — under the brand */
+/* Headline - under the brand */
 .lp-hero-headline {
     font-family: var(--font-display), sans-serif;
     font-weight: 400;
@@ -250,7 +250,7 @@ a { color: inherit; text-decoration: none; }
     overflow: hidden;
 }
 
-/* Glow border effect — Linear style */
+/* Glow border effect - Linear style */
 .lp-mockup-card::before {
     content: '';
     position: absolute;
@@ -288,7 +288,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ══════════════════════════
-   SECTION HEADERS — Linear style
+   SECTION HEADERS - Linear style
    ══════════════════════════ */
 .lp-section-label {
     font-family: var(--font-body), sans-serif;
@@ -315,7 +315,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ══════════════════════════
-   STATS BAR — x.ai style
+   STATS BAR - x.ai style
    ══════════════════════════ */
 .lp-stats-bar {
     border-top: 1px solid var(--br);
@@ -362,7 +362,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ══════════════════════════
-   FEATURE GRID — Linear cell style
+   FEATURE GRID - Linear cell style
    ══════════════════════════ */
 .lp-features-section { padding: 100px 0; }
 
@@ -421,7 +421,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ══════════════════════════
-   AI DEMO — Terminal cards
+   AI DEMO - Terminal cards
    ══════════════════════════ */
 .lp-ai-section { padding: 80px 0 100px; border-top: 1px solid var(--br); }
 
@@ -512,7 +512,7 @@ a { color: inherit; text-decoration: none; }
 .lp-terminal-line.bold .lp-right { color: var(--t1); }
 
 /* ══════════════════════════
-   STEPS — Linear numbered
+   STEPS - Linear numbered
    ══════════════════════════ */
 .lp-steps-section { padding: 80px 0 100px; border-top: 1px solid var(--br); }
 
@@ -611,7 +611,7 @@ a { color: inherit; text-decoration: none; }
 .lp-footer a:hover { color: var(--g); }
 
 /* ══════════════════════════
-   MARQUEE — t72t style
+   MARQUEE - t72t style
    ══════════════════════════ */
 @keyframes lp-marquee {
     from { transform: translateX(0); }

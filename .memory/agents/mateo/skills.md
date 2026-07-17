@@ -1,5 +1,5 @@
 ---
-name: UI Frontend Agent — Skills
+name: UI Frontend Agent - Skills
 last_updated: 2026-04-15
 updated_by: codex-gpt-5
 ---
@@ -8,14 +8,14 @@ updated_by: codex-gpt-5
 
 ## Technologies Owned
 
-- **Next.js 15 Client Components** — `'use client'` components, hooks, modals
-- **Tailwind CSS 3.4** — dark styling, responsive breakpoints, token use
-- **Framer Motion 11.15** — modal/page transitions
-- **Recharts 2.15** — chart rendering
-- **Lucide React 0.468** — icons
-- **CSS keyframe animations** — in `app/globals.css`
-- **UI state-heavy settings flows** — `app/(dashboard)/settings/page.tsx`
-- **Orchestrator + debug UI** — `components/orchestrator/*`, `components/debug/*`
+- **Next.js 15 Client Components** - `'use client'` components, hooks, modals
+- **Tailwind CSS 3.4** - dark styling, responsive breakpoints, token use
+- **Framer Motion 11.15** - modal/page transitions
+- **Recharts 2.15** - chart rendering
+- **Lucide React 0.468** - icons
+- **CSS keyframe animations** - in `app/globals.css`
+- **UI state-heavy settings flows** - `app/(dashboard)/settings/page.tsx`
+- **Orchestrator + debug UI** - `components/orchestrator/*`, `components/debug/*`
 
 ## Design System
 

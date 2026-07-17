@@ -9,7 +9,7 @@ updated_by: codex-gpt-5
 
 ## How It's Used Here
 
-- **App Router** only — no Pages Router
+- **App Router** only - no Pages Router
 - Route groups `(auth)` and `(dashboard)` separate public vs protected pages
 - `(dashboard)/layout.tsx` wraps protected pages with the dashboard shell
 - API routes live in `app/api/`

@@ -1,5 +1,5 @@
 // ============================================
-// /api/ai/daily-plan/feedback — Save user feedback on daily plan
+// /api/ai/daily-plan/feedback - Save user feedback on daily plan
 // ============================================
 // POST: upserts feedback on a DailyPlan document for the given date
 
