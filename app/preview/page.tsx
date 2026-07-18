@@ -33,7 +33,9 @@ const NAV_ITEMS = [
   { href: '/achievements', icon: Star,          label: 'Achievements' },
   { href: '/todays-plan',  icon: CalendarDays,  label: 'Checklist' },
   { href: '/todos',        icon: CheckSquare,   label: 'Todos' },
-  { href: '/debug',        icon: Bug,           label: 'Debugger' },
+  ...(process.env.NEXT_PUBLIC_DEBUG_MODE === 'true'
+    ? [{ href: '/debug', icon: Bug, label: 'Debugger' }]
+    : []),
 ];
 
 const BOTTOM_NAV = [

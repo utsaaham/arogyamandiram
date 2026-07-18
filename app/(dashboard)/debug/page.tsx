@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { notFound } from 'next/navigation';
 import {
   MealIdeasLogView,
   AILoggerLogView,
@@ -201,6 +202,10 @@ function LogViewRenderer({
 }
 
 export default function DebugPage() {
+  // NEXT_PUBLIC_DEBUG_MODE is inlined at build time, so this branch is constant per deployment
+  if (process.env.NEXT_PUBLIC_DEBUG_MODE !== 'true') {
+    notFound();
+  }
   const { orchestratorLogs } = useDebugLogs();
   const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set(['orchestrator']));
   const [selectedAgent, setSelectedAgent] = useState<{ page: string; agent: string } | null>(
