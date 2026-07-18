@@ -1,282 +1,229 @@
-# 🏥 Arogyamandiram
+# Arogyamandiram
 
-**A practical health companion for daily tracking**
+A practical health companion for daily tracking.
 
-A full-stack health tracking web app built with Next.js 15. It covers food logging, water tracking, weight, workouts, sleep, and AI-assisted recommendations.
+Arogyamandiram is a full-stack health tracking app built with Next.js 15. You log your food, water, weight, workouts and sleep, and the app does the math on calories, macros and streaks. Add an OpenAI key and it will also write meal ideas, workout plans and a daily plan for you.
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue) ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green) ![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8)
+![Next.js](https://img.shields.io/badge/Next.js-15-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue) ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green) ![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
----
-
-## ✨ Features
-
-### 📊 Dashboard
-- Real-time calorie & macro tracking with progress rings
-- Daily summary: calories, water, workouts, meals
-- Meal breakdown by type (breakfast/lunch/dinner/snack)
-- Quick action shortcuts
-
-### 🏅 Achievements & Streaks
-- Habit streaks for logging, water, workouts, sleep, and weight
-- Badge collection for first-time milestones and longer streaks
-- Dedicated achievements page with streak overview cards
-- Motivation section on the dashboard with your latest badge
-
-### 🍛 Food Logger
-- **150+ curated foods** built-in for quick logging across common meal types and staples
-- Fuzzy search with relevance scoring
-- Category filters for mains, legumes, breads, grains, snacks, desserts, drinks, protein, fruits, dips, and more
-- Custom food entry for anything not in the database
-- Quantity adjustor with scaled nutrition preview
-- Auto meal-type detection by time of day
-- USDA FoodData Central fallback for broader food search coverage
-
-### 💧 Water Tracker
-- Animated water glass visualization with wave effects
-- Quick-add buttons (100ml, 250ml, 500ml, 750ml)
-- Custom amount picker
-- Glass tracker visualization
-- Contextual hydration tips
-
-### ⚖️ Weight Journal
-- Interactive weight trend chart (recharts)
-- Period selector: 7D, 2W, 1M, 3M, 6M, 1Y
-- BMI calculator with visual scale
-- Weight history table with change indicators
-- Target weight reference line
-
-### 🏋️ Workout Planner
-- 50+ preset exercises across 5 categories (Cardio, Strength, Flexibility, Sports, Other)
-- Auto calorie estimation per exercise
-- Strength-specific: sets, reps, weight tracking
-- Burn goal progress ring
-- Category breakdown visualization
-
-### 🤖 Insights
-- AI-assisted insights for yesterday, weekly, monthly, and yearly views, based on the data you log
-- Privacy-first: we never send your name or email, only anonymized health metrics
-- Personalized meal suggestions
-- Custom workout plan generator
-- Requires OpenAI API key (user provides their own)
-
-### ✨ Ciel
-- A personalized daily health guide for outlooks, meals, workouts, and weekly direction
-- Food plans respect vegetarian, non-vegetarian, eggetarian, vegan, pescatarian, and flexitarian choices
-- Favorite cuisines, allergies, cooking comfort, and maximum cooking time are configured in **Settings → Customizations**
-- Every generated dish includes ingredients, prep/cook time, and step-by-step instructions
-
-### ⚙️ Settings & Onboarding
-- 4-step onboarding wizard
-- Profile management (height, weight, activity, goal)
-- API key management (AES-256 encrypted)
-- Custom daily targets
-- Metric/Imperial units
-- Notification preferences
-- Food, cuisine, allergy, and cooking preferences for Ciel
+There is also a native iOS app, [ArogyaM-iOS-v1](https://github.com/utsaaham/ArogyaM-iOS-v1), which talks to this same backend. More on it [below](#mobile-app-ios).
 
 ---
 
-## 🔒 Security Features
+## What you can do with it
 
-- **API Masking**: All API responses are filtered server-side, so sensitive data never shows up in the browser network tab
-- **Encrypted API Keys**: User API keys encrypted with AES-256-GCM before storage
-- **Password Hashing**: bcrypt with 12 salt rounds
-- **JWT Sessions**: 30-day expiry via NextAuth.js
-- **Route Protection**: Dashboard layout guards plus API session checks for protected flows
-- **Request Sanitization**: Frontend API client strips blocked fields before sending
+### Track your day
+
+- The dashboard has calorie and macro progress rings, a daily summary, and quick actions for whatever you log most.
+- The food logger ships with 150+ built-in foods. Search is fuzzy, there are category filters, and anything missing can be added as a custom food or pulled from USDA FoodData Central. The meal type (breakfast, lunch, dinner, snack) is guessed from the time of day.
+- The water tracker is an animated glass with quick-add buttons for common amounts.
+- The weight journal has a trend chart with period selectors from 7 days up to a year, a BMI calculator, and a history table with change indicators.
+- The workout planner has 50+ preset exercises with automatic calorie estimates. Strength workouts also track sets, reps and weight.
+- Sleep, vitals and todos each get their own page. "Today's plan" pulls everything planned for the day into a single view.
+
+### Keep yourself honest
+
+Logging consistently builds streaks. Streaks and milestones earn badges and XP, and your latest badge shows up on the dashboard. There's a dedicated achievements page with streak overview cards.
+
+### Let the AI help
+
+- Insights: yesterday, weekly, monthly and yearly summaries of what you logged. Privacy comes first here: the app never sends your name or email to the model, only anonymized numbers.
+- Ciel: a daily guide that plans your meals and workouts around your diet type (veg, non-veg, eggetarian, vegan, pescatarian, flexitarian), your favorite cuisines, allergies, and how long you're willing to cook. Every generated dish comes with ingredients, timings and steps.
+- Coach: an AI coach that remembers past conversations, writes weekly summaries and tracks health scores over time.
+
+AI needs an OpenAI key. You can set one server-wide, or each user can add their own in Settings (stored AES-256 encrypted).
+
+### Get nudged by email
+
+The app can send reminder emails over SMTP, and you can reply to them to log data. Replies are read over IMAP by a cron job. Users bring their own email and app password.
+
+### Set it up your way
+
+A 4-step onboarding wizard collects height, weight, activity level and goal. Settings covers daily targets, metric or imperial units, notification preferences, and the food and cooking preferences Ciel uses.
 
 ---
 
-## 🛠️ Tech Stack
+## Security
+
+- All API responses pass through a server-side mask (`lib/apiMask.ts`), so sensitive fields never reach the browser's network tab.
+- User API keys are encrypted with AES-256-GCM before they touch the database.
+- Passwords are hashed with bcrypt (12 rounds).
+- Sessions are JWTs via NextAuth.js with a 30-day expiry.
+- The dashboard layout and the API routes both check the session.
+- The frontend API client strips blocked fields before sending anything.
+- There is a proper forgot/reset password flow.
+
+---
+
+## Tech stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript 5.7 (strict) |
+| Framework | Next.js 15 (App Router, Turbopack in dev) |
+| Language | TypeScript 5.7, strict mode |
 | Styling | Tailwind CSS 3.4 |
-| Database | MongoDB (Mongoose 8) |
+| Database | MongoDB with Mongoose 8 |
 | Auth | NextAuth.js 4 (JWT) |
 | Charts | Recharts 2.15 |
 | Icons | Lucide React |
-| AI | OpenAI GPT-4o-mini |
-| Animation | Framer Motion + CSS |
-| Encryption | Node.js crypto (AES-256-GCM) |
+| AI | OpenAI SDK, models set via env |
+| Email | Nodemailer (SMTP) and ImapFlow (IMAP) |
+| Validation | Zod |
+| Animation | Framer Motion and CSS |
+| Encryption | Node.js crypto, AES-256-GCM |
 
 ---
 
-## 🚀 Getting Started
+## Getting started
 
-### Prerequisites
+You'll need:
 
-- Node.js 20.19+ (or Node.js 22.13+)
-- MongoDB Atlas account (free tier works)
-- (Optional) OpenAI API key for AI features
-- (Optional) USDA FoodData Central API key for broader food search coverage
+- Node.js 20.19+ (or 22.13+)
+- A MongoDB Atlas account (the free tier is fine)
+- Optionally an OpenAI API key for the AI pages
+- Optionally a USDA FoodData Central key for wider food search
 
-**What you need to provide:**
+| Variable | Required? | Where to get it | Notes |
+|----------|-----------|-----------------|-------|
+| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas), create a free cluster and copy the connection string | Use the same cluster for local and Vercel if you want shared data. |
+| `NEXTAUTH_SECRET` | Yes | `openssl rand -base64 32` | Keep it stable per environment. |
+| `ENCRYPTION_KEY` | Yes | `openssl rand -hex 32` | If local and Vercel share a database, this must be the same value in both places. Changing it makes stored API keys unreadable until users re-enter them. |
+| `NEXTAUTH_URL` | Yes | `http://localhost:3000` for local dev | Your Vercel URL in production. |
+| `CRON_SECRET` | For cron | Any random string | Authenticates calls to `/api/cron/*`. |
+| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) | Server-wide fallback. Users can also bring their own key in Settings. |
+| `FDC_API_KEY` | Optional | [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/) | Fallback for food lookups beyond the built-in catalog. |
 
-| Item | Required? | Where to get it | Notes |
-|------|-----------|-----------------|-------|
-| `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) - create a free cluster and copy the connection string | Use the same cluster for local + Vercel if you want to share data. |
-| `NEXTAUTH_SECRET` | Yes | Run `openssl rand -base64 32` | Must stay stable per deployed environment. |
-| `ENCRYPTION_KEY` | Yes | Run `openssl rand -hex 32` | **If you share a MongoDB cluster between local and Vercel, this MUST be the same value everywhere. Changing it will make all previously stored API keys undecryptable until users re-enter them.** |
-| `NEXTAUTH_URL` | Yes | Use `http://localhost:3000` for local dev | Set to your Vercel URL in production. |
-| `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) - for insights, meal ideas, and workout plans | Optional server-wide fallback. Users can also add their own key in **Settings → API Keys**, which is AES-256 encrypted in MongoDB. In production (Vercel), set this so AI keeps working even if a user key is missing or broken. |
-| `FDC_API_KEY` | Optional | [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/) - for broader food search | Optional server-wide fallback for food lookup beyond the built-in catalog. |
-
-### Installation
+### Install
 
 ```bash
-# Clone the repository
 git clone https://github.com/utsaaham/arogyamandiram.git
 cd arogyamandiram
-
-# Install dependencies
 npm install
-
-# Set up environment variables
 cp .env.example .env.local
 ```
 
-### Environment Variables
-
-Edit `.env.local` with your values:
+Then edit `.env.local`:
 
 ```env
 # Required
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/arogyamandiram
+MONGO_DB=arogyamandiram
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-min-32-characters-long
 ENCRYPTION_KEY=your-32-byte-hex-string-for-aes256
+CRON_SECRET=any-random-string
 
-# Optional - Server defaults for AI & food search
+# Optional, server defaults for AI and food search
 OPENAI_API_KEY=sk-...
 FDC_API_KEY=your-usda-fooddata-central-api-key
 
-NODE_ENV=development
+# Optional, email reminders (Gmail defaults)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+IMAP_HOST=imap.gmail.com
+IMAP_PORT=993
 ```
 
-**Generate secure keys:**
-
-```bash
-# NEXTAUTH_SECRET
-openssl rand -base64 32
-
-# ENCRYPTION_KEY (32 bytes hex)
-openssl rand -hex 32
-```
-
-### Run Development Server
+### Run it
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+This starts Next.js and a local cron runner together, with their logs interleaved. Open [http://localhost:3000](http://localhost:3000). The port can be changed with `PORT` in `.env.local`.
 
-### Build for Production
+For a production build:
 
 ```bash
 npm run build
 npm start
 ```
 
+### Deploy to Vercel
+
+The repo has a `vercel.json`, so you can deploy straight from GitHub. Two cron jobs come pre-configured: guest account cleanup runs daily at 03:00 and daily plan generation runs at 23:55. Set the same env vars in your Vercel project, and keep `ENCRYPTION_KEY` identical to local if the two share a database.
+
 ---
 
-## 📁 Project Structure
+## Mobile app (iOS)
+
+The native iOS app lives in its own repo: [utsaaham/ArogyaM-iOS-v1](https://github.com/utsaaham/ArogyaM-iOS-v1).
+
+It's built with SwiftUI and mirrors the web app's tabs and structure, so both feel like one product. It logs in with the same credentials and calls the same `/api/*` routes, either against your deployed URL or a locally running copy of this app. That repo's README covers Xcode setup, connecting to a backend, and running on a simulator or a real iPhone.
+
+---
+
+## Project structure
 
 ```
 arogyamandiram/
 ├── app/
-│   ├── (auth)/
-│   │   ├── login/page.tsx
-│   │   ├── register/page.tsx
-│   │   └── onboarding/page.tsx
+│   ├── (auth)/                   # login, register, onboarding,
+│   │                             # forgot-password, reset-password
 │   ├── (dashboard)/
-│   │   ├── layout.tsx            # Sidebar + mobile nav wrapper
-│   │   ├── dashboard/page.tsx    # Main dashboard
-│   │   ├── food/page.tsx         # Food logger
-│   │   ├── water/page.tsx        # Water tracker
-│   │   ├── weight/page.tsx       # Weight journal
-│   │   ├── workout/page.tsx      # Workout planner
-│   │   ├── sleep/page.tsx        # Sleep tracker
-│   │   ├── ai-insights/page.tsx  # Insights (yesterday, weekly, monthly, yearly)
-│   │   ├── achievements/page.tsx # Achievements & streaks
-│   │   └── settings/page.tsx     # Settings
+│   │   ├── layout.tsx            # sidebar + mobile nav wrapper
+│   │   ├── home/                 # main dashboard
+│   │   ├── food/                 # food logger
+│   │   ├── water/                # water tracker
+│   │   ├── weight/               # weight journal
+│   │   ├── workout/              # workout planner
+│   │   ├── sleep/                # sleep tracker
+│   │   ├── vitals/               # vitals
+│   │   ├── todos/                # todos and checklists
+│   │   ├── todays-plan/          # the day's plan in one view
+│   │   ├── coach/                # AI coach
+│   │   ├── ai/                   # insights
+│   │   ├── achievements/         # streaks and badges
+│   │   └── settings/
 │   ├── api/
-│   │   ├── auth/                 # NextAuth + register
-│   │   ├── user/                 # Profile, API keys, onboarding
-│   │   ├── foods/                # Food search + USDA fallback
-│   │   ├── daily-log/            # Daily log + meals
-│   │   ├── water/                # Water intake
-│   │   ├── weight/               # Weight history
-│   │   ├── workouts/             # Workout CRUD
-│   │   ├── cron/                 # Scheduled syncs, reminders, daily plans
-│   │   └── ai/                   # AI plans, recommendations, logging
-│   ├── globals.css               # Dark theme + glassmorphism
-│   ├── layout.tsx                # Root layout
-│   └── page.tsx                  # Landing page
-├── components/
-│   ├── food/                     # Food search cards, modals
-│   ├── layout/                   # Sidebar, MobileNav
-│   ├── achievements/             # Streak and badge cards
-│   ├── ui/                       # ProgressRing, MacroBar, Chart, Toast, etc.
-│   └── workout/                  # Workout modal
-├── hooks/
-│   ├── useDailyLog.ts            # Daily log data hook
-│   ├── useUser.ts                # User data hook
-│   └── useAchievements.ts        # Achievements (streaks + badges) hook
-├── lib/
-│   ├── apiClient.ts              # Frontend API wrapper (sanitized)
-│   ├── apiMask.ts                # Server-side response masking
-│   ├── auth.ts                   # NextAuth configuration
-│   ├── db.ts                     # MongoDB connection
-│   ├── encryption.ts             # AES-256 encryption
-│   ├── health.ts                 # BMR, TDEE, macro calculations
-│   ├── session.ts                # Auth helpers
-│   ├── gamification.ts           # Streak and badge calculation logic
-│   └── utils.ts                  # Formatters, validators
-├── models/
-│   ├── User.ts                   # User schema
-│   ├── DailyLog.ts               # Daily log schema
-│   ├── DailyPlan.ts              # AI daily plan schema
-│   └── Food.ts                   # Food cache/search schema
+│   │   ├── auth/                 # NextAuth, register, mobile login, password reset
+│   │   ├── user/                 # profile, API keys, onboarding
+│   │   ├── foods/                # food search + USDA fallback
+│   │   ├── daily-log/            # daily log and meals
+│   │   ├── water/ weight/ workouts/ sleep/ todos/
+│   │   ├── achievements/ scores/ health-snapshots/
+│   │   ├── coach/ intelligence/
+│   │   ├── email/                # reminder setup
+│   │   ├── cron/                 # reminders, daily plans, email replies, cleanup
+│   │   └── ai/                   # daily plan, meal ideas, loggers, orchestrator
+│   ├── globals.css               # dark theme + glassmorphism
+│   ├── layout.tsx
+│   └── page.tsx                  # landing page
+├── components/                   # ui, food, water, workout, layout,
+│                                 # achievements, landing, tour, orchestrator
+├── contexts/                     # user, orchestrator sidebar, debug logs
+├── hooks/                        # useUser, useDailyLog, useAchievements, usePlanAutoRefresh
+├── lib/                          # apiClient, apiMask, auth, db, encryption,
+│                                 # health, gamification, xp, level, adherence,
+│                                 # email/, intelligence/, scores/, ...
+├── models/                       # User, DailyLog, DailyPlan, Food,
+│                                 # CoachMemory, HealthSnapshot, WeeklySummary
+├── scripts/                      # dev.mjs, local-cron.mjs, logger.mjs
 ├── types/
-│   └── index.ts                  # TypeScript definitions
+└── public/                       # icons, badges, manifest.json (PWA)
 ```
 
 ---
 
-## 🎨 Design System
+## Design
 
-- **Theme**: Dark with glassmorphism (noise texture overlay)
-- **Colors**: Violet (primary), Emerald (success), Amber (warning), Rose (danger), Cyan (water)
-- **Typography**: DM Sans (body), Satoshi fallback (headings), JetBrains Mono (code)
-- **Components**: Glass cards, progress rings, macro bars, stat cards, modals
+Dark theme with glassmorphism and a noise texture overlay. Violet is the primary color, with emerald for success, amber for warnings, rose for danger and cyan for water. Type is DM Sans for body text, Satoshi as the heading fallback, and JetBrains Mono for code.
 
----
-
-## 📱 Responsive Design
-
-- **Desktop**: Full sidebar navigation (collapsible)
-- **Mobile**: Bottom tab navigation, stacked layouts
-- **Modals**: Bottom-sheet style on mobile, centered on desktop
+On desktop you get a collapsible sidebar; on mobile, bottom tabs and stacked layouts. Modals open centered on desktop and as bottom sheets on mobile. There's a PWA manifest too.
 
 ---
 
-## 🍛 Food Catalog
+## Food catalog
 
-150+ built-in foods with accurate per-serving nutrition data across mains, legumes, breads, rice dishes, snacks, sweets, drinks, fruits, seafood, and more.
-
-Each item includes: calories, protein, carbs, fat, fiber, serving size, veg/vegan flags.
+150+ built-in foods with per-serving nutrition data: calories, protein, carbs, fat, fiber, serving size, and veg/vegan flags. The catalog spans mains, legumes, breads, rice dishes, snacks, sweets, drinks, fruits and seafood.
 
 ---
 
-## 🤖 Integrating with AI Tools
+## AI coding tools and the .memory folder
 
-This project ships with a shared memory system (`.memory/`) that any AI coding tool can load. The entry point is `project-memory.md` + `.memory/README.md`.
+This project uses [Gnanam](https://github.com/utsaaham/gnanam), a portable memory system for AI coding agents. The `.memory/` folder and `project-memory.md` come from that repo. Any agent that reads them gets the project context, coding rules and workflows without you re-explaining everything.
 
-Each tool reads its own instruction file:
+Each tool has its own entry file, and they all point at the same memory:
 
 | Tool | File |
 |------|------|
@@ -285,18 +232,28 @@ Each tool reads its own instruction file:
 | Cursor | `.cursorrules` |
 | GitHub Copilot | `.github/copilot-instructions.md` |
 
-All files point to the same `.memory/` system - no duplication.
+If you want the same setup in your own project, grab it from the [gnanam repo](https://github.com/utsaaham/gnanam).
 
 ---
 
-## 📄 License
+## Related repos
+
+| Repo | What it is |
+|------|-----------|
+| [utsaaham/arogyamandiram](https://github.com/utsaaham/arogyamandiram) | This repo. Next.js web app and backend API. |
+| [utsaaham/ArogyaM-iOS-v1](https://github.com/utsaaham/ArogyaM-iOS-v1) | Native iOS app, SwiftUI. |
+| [utsaaham/gnanam](https://github.com/utsaaham/gnanam) | The portable AI memory system used in this repo. |
+
+---
+
+## License
 
 MIT
 
-## 💙 Inspiration Credit
+## About the name Ciel
 
-The name **Ciel** is a fan tribute inspired by *That Time I Got Reincarnated as a Slime* (*Tensura*). The original work, names, and characters belong to their respective creators and rights holders. Arogyamandiram is an independent open-source project and is not affiliated with or endorsed by the franchise.
+The name Ciel is a fan tribute inspired by *That Time I Got Reincarnated as a Slime* (*Tensura*). The original work, names and characters belong to their respective creators and rights holders. Arogyamandiram is an independent open-source project and is not affiliated with or endorsed by the franchise.
 
 ---
 
-Built for everyday health tracking, anywhere
+Built for everyday health tracking, anywhere.
