@@ -17,6 +17,7 @@ import {
   BookHeart,
   Brain,
   Flame,
+  Hourglass,
   Moon,
   Sparkles,
   Utensils,
@@ -515,6 +516,70 @@ function VitalsPageInner() {
     );
   };
 
+  const arogyamAge = vitals?.arogyamAge ?? null;
+  const ageDelta = arogyamAge?.delta ?? null;
+  const ageAccent =
+    ageDelta === null ? 'text-zinc-500'
+    : ageDelta <= -1 ? 'text-emerald-400'
+    : ageDelta < 1 ? 'text-amber-400'
+    : 'text-rose-400';
+  const agePhrase =
+    arogyamAge?.age === null || ageDelta === null ? null
+    : ageDelta <= -1 ? `${Math.abs(ageDelta)} years younger than your calendar age of ${arogyamAge!.chronologicalAge}`
+    : ageDelta < 1 ? `right around your calendar age of ${arogyamAge!.chronologicalAge}`
+    : `${ageDelta} years older than your calendar age of ${arogyamAge!.chronologicalAge}`;
+
+  const arogyamAgeCard = (
+    <div className="glass-card p-5 sm:p-6">
+      <div className="flex items-center gap-2">
+        <Hourglass className="h-5 w-5 text-emerald-400" />
+        <h2 className="text-sm font-semibold text-zinc-200">ArogyaM Age</h2>
+        <span className="text-[10px] text-zinc-600">estimate</span>
+        {arogyamAge && arogyamAge.age !== null && (
+          <span className="ml-auto rounded-full bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium capitalize text-zinc-400">
+            {arogyamAge.confidence} confidence
+          </span>
+        )}
+      </div>
+      {arogyamAge && arogyamAge.age !== null ? (
+        <div className="mt-4 grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-emerald-500/[0.04] p-5 text-center">
+            <p className={cn('text-6xl font-extrabold tabular-nums', ageAccent)}>{arogyamAge.age}</p>
+            <p className="mt-1 text-[10px] font-semibold tracking-[0.16em] text-zinc-500">AROGYAM AGE</p>
+            {agePhrase && <p className="mt-3 text-[12px] leading-relaxed text-zinc-400">{agePhrase}</p>}
+          </div>
+          <div className="space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {arogyamAge.components.map((c) => (
+                <div key={c.key} className="rounded-xl bg-white/[0.035] px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[12px] font-medium text-zinc-200">{c.label}</span>
+                    {c.yearsDelta !== null && c.yearsDelta !== 0 && (
+                      <span className={cn('shrink-0 text-[11px] font-semibold', c.yearsDelta < 0 ? 'text-emerald-400' : 'text-rose-400')}>
+                        {c.yearsDelta > 0 ? '+' : ''}{c.yearsDelta} yrs
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">{c.note}</p>
+                </div>
+              ))}
+            </div>
+            {arogyamAge.bestLever && (
+              <div className="rounded-xl bg-emerald-500/[0.05] px-4 py-3">
+                <span className="text-[12px] font-medium text-emerald-300">Fastest lever: {arogyamAge.bestLever.label}</span>
+                <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">{arogyamAge.bestLever.note}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-[12px] text-zinc-500">
+          {arogyamAge?.missingReason ?? 'ArogyaM Age needs a bit of profile and health data first.'}
+        </p>
+      )}
+    </div>
+  );
+
   const habitInsightsCard = (
     <div className="glass-card p-4 lg:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -680,6 +745,7 @@ function VitalsPageInner() {
                   <BodySummaryLine data={intelligence} />
                 </div>
               </div>
+              {arogyamAgeCard}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <HealthScoreCard data={intelligence} />
                 <GoalScoreCard data={intelligence} />

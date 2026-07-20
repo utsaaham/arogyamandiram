@@ -1,9 +1,9 @@
 // ============================================
 // /api/todos/templates - Manage recurring todo templates
 // ============================================
-// GET    → list all templates
-// POST   { title, note?, time?, category? } → create template
-// PUT    { id, title?, note?, time?, category?, enabled? } → update template
+// GET    → { templates, groups }
+// POST   { title, note?, time?, category?, group?, cadence?, cadenceDays? } → create template
+// PUT    { id, ...same fields..., enabled? } → update template
 // DELETE ?id= → delete template
 
 import { NextRequest } from 'next/server';
@@ -11,7 +11,11 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import DailyLog from '@/models/DailyLog';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
-import { DEFAULT_CARE_CADENCE, isCareCadence } from '@/lib/careCadence';
+import { DEFAULT_CUSTOM_DAYS, isCareCadence } from '@/lib/careCadence';
+import {
+  cadenceOf, groupOf, groupsForResponse, needsLastDone, sanitizeGroupId,
+  type RawTemplate, type TodoGroup,
+} from '@/lib/checklistGroups';
 import { getAuthUserId, isUserId } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +29,14 @@ function sanitizeTimes(raw: unknown): string[] {
     .map((t) => (/^\d{1,2}:\d{2}$/.test(t) ? t : ''));
 }
 
-/** Valid YYYY-MM-DD not in the future, for anchoring a care item's cycle. */
+/** Cycle length for custom cadences, clamped to 2-365 days. */
+function sanitizeCadenceDays(raw: unknown): number {
+  const n = typeof raw === 'number' ? Math.round(raw) : NaN;
+  if (!Number.isFinite(n)) return DEFAULT_CUSTOM_DAYS;
+  return Math.min(365, Math.max(2, n));
+}
+
+/** Valid YYYY-MM-DD not in the future, for anchoring a cycling item. */
 function sanitizeLastDone(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const value = raw.trim();
@@ -61,18 +72,17 @@ export async function GET() {
     if (!isUserId(userId)) return userId;
 
     await connectDB();
-    const user = await User.findById(userId).select('settings.todoTemplates').lean();
-    const templates = (
-      (user as { settings?: { todoTemplates?: unknown[] } } | null)?.settings?.todoTemplates ?? []
-    ) as Array<Record<string, unknown> & { id: string; category?: string }>;
+    const user = await User.findById(userId).select('settings.todoTemplates settings.todoGroups').lean();
+    const settings = (user as { settings?: { todoTemplates?: unknown[]; todoGroups?: TodoGroup[] } } | null)?.settings;
+    const templates = (settings?.todoTemplates ?? []) as RawTemplate[];
 
-    // Care items anchor their cycle to their most recent completion; the
-    // settings form needs it to show "when did you last do this?" on edit.
-    const careIds = templates.filter((t) => t.category === 'care').map((t) => t.id);
+    // Cycling items anchor to their most recent completion; the settings
+    // form needs it to show "when did you last do this?" on edit.
+    const cycleIds = templates.filter(needsLastDone).map((t) => t.id);
     const lastDone = new Map<string, string>();
-    if (careIds.length > 0) {
+    if (cycleIds.length > 0) {
       const historyLogs = await DailyLog.find(
-        { userId, 'todoCompletions.templateId': { $in: careIds } },
+        { userId, 'todoCompletions.templateId': { $in: cycleIds } },
         { date: 1, 'todoCompletions.templateId': 1 }
       )
         .sort({ date: -1 })
@@ -80,7 +90,7 @@ export async function GET() {
         .lean();
       for (const h of historyLogs as Array<{ date: string; todoCompletions?: Array<{ templateId: string }> }>) {
         for (const c of h.todoCompletions ?? []) {
-          if (careIds.includes(c.templateId) && !lastDone.has(c.templateId)) {
+          if (cycleIds.includes(c.templateId) && !lastDone.has(c.templateId)) {
             lastDone.set(c.templateId, h.date);
           }
         }
@@ -88,9 +98,13 @@ export async function GET() {
     }
 
     return maskedResponse({
-      templates: templates.map((t) =>
-        t.category === 'care' ? { ...t, lastDone: lastDone.get(t.id) ?? null } : t
-      ),
+      templates: templates.map((t) => ({
+        ...t,
+        group: groupOf(t),
+        cadence: cadenceOf(t),
+        ...(needsLastDone(t) ? { lastDone: lastDone.get(t.id) ?? null } : {}),
+      })),
+      groups: groupsForResponse(settings?.todoGroups, templates),
     });
   } catch (err) {
     console.error('[Todo Templates GET Error]:', err);
@@ -108,9 +122,11 @@ export async function POST(req: NextRequest) {
       note?: string;
       time?: string;
       category?: string;
+      group?: string;
       frequency?: number;
       times?: unknown[];
       cadence?: string;
+      cadenceDays?: number;
       lastDone?: string;
       baseItems?: unknown[];
     };
@@ -123,6 +139,19 @@ export async function POST(req: NextRequest) {
     const category = body.category ?? 'other';
     const times = sanitizeTimes(body.times).slice(0, frequency);
 
+    await connectDB();
+
+    // Validate the target group against the user's real groups.
+    const owner = await User.findById(userId).select('settings.todoTemplates settings.todoGroups').lean();
+    const ownerSettings = (owner as { settings?: { todoTemplates?: unknown[]; todoGroups?: TodoGroup[] } } | null)?.settings;
+    const knownGroups = groupsForResponse(ownerSettings?.todoGroups, (ownerSettings?.todoTemplates ?? []) as RawTemplate[]);
+
+    // Every item carries its own schedule now; daily is the default. Legacy
+    // clients that send category 'care' without a cadence keep cycling monthly.
+    const cadence = isCareCadence(body.cadence)
+      ? body.cadence
+      : category === 'care' ? 'monthly' as const : 'daily' as const;
+
     const newTemplate = {
       id: crypto.randomUUID(),
       title,
@@ -130,23 +159,21 @@ export async function POST(req: NextRequest) {
       // Keep the single time in sync with dose 1 for older readers.
       time: (times[0] || body.time?.trim()) ?? '',
       category,
+      group: sanitizeGroupId(body.group, knownGroups),
       enabled: true,
       frequency,
       times,
-      // Care items repeat on a cadence instead of resetting daily
-      ...(category === 'care'
-        ? { cadence: isCareCadence(body.cadence) ? body.cadence : DEFAULT_CARE_CADENCE }
-        : {}),
+      cadence,
+      ...(cadence === 'custom' ? { cadenceDays: sanitizeCadenceDays(body.cadenceDays) } : {}),
       baseItems: Array.isArray(body.baseItems) ? body.baseItems : [],
     };
 
-    await connectDB();
     await User.findByIdAndUpdate(userId, {
       $push: { 'settings.todoTemplates': newTemplate },
     });
 
-    // "When did you last do this?" anchors the care cycle to a real date.
-    const lastDone = category === 'care' ? sanitizeLastDone(body.lastDone) : null;
+    // "When did you last do this?" anchors a cycling item to a real date.
+    const lastDone = cadence !== 'daily' ? sanitizeLastDone(body.lastDone) : null;
     if (lastDone) {
       await recordCareCompletion(userId, newTemplate.id, lastDone);
     }
@@ -169,10 +196,12 @@ export async function PUT(req: NextRequest) {
       note?: string;
       time?: string;
       category?: string;
+      group?: string;
       enabled?: boolean;
       frequency?: number;
       times?: unknown[];
       cadence?: string;
+      cadenceDays?: number;
       lastDone?: string;
       baseItems?: unknown[];
     };
@@ -187,7 +216,12 @@ export async function PUT(req: NextRequest) {
     if (body.time !== undefined) updateFields['settings.todoTemplates.$.time'] = body.time.trim();
     if (body.category !== undefined) updateFields['settings.todoTemplates.$.category'] = body.category;
     if (body.enabled !== undefined) updateFields['settings.todoTemplates.$.enabled'] = body.enabled;
-    if (isCareCadence(body.cadence)) updateFields['settings.todoTemplates.$.cadence'] = body.cadence;
+    if (isCareCadence(body.cadence)) {
+      updateFields['settings.todoTemplates.$.cadence'] = body.cadence;
+      if (body.cadence === 'custom') {
+        updateFields['settings.todoTemplates.$.cadenceDays'] = sanitizeCadenceDays(body.cadenceDays);
+      }
+    }
     if (Array.isArray(body.baseItems)) updateFields['settings.todoTemplates.$.baseItems'] = body.baseItems;
     if (body.frequency !== undefined) {
       updateFields['settings.todoTemplates.$.frequency'] = Math.min(5, Math.max(1, Math.round(body.frequency)));
@@ -197,14 +231,20 @@ export async function PUT(req: NextRequest) {
       updateFields['settings.todoTemplates.$.times'] = times;
       if (times[0]) updateFields['settings.todoTemplates.$.time'] = times[0];
     }
+    if (body.group !== undefined) {
+      const owner = await User.findById(userId).select('settings.todoTemplates settings.todoGroups').lean();
+      const ownerSettings = (owner as { settings?: { todoTemplates?: unknown[]; todoGroups?: TodoGroup[] } } | null)?.settings;
+      const knownGroups = groupsForResponse(ownerSettings?.todoGroups, (ownerSettings?.todoTemplates ?? []) as RawTemplate[]);
+      updateFields['settings.todoTemplates.$.group'] = sanitizeGroupId(body.group, knownGroups);
+    }
 
     await User.findOneAndUpdate(
       { _id: userId, 'settings.todoTemplates.id': body.id },
       { $set: updateFields }
     );
 
-    // Re-anchor the care cycle when the user tells us the real last-done date.
-    const lastDone = body.category === 'care' || isCareCadence(body.cadence)
+    // Re-anchor the cycle when the user tells us the real last-done date.
+    const lastDone = body.category === 'care' || (isCareCadence(body.cadence) && body.cadence !== 'daily')
       ? sanitizeLastDone(body.lastDone)
       : null;
     if (lastDone) {
