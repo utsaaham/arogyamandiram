@@ -1,4 +1,4 @@
-# Arogyamandiram
+# ఆరోగ్యమందిరం ( Arogyamandiram ) 
 
 A practical health companion for daily tracking.
 
