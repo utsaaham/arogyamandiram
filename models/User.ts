@@ -189,8 +189,19 @@ const UserSchema = new Schema<IUserDocument>(
             enabled:   { type: Boolean, default: true },
             frequency: { type: Number, default: 1, min: 1, max: 5 }, // how many times per day (for supplements/medicines)
             times:     { type: [String], default: [] }, // per-dose times ("HH:mm"), index-aligned with dose number
-            cadence:   { type: String, enum: ['weekly', 'biweekly', 'monthly', 'quarterly', 'yearly'] }, // reminder cadence for care items
+            group:     { type: String, default: 'daily' }, // checklist group id ('daily' is built in)
+            cadence:   { type: String, enum: ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'yearly', 'custom'] }, // per-item schedule
+            cadenceDays: { type: Number, min: 2, max: 365 }, // cycle length when cadence === 'custom'
             baseItems: { type: [Schema.Types.Mixed], default: [] }, // pre-parsed food items for food category
+          },
+        ],
+        default: [],
+      },
+      todoGroups: {
+        type: [
+          {
+            id:   { type: String, required: true },
+            name: { type: String, required: true },
           },
         ],
         default: [],

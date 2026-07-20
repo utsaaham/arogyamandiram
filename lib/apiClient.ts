@@ -322,7 +322,7 @@ export const api = {
 
   // Todos
   getTodosForDate: (date: string) =>
-    apiFetch<{ date: string; templates: unknown[]; completions: unknown[] }>(`/todos?date=${date}`),
+    apiFetch<{ date: string; templates: unknown[]; completions: unknown[]; groups: { id: string; name: string }[] }>(`/todos?date=${date}`),
 
   toggleTodo: (templateId: string, date: string, completed: boolean) =>
     apiFetch('/todos', {
@@ -331,15 +331,15 @@ export const api = {
     }),
 
   getTodoTemplates: () =>
-    apiFetch<{ templates: unknown[] }>('/todos/templates'),
+    apiFetch<{ templates: unknown[]; groups: { id: string; name: string }[] }>('/todos/templates'),
 
-  createTodoTemplate: (t: { title: string; note?: string; time?: string; category?: string; frequency?: number; cadence?: string; baseItems?: Record<string, unknown>[] }) =>
+  createTodoTemplate: (t: { title: string; note?: string; time?: string; category?: string; group?: string; frequency?: number; times?: string[]; cadence?: string; cadenceDays?: number; lastDone?: string; baseItems?: Record<string, unknown>[] }) =>
     apiFetch('/todos/templates', {
       method: 'POST',
       body: JSON.stringify(t),
     }),
 
-  updateTodoTemplate: (t: { id: string; title?: string; note?: string; time?: string; category?: string; enabled?: boolean; frequency?: number; cadence?: string; baseItems?: Record<string, unknown>[] }) =>
+  updateTodoTemplate: (t: { id: string; title?: string; note?: string; time?: string; category?: string; group?: string; enabled?: boolean; frequency?: number; times?: string[]; cadence?: string; cadenceDays?: number; lastDone?: string; baseItems?: Record<string, unknown>[] }) =>
     apiFetch('/todos/templates', {
       method: 'PUT',
       body: JSON.stringify(t),
@@ -347,6 +347,21 @@ export const api = {
 
   deleteTodoTemplate: (id: string) =>
     apiFetch(`/todos/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  createTodoGroup: (name: string) =>
+    apiFetch<{ group: { id: string; name: string } }>('/todos/groups', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+
+  renameTodoGroup: (id: string, name: string) =>
+    apiFetch('/todos/groups', {
+      method: 'PUT',
+      body: JSON.stringify({ id, name }),
+    }),
+
+  deleteTodoGroup: (id: string) =>
+    apiFetch(`/todos/groups?id=${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
   // AI Orchestrator
   callOrchestrator: (text: string, imageBase64?: string, imageMimeType?: string) =>

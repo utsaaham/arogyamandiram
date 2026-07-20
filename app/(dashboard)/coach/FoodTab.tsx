@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import {
   Sparkles, Loader2, CalendarDays, Flame,
-  Lightbulb, ChevronDown, ChevronUp, X, CheckCircle2,
+  Lightbulb, RefreshCw, X, CheckCircle2,
   Coffee, Sun, Moon, Apple, Clock3, ListOrdered,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,61 +33,98 @@ type FoodPlan = {
 function MealCard({
   meal, type, onDislike, disliked,
 }: { meal: AiMealSuggestion; type: MealType; onDislike: (name: string) => void; disliked: boolean }) {
-  const [expanded, setExpanded] = useState(false);
+  const [flipped, setFlipped] = useState(false);
   const style = MEAL_STYLE[type];
   const Icon = style.icon;
   const ingredients = meal.ingredients ?? [];
   const steps = meal.steps ?? [];
+  const hasRecipe = ingredients.length > 0 || steps.length > 0;
+
+  // One base height for every card, front and back alike. The rotating face
+  // must NOT scroll itself - Safari ignores backface-visibility on elements
+  // with overflow, which lets the mirrored front bleed through the back. So
+  // each face is a plain rotated shell, and an inner wrapper does the
+  // scrolling. The opacity fade at mid-flip is a second guarantee.
+  const faceCls = cn(
+    '[grid-area:1/1] h-full [backface-visibility:hidden] rounded-2xl border transition-opacity duration-200 delay-100',
+    disliked ? 'border-zinc-800' : 'border-white/[0.06] bg-white/[0.025]'
+  );
+  const faceInnerCls = 'h-full overflow-y-auto p-5';
+
   return (
-    <article className={cn('rounded-2xl border p-5 transition-all', disliked ? 'border-zinc-800 opacity-40 line-through' : 'border-white/[0.06] bg-white/[0.025]')}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className={cn('mb-4 flex h-10 w-10 items-center justify-center rounded-xl', style.bg)}>
-            <Icon className={cn('h-5 w-5', style.color)} />
-          </div>
-          <p className={cn('text-[10px] font-semibold uppercase tracking-[0.16em]', style.color)}>{style.label}</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="mt-1 text-base font-semibold text-text-primary">{meal.name}</h3>
-            {meal.isVegetarian && (
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400">Veg</span>
+    <article className={cn('h-[360px] [perspective:1200px] transition-opacity', disliked && 'opacity-40')}>
+      <div
+        className={cn(
+          'grid h-full transition-transform duration-500 [transform-style:preserve-3d]',
+          flipped && '[transform:rotateY(180deg)]'
+        )}
+      >
+        {/* Front: the dish */}
+        <div className={cn(faceCls, flipped && 'pointer-events-none opacity-0')}>
+          <div className={faceInnerCls}>
+          <div className="flex items-start justify-between gap-2">
+            <div className={cn('min-w-0 flex-1', disliked && 'line-through')}>
+              <div className={cn('mb-4 flex h-10 w-10 items-center justify-center rounded-xl', style.bg)}>
+                <Icon className={cn('h-5 w-5', style.color)} />
+              </div>
+              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.16em]', style.color)}>{style.label}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="mt-1 text-base font-semibold text-text-primary">{meal.name}</h3>
+                {meal.isVegetarian && (
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400">Veg</span>
+                )}
+              </div>
+              {meal.description && (
+                <p className="mt-2 text-xs text-text-muted leading-relaxed">{meal.description}</p>
+              )}
+              <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
+                <span className="flex items-center justify-center gap-1 rounded-lg bg-zinc-800/70 px-2 py-1.5 text-zinc-300">
+                  <Flame className="h-2.5 w-2.5 text-orange-400" /> {meal.calories} kcal
+                </span>
+                <span className="rounded-lg bg-zinc-800/70 px-2 py-1.5 text-center text-zinc-300">Protein {meal.protein}g</span>
+                <span className="rounded-lg bg-zinc-800/70 px-2 py-1.5 text-center text-zinc-300">Carbs {meal.carbs}g</span>
+                <span className="rounded-lg bg-zinc-800/70 px-2 py-1.5 text-center text-zinc-300">Fat {meal.fat}g</span>
+              </div>
+            </div>
+            {!disliked && (
+              <button type="button" onClick={() => onDislike(meal.name)}
+                className="shrink-0 rounded-full p-1 text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400 transition-colors">
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
-          {meal.description && (
-            <p className="mt-2 text-xs text-text-muted leading-relaxed">{meal.description}</p>
+          {hasRecipe && (
+            <button type="button" onClick={() => setFlipped(true)}
+              className="mt-4 flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
+              <RefreshCw className="h-3 w-3" />
+              How to make this
+            </button>
           )}
-          <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
-            <span className="flex items-center justify-center gap-1 rounded-lg bg-zinc-800/70 px-2 py-1.5 text-zinc-300">
-              <Flame className="h-2.5 w-2.5 text-orange-400" /> {meal.calories} kcal
-            </span>
-            <span className="rounded-lg bg-zinc-800/70 px-2 py-1.5 text-center text-zinc-300">Protein {meal.protein}g</span>
-            <span className="rounded-lg bg-zinc-800/70 px-2 py-1.5 text-center text-zinc-300">Carbs {meal.carbs}g</span>
-            <span className="rounded-lg bg-zinc-800/70 px-2 py-1.5 text-center text-zinc-300">Fat {meal.fat}g</span>
           </div>
         </div>
-        {!disliked && (
-          <button type="button" onClick={() => onDislike(meal.name)}
-            className="shrink-0 rounded-full p-1 text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400 transition-colors">
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-      {(ingredients.length > 0 || steps.length > 0) && (
-        <button type="button" onClick={() => setExpanded(!expanded)}
-          className="mt-4 flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
-          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {expanded ? 'Hide recipe' : 'How to make this'}
-        </button>
-      )}
-      {expanded && (
-        <div className="mt-3 space-y-4 rounded-xl border border-white/[0.05] bg-black/15 p-4">
+
+        {/* Back: the recipe */}
+        <div className={cn(faceCls, '[transform:rotateY(180deg)]', !flipped && 'pointer-events-none opacity-0')}>
+          <div className={faceInnerCls}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.16em]', style.color)}>{style.label} · Recipe</p>
+              <h3 className="mt-1 text-base font-semibold text-text-primary">{meal.name}</h3>
+            </div>
+            <button type="button" onClick={() => setFlipped(false)}
+              className="shrink-0 rounded-full p-1 text-zinc-600 hover:bg-white/[0.06] hover:text-zinc-300 transition-colors"
+              title="Back to the dish">
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+          </div>
           {(meal.prepMinutes != null || meal.cookMinutes != null) && (
-            <div className="flex flex-wrap gap-3 text-[11px] text-zinc-400">
+            <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-zinc-400">
               {meal.prepMinutes != null && <span className="inline-flex items-center gap-1"><Clock3 className="h-3 w-3" /> Prep {meal.prepMinutes} min</span>}
               {meal.cookMinutes != null && <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Cook {meal.cookMinutes} min</span>}
             </div>
           )}
           {ingredients.length > 0 && (
-            <div>
+            <div className="mt-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-300">Ingredients</p>
               <ul className="mt-2 grid gap-1 text-xs leading-relaxed text-zinc-400 sm:grid-cols-2">
                 {ingredients.map((ingredient, index) => <li key={`${ingredient}-${index}`}>• {ingredient}</li>)}
@@ -95,7 +132,7 @@ function MealCard({
             </div>
           )}
           {steps.length > 0 && (
-            <div>
+            <div className="mt-4">
               <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-300"><ListOrdered className="h-3 w-3" /> Steps</p>
               <ol className="mt-2 space-y-2 text-xs leading-relaxed text-zinc-400">
                 {steps.map((step, index) => (
@@ -104,8 +141,14 @@ function MealCard({
               </ol>
             </div>
           )}
+          <button type="button" onClick={() => setFlipped(false)}
+            className="mt-4 flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
+            <RefreshCw className="h-3 w-3" />
+            Back to the dish
+          </button>
+          </div>
         </div>
-      )}
+      </div>
     </article>
   );
 }

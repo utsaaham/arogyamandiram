@@ -8,12 +8,13 @@ import {
   Loader2, RefreshCw, Flame,
   Mail, Plus, ListChecks, Pill, Zap, Trash2, Pencil, CheckSquare,
   Link2, RotateCcw, AlertCircle, SlidersHorizontal, Smile, Scissors,
+  FolderPlus, X,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useUser } from '@/hooks/useUser';
 import api from '@/lib/apiClient';
-import { CARE_CADENCES, cadenceInfo } from '@/lib/careCadence';
+import { CARE_CADENCES, cadenceInfo, isDailyCadence } from '@/lib/careCadence';
 import { cn } from '@/lib/utils';
 import { getTargetsForUser } from '@/lib/health';
 import { GOAL_OPTIONS } from '@/lib/goals';
@@ -22,7 +23,8 @@ import Image from 'next/image';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface TodoTemplate { id: string; title: string; note: string; time: string; category: string; enabled: boolean; frequency?: number; times?: string[]; cadence?: string; lastDone?: string | null; baseItems?: Record<string, unknown>[]; }
+interface TodoTemplate { id: string; title: string; note: string; time: string; category: string; group?: string; enabled: boolean; frequency?: number; times?: string[]; cadence?: string; cadenceDays?: number; lastDone?: string | null; baseItems?: Record<string, unknown>[]; }
+interface TodoGroupInfo { id: string; name: string }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1718,7 +1720,7 @@ function SettingsInner() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-accent-violet" />
-                  <h2 className="text-base font-semibold text-text-primary">Reminder schedule</h2>
+                  <h2 className="text-base font-semibold text-text-primary">Reminder schedule (email only)</h2>
                 </div>
                 <button onClick={savePreferences} disabled={prefSaving}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-50">
@@ -1726,7 +1728,7 @@ function SettingsInner() {
                   Save Schedule
                 </button>
               </div>
-              <p className="mt-1 text-xs text-text-muted">Set the times for each reminder. Leave blank to disable.</p>
+              <p className="mt-1 text-xs text-text-muted">These are email reminders. Set the times for each one; leave blank to disable. Phone nudges are set up in the iOS app under Notifications.</p>
 
               {/* Timezone */}
               <div className="mt-4">
@@ -2288,10 +2290,10 @@ function toTimeInputValue(raw: string): string {
   return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
 }
 
-type TodoFormValues = { title: string; note: string; time: string; category: string; frequency: number; times: string[]; cadence: string; lastDone: string };
+type TodoFormValues = { title: string; note: string; time: string; category: string; group: string; frequency: number; times: string[]; cadence: string; cadenceDays: number; lastDone: string };
 
 function TodoForm({
-  values, onChange, onSubmit, onCancel, saving, submitLabel, mode,
+  values, onChange, onSubmit, onCancel, saving, submitLabel, groups,
 }: {
   values: TodoFormValues;
   onChange: (f: TodoFormValues) => void;
@@ -2299,11 +2301,12 @@ function TodoForm({
   onCancel: () => void;
   saving: boolean;
   submitLabel: string;
-  mode: 'todos' | 'care';
+  groups: TodoGroupInfo[];
 }) {
-  const showFrequency = values.category === 'supplement' || values.category === 'medicine';
-  const isCare = mode === 'care';
-  const categoryOptions = TODO_CATEGORIES.filter((c) => c.value !== 'care');
+  const isDaily = isDailyCadence(values.cadence);
+  const showFrequency = isDaily && (values.category === 'supplement' || values.category === 'medicine');
+  // 'care' stays selectable only on legacy items that already carry it
+  const categoryOptions = TODO_CATEGORIES.filter((c) => c.value !== 'care' || values.category === 'care');
   return (
     <div className="mt-3 rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-5 space-y-4">
       {/* Title */}
@@ -2312,7 +2315,7 @@ function TodoForm({
         <input
           type="text" value={values.title} maxLength={80}
           onChange={(e) => onChange({ ...values, title: e.target.value })}
-          placeholder={isCare ? 'e.g. Haircut' : 'e.g. Vitamin D capsule'}
+          placeholder="e.g. Vitamin D capsule, Haircut, Water the plants"
           className={todoInputCls}
           autoComplete="off"
           style={{ outline: 'none', boxShadow: 'none' }}
@@ -2327,56 +2330,25 @@ function TodoForm({
         <input
           type="text" value={values.note} maxLength={160}
           onChange={(e) => onChange({ ...values, note: e.target.value })}
-          placeholder={isCare ? 'e.g. Book the usual salon' : 'e.g. Take with water after meal'}
+          placeholder="e.g. Take with water after meal"
           className={todoInputCls}
           autoComplete="off"
           style={{ outline: 'none', boxShadow: 'none' }}
         />
       </div>
 
-      {/* Category (care items are always care, so no picker there) */}
-      {!isCare && (
+      {/* Group */}
+      {groups.length > 1 && (
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Category</label>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-            {categoryOptions.map((c) => {
-              const CatIcon = c.icon;
-              const active = values.category === c.value;
-              return (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => onChange({ ...values, category: c.value, frequency: 1 })}
-                  className={cn(
-                    'flex flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-medium transition-all',
-                    active
-                      ? `border-transparent ${c.bgColor} ${c.color}`
-                      : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
-                  )}
-                >
-                  <CatIcon className={cn('h-4 w-4 shrink-0', active ? c.color : 'text-zinc-600')} />
-                  {c.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Reminder cadence for care items */}
-      {isCare && (
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-            When should we remind you?
-          </label>
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Group</label>
           <div className="flex flex-wrap gap-2">
-            {CARE_CADENCES.map((opt) => {
-              const active = values.cadence === opt.value;
+            {groups.map((g) => {
+              const active = (values.group || 'daily') === g.id;
               return (
                 <button
-                  key={opt.value}
+                  key={g.id}
                   type="button"
-                  onClick={() => onChange({ ...values, cadence: opt.value })}
+                  onClick={() => onChange({ ...values, group: g.id })}
                   className={cn(
                     'rounded-lg border px-3 py-2 text-xs font-medium transition-all',
                     active
@@ -2384,19 +2356,87 @@ function TodoForm({
                       : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
                   )}
                 >
-                  {opt.label}
+                  {g.name}
                 </button>
               );
             })}
           </div>
-          <p className="text-[11px] text-zinc-600">
-            When it comes due, we&apos;ll bring it back to your Care list. Skip it too long and we&apos;ll give you a gentle poke.
-          </p>
         </div>
       )}
 
-      {/* When was it last done? Anchors the care cycle to a real date. */}
-      {isCare && (
+      {/* Category */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Category</label>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+          {categoryOptions.map((c) => {
+            const CatIcon = c.icon;
+            const active = values.category === c.value;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => onChange({ ...values, category: c.value, frequency: 1 })}
+                className={cn(
+                  'flex flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-medium transition-all',
+                  active
+                    ? `border-transparent ${c.bgColor} ${c.color}`
+                    : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                )}
+              >
+                <CatIcon className={cn('h-4 w-4 shrink-0', active ? c.color : 'text-zinc-600')} />
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Schedule: daily resets each morning, everything else cycles */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+          How often?
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {CARE_CADENCES.map((opt) => {
+            const active = values.cadence === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange({ ...values, cadence: opt.value })}
+                className={cn(
+                  'rounded-lg border px-3 py-2 text-xs font-medium transition-all',
+                  active
+                    ? 'border-emerald-600 bg-emerald-500/10 text-emerald-300'
+                    : 'border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                )}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        {values.cadence === 'custom' && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-xs text-zinc-500">Every</span>
+            <input
+              type="number" min={2} max={365} value={values.cadenceDays}
+              onChange={(e) => onChange({ ...values, cadenceDays: Math.min(365, Math.max(2, Math.round(Number(e.target.value) || 2))) })}
+              className={cn(todoInputCls, 'w-24')}
+              style={{ outline: 'none', boxShadow: 'none' }}
+            />
+            <span className="text-xs text-zinc-500">days</span>
+          </div>
+        )}
+        <p className="text-[11px] text-zinc-600">
+          {isDaily
+            ? 'Daily items start fresh every morning, like a classic to-do.'
+            : 'We remember when you last did it and bring it back when it comes due.'}
+        </p>
+      </div>
+
+      {/* When was it last done? Anchors a cycling item to a real date. */}
+      {!isDaily && (
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             When did you last do this? <span className="normal-case font-normal text-zinc-600">(optional)</span>
@@ -2413,10 +2453,10 @@ function TodoForm({
             {values.lastDone
               ? (() => {
                   const next = new Date(`${values.lastDone}T00:00:00`);
-                  next.setDate(next.getDate() + cadenceInfo(values.cadence).days);
+                  next.setDate(next.getDate() + cadenceInfo(values.cadence, values.cadenceDays).days);
                   const label = next.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
                   return next.getTime() <= Date.now()
-                    ? `That makes it due already - it'll show up in your Care list right away.`
+                    ? `That makes it due already - it'll show up in your checklist right away.`
                     : `Next one comes due around ${label}.`;
                 })()
               : 'Tell us and the cycle starts from that day instead of today.'}
@@ -2425,7 +2465,7 @@ function TodoForm({
       )}
 
       {/* Time of day for daily items (single dose) */}
-      {!isCare && values.frequency <= 1 && (
+      {isDaily && values.frequency <= 1 && (
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             Around what time? <span className="normal-case font-normal text-zinc-600">(optional)</span>
@@ -2444,7 +2484,7 @@ function TodoForm({
       )}
 
       {/* Per-dose times when taken more than once a day */}
-      {!isCare && values.frequency > 1 && (
+      {isDaily && values.frequency > 1 && (
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             When is each dose? <span className="normal-case font-normal text-zinc-600">(optional)</span>
@@ -2528,7 +2568,7 @@ function TodoForm({
   );
 }
 
-const EMPTY_FORM: TodoFormValues = { title: '', note: '', time: '', category: 'other', frequency: 1, times: [], cadence: 'monthly', lastDone: '' };
+const EMPTY_FORM: TodoFormValues = { title: '', note: '', time: '', category: 'other', group: 'daily', frequency: 1, times: [], cadence: 'daily', cadenceDays: 3, lastDone: '' };
 
 const FREQUENCY_OPTIONS = [
   { value: 1, label: '1×', desc: 'Once' },
@@ -2540,20 +2580,31 @@ const FREQUENCY_OPTIONS = [
 
 function TodosSettingsTab() {
   const [templates, setTemplates] = useState<TodoTemplate[]>([]);
+  const [groups, setGroups] = useState<TodoGroupInfo[]>([{ id: 'daily', name: 'Daily' }]);
   const [loading, setLoading] = useState(false);
-  const [section, setSection] = useState<'todos' | 'care'>('todos');
+  const [section, setSection] = useState<string>('daily');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<TodoFormValues>(EMPTY_FORM);
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<TodoFormValues>(EMPTY_FORM);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [groupEditor, setGroupEditor] = useState<'add' | 'rename' | null>(null);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [savingGroup, setSavingGroup] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.getTodoTemplates();
-      if (res.success && res.data) setTemplates((res.data.templates ?? []) as TodoTemplate[]);
+      if (res.success && res.data) {
+        setTemplates((res.data.templates ?? []) as TodoTemplate[]);
+        const nextGroups = (res.data.groups ?? []) as TodoGroupInfo[];
+        if (nextGroups.length > 0) {
+          setGroups(nextGroups);
+          setSection((prev) => (nextGroups.some((g) => g.id === prev) ? prev : 'daily'));
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -2561,24 +2612,21 @@ function TodosSettingsTab() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const visibleTemplates = templates.filter((t) =>
-    section === 'care' ? t.category === 'care' : t.category !== 'care'
-  );
+  const visibleTemplates = templates.filter((t) => (t.group || 'daily') === section);
 
-  const switchSection = (next: 'todos' | 'care') => {
+  const switchSection = (next: string) => {
     setSection(next);
     setShowForm(false);
     setEditId(null);
-    setForm(next === 'care' ? { ...EMPTY_FORM, category: 'care' } : EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, group: next });
   };
 
   const handleAdd = async () => {
     if (!form.title.trim()) { showToast('Give it a title first', 'error'); return; }
     setAdding(true);
     try {
-      const category = section === 'care' ? 'care' : form.category;
       let baseItems: Record<string, unknown>[] = [];
-      if (category === 'food') {
+      if (form.category === 'food') {
         const foodText = [form.title, form.note].filter(Boolean).join(': ');
         const foodRes = await api.logFoodText(foodText, 'settings-todos');
         if (foodRes.success && foodRes.data?.items?.length) {
@@ -2587,10 +2635,10 @@ function TodosSettingsTab() {
         }
         // food parse failure is non-blocking; the template still saves
       }
-      const res = await api.createTodoTemplate({ ...form, category, baseItems });
+      const res = await api.createTodoTemplate({ ...form, baseItems });
       if (res.success) {
-        showToast(section === 'care' ? 'Care item added. We will keep an eye on it.' : 'To-do added. See you tomorrow morning!', 'success');
-        setForm(section === 'care' ? { ...EMPTY_FORM, category: 'care' } : EMPTY_FORM);
+        showToast(isDailyCadence(form.cadence) ? 'Added. See you tomorrow morning!' : 'Added. We will keep an eye on it.', 'success');
+        setForm({ ...EMPTY_FORM, group: section });
         setShowForm(false);
         await load();
       } else {
@@ -2653,7 +2701,51 @@ function TodosSettingsTab() {
     await api.updateTodoTemplate({ id, enabled });
   };
 
-  const isCareSection = section === 'care';
+  const handleSubmitGroup = async () => {
+    const name = newGroupName.trim();
+    if (!name || savingGroup) return;
+    setSavingGroup(true);
+    try {
+      if (groupEditor === 'add') {
+        const res = await api.createTodoGroup(name);
+        if (res.success && res.data) {
+          setGroupEditor(null);
+          setNewGroupName('');
+          await load();
+          switchSection(res.data.group.id);
+        } else {
+          showToast(res.error || 'Could not add that group. Try again?', 'error');
+        }
+      } else if (groupEditor === 'rename') {
+        const res = await api.renameTodoGroup(section, name);
+        if (res.success) {
+          setGroupEditor(null);
+          setNewGroupName('');
+          await load();
+        } else {
+          showToast(res.error || 'That rename did not save. Try again?', 'error');
+        }
+      }
+    } finally {
+      setSavingGroup(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    const group = groups.find((g) => g.id === section);
+    if (!group || section === 'daily') return;
+    const ok = window.confirm(`Delete the "${group.name}" group? Its items move to Daily.`);
+    if (!ok) return;
+    const res = await api.deleteTodoGroup(section);
+    if (res.success) {
+      switchSection('daily');
+      await load();
+    } else {
+      showToast(res.error || 'Could not delete that group. Try again?', 'error');
+    }
+  };
+
+  const isDailySection = section === 'daily';
 
   return (
     <div className="glass-card rounded-2xl p-6">
@@ -2665,41 +2757,102 @@ function TodosSettingsTab() {
             <h2 className="text-base font-semibold text-text-primary">Checklist</h2>
           </div>
           <p className="mt-1 text-xs text-text-muted">
-            {isCareSection
-              ? 'Haircuts, dentist visits, that kind of thing. Set a rhythm and we will remember for you.'
-              : 'Daily to-dos start fresh every morning. Add a time and we will nudge you if you run late.'}
+            {isDailySection
+              ? 'Daily to-dos start fresh every morning. Add a time and we will nudge you if you run late.'
+              : 'Each item here keeps its own rhythm: daily, weekly, monthly, or every N days.'}
           </p>
         </div>
         {!showForm && (
           <button type="button" onClick={() => setShowForm(true)}
             className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors">
             <Plus className="h-3 w-3" />
-            {isCareSection ? 'Add care item' : 'Add to-do'}
+            Add item
           </button>
         )}
       </div>
 
-      {/* To-dos / Care switcher */}
-      <div className="mt-4 flex gap-2">
-        {([
-          { key: 'todos', label: 'To-dos', icon: CheckSquare },
-          { key: 'care', label: 'Care', icon: Scissors },
-        ] as const).map((s) => (
+      {/* Group switcher */}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        {groups.map((g) => (
           <button
-            key={s.key}
+            key={g.id}
             type="button"
-            onClick={() => switchSection(s.key)}
+            onClick={() => switchSection(g.id)}
             className={cn(
               'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors',
-              section === s.key
+              section === g.id
                 ? 'bg-emerald-500/10 text-emerald-400'
                 : 'bg-zinc-900/60 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'
             )}
           >
-            <s.icon className="h-3.5 w-3.5" />
-            {s.label}
+            {g.id === 'daily' ? <CheckSquare className="h-3.5 w-3.5" /> : <Scissors className="h-3.5 w-3.5" />}
+            {g.name}
           </button>
         ))}
+        {groupEditor !== null ? (
+          <span className="flex items-center gap-1.5">
+            <input
+              autoFocus
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void handleSubmitGroup();
+                if (e.key === 'Escape') { setGroupEditor(null); setNewGroupName(''); }
+              }}
+              placeholder={groupEditor === 'add' ? 'Group name (Care, Home...)' : 'New name'}
+              maxLength={40}
+              className="w-40 rounded-xl border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void handleSubmitGroup()}
+              disabled={savingGroup || !newGroupName.trim()}
+              className="rounded-lg bg-emerald-500/10 p-1.5 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
+              title="Save group"
+            >
+              {savingGroup ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setGroupEditor(null); setNewGroupName(''); }}
+              className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-300"
+              title="Cancel"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </span>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => { setGroupEditor('add'); setNewGroupName(''); }}
+              className="flex items-center gap-1.5 rounded-xl border border-dashed border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-500 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+              Add group
+            </button>
+            {section !== 'daily' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { setGroupEditor('rename'); setNewGroupName(groups.find((g) => g.id === section)?.name ?? ''); }}
+                  className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-300"
+                  title="Rename this group"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteGroup()}
+                  className="rounded-lg p-1.5 text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400"
+                  title="Delete this group (items move to Daily)"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       {/* Add form */}
@@ -2708,10 +2861,10 @@ function TodosSettingsTab() {
           values={form}
           onChange={setForm}
           onSubmit={handleAdd}
-          onCancel={() => { setShowForm(false); setForm(isCareSection ? { ...EMPTY_FORM, category: 'care' } : EMPTY_FORM); }}
+          onCancel={() => { setShowForm(false); setForm({ ...EMPTY_FORM, group: section }); }}
           saving={adding}
           submitLabel="Add"
-          mode={section}
+          groups={groups}
         />
       )}
 
@@ -2724,15 +2877,15 @@ function TodosSettingsTab() {
         ) : visibleTemplates.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-800 py-10 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-800/60">
-              {isCareSection ? <Scissors className="h-6 w-6 text-zinc-600" /> : <CheckSquare className="h-6 w-6 text-zinc-600" />}
+              {isDailySection ? <CheckSquare className="h-6 w-6 text-zinc-600" /> : <Scissors className="h-6 w-6 text-zinc-600" />}
             </div>
             <p className="mt-3 text-sm font-medium text-zinc-400">
-              {isCareSection ? 'No care items yet' : 'No to-dos yet'}
+              {isDailySection ? 'No to-dos yet' : 'Nothing in this group yet'}
             </p>
             <p className="mt-1 text-xs text-zinc-600">
-              {isCareSection
-                ? 'Add the things you always forget: haircut, dentist, filter change...'
-                : 'Add supplements, medicines, habits, or food routines.'}
+              {isDailySection
+                ? 'Add supplements, medicines, habits, or food routines.'
+                : 'Add the things you always forget: haircut, dentist, filter change...'}
             </p>
           </div>
         ) : (
@@ -2751,7 +2904,7 @@ function TodosSettingsTab() {
                       onCancel={() => setEditId(null)}
                       saving={savingEdit}
                       submitLabel="Save"
-                      mode={t.category === 'care' ? 'care' : 'todos'}
+                      groups={groups}
                     />
                   </div>
                 ) : (
@@ -2775,15 +2928,15 @@ function TodosSettingsTab() {
                           </span>
                           {(t.category === 'supplement' || t.category === 'medicine') && (t.frequency ?? 1) > 1 && (
                             <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bgColor, cfg.color)}>
-                              {t.frequency}\u00d7 daily
+                              {t.frequency}&times; daily
                             </span>
                           )}
-                          {t.category === 'care' && (
-                            <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bgColor, cfg.color)}>
-                              {cadenceInfo(t.cadence).label}
+                          {!isDailyCadence(t.cadence) && (
+                            <span className="rounded-full bg-fuchsia-400/15 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-300">
+                              {cadenceInfo(t.cadence, t.cadenceDays).label}
                             </span>
                           )}
-                          {t.category !== 'care' && toTimeInputValue(t.time) && (
+                          {isDailyCadence(t.cadence) && toTimeInputValue(t.time) && (
                             <span className="rounded-full bg-zinc-800/80 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
                               {toTimeInputValue(t.time)}
                             </span>
@@ -2814,7 +2967,7 @@ function TodosSettingsTab() {
                         </button>
                         <button type="button"
                           title="Edit"
-                          onClick={() => { setEditId(t.id); setEditForm({ title: t.title, note: t.note, time: toTimeInputValue(t.time), category: t.category, frequency: t.frequency ?? 1, times: (t.times ?? []).map(toTimeInputValue), cadence: t.cadence ?? 'monthly', lastDone: t.lastDone ?? '' }); }}
+                          onClick={() => { setEditId(t.id); setEditForm({ title: t.title, note: t.note, time: toTimeInputValue(t.time), category: t.category, group: t.group ?? 'daily', frequency: t.frequency ?? 1, times: (t.times ?? []).map(toTimeInputValue), cadence: t.cadence ?? (t.category === 'care' ? 'monthly' : 'daily'), cadenceDays: t.cadenceDays ?? 3, lastDone: t.lastDone ?? '' }); }}
                           className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>

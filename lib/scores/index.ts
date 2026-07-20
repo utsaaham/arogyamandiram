@@ -3,6 +3,7 @@
 
 import type { IDailyLog } from '@/types';
 import { attributeScore, type ScoreAttribution } from '@/lib/intelligence/attribution';
+import { computeArogyamAge, type AgeProfileInput, type ArogyamAgeResult } from './age';
 import { baselineOf, column, zScore } from './baselines';
 import { computeGuidance } from './guidance';
 import { computeInsights } from './insights';
@@ -16,6 +17,8 @@ export type {
   DayInput, GuidanceResult, HabitInsight, ReadinessResult, ScoreComponent,
   SleepResult, StrainResult, StressResult,
 } from './types';
+export { computeArogyamAge } from './age';
+export type { AgeProfileInput, AgeComponent, ArogyamAgeResult } from './age';
 
 export interface VitalsTrendPoint {
   date: string;
@@ -62,6 +65,8 @@ export interface VitalsResult {
   sleep: SleepResult;
   stress: StressResult;
   guidance: GuidanceResult;
+  /** ArogyaM Age estimate; null-age until a profile age and some data exist */
+  arogyamAge: ArogyamAgeResult;
   attribution: VitalsAttribution;
   /** Attribution chained over the last week: what moved and why, day by day. */
   timeline: TimelineEvent[];
@@ -119,8 +124,10 @@ export function toDayInput(log: LeanLog): DayInput {
  * @param today  YYYY-MM-DD in the user's timezone. If the last entry isn't
  *               today, today's scores compute from whatever partial data exists.
  * @param trendDays How many trailing days to include in `trends`.
+ * @param profile   Optional profile slice for ArogyaM Age; omitting it just
+ *                  leaves the age null with a "complete your profile" reason.
  */
-export function computeVitals(days: DayInput[], today: string, trendDays = 30): VitalsResult {
+export function computeVitals(days: DayInput[], today: string, trendDays = 30, profile: AgeProfileInput = {}): VitalsResult {
   // Ensure there's an entry for today so baselines index correctly.
   let series = days;
   if (series.length === 0 || series[series.length - 1].date < today) {
@@ -250,6 +257,7 @@ export function computeVitals(days: DayInput[], today: string, trendDays = 30): 
     sleep: perDay[todayIndex].sleep,
     stress: perDay[todayIndex].stress,
     guidance: computeGuidance(todayInput, perDay[todayIndex].readiness),
+    arogyamAge: computeArogyamAge(series, profile),
     attribution,
     timeline,
     anomalies,

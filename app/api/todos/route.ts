@@ -9,6 +9,7 @@ import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import User from '@/models/User';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
+import { cadenceOf, groupOf, groupsForResponse, needsLastDone, type RawTemplate, type TodoGroup } from '@/lib/checklistGroups';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
 
@@ -25,26 +26,25 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     const [user, log] = await Promise.all([
-      User.findById(userId).select('settings.todoTemplates').lean(),
+      User.findById(userId).select('settings.todoTemplates settings.todoGroups').lean(),
       DailyLog.findOne({ userId, date }, { todoCompletions: 1 }).lean(),
     ]);
 
-    const templates = (
-      (user as { settings?: { todoTemplates?: unknown[] } } | null)?.settings?.todoTemplates ?? []
-    ) as Array<{ id: string; title: string; note: string; time: string; category: string; enabled: boolean; cadence?: string }>;
+    const settings = (user as { settings?: { todoTemplates?: unknown[]; todoGroups?: TodoGroup[] } } | null)?.settings;
+    const templates = (settings?.todoTemplates ?? []) as Array<RawTemplate & { enabled?: boolean }>;
 
     const completions = (
       (log as { todoCompletions?: unknown[] } | null)?.todoCompletions ?? []
     ) as Array<{ templateId: string; completedAt: string }>;
 
-    // Care items repeat on a cadence, so each one needs its most recent
+    // Cycling items repeat on a cadence, so each one needs its most recent
     // completion date (any day, not just today) to know where it stands.
     const enabledTemplates = templates.filter((t) => t.enabled);
-    const careIds = enabledTemplates.filter((t) => t.category === 'care').map((t) => t.id);
+    const cycleIds = enabledTemplates.filter(needsLastDone).map((t) => t.id);
     const lastDone = new Map<string, string>();
-    if (careIds.length > 0) {
+    if (cycleIds.length > 0) {
       const historyLogs = await DailyLog.find(
-        { userId, date: { $lte: date }, 'todoCompletions.templateId': { $in: careIds } },
+        { userId, date: { $lte: date }, 'todoCompletions.templateId': { $in: cycleIds } },
         { date: 1, 'todoCompletions.templateId': 1 }
       )
         .sort({ date: -1 })
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         .lean();
       for (const h of historyLogs as Array<{ date: string; todoCompletions?: Array<{ templateId: string }> }>) {
         for (const c of h.todoCompletions ?? []) {
-          if (careIds.includes(c.templateId) && !lastDone.has(c.templateId)) {
+          if (cycleIds.includes(c.templateId) && !lastDone.has(c.templateId)) {
             lastDone.set(c.templateId, h.date);
           }
         }
@@ -61,10 +61,14 @@ export async function GET(req: NextRequest) {
 
     return maskedResponse({
       date,
-      templates: enabledTemplates.map((t) =>
-        t.category === 'care' ? { ...t, lastDone: lastDone.get(t.id) ?? null } : t
-      ),
+      templates: enabledTemplates.map((t) => ({
+        ...t,
+        group: groupOf(t),
+        cadence: cadenceOf(t),
+        ...(needsLastDone(t) ? { lastDone: lastDone.get(t.id) ?? null } : {}),
+      })),
       completions,
+      groups: groupsForResponse(settings?.todoGroups, templates),
     });
   } catch (err) {
     console.error('[Todos GET Error]:', err);

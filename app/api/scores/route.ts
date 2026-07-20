@@ -50,9 +50,16 @@ export async function GET() {
   await connectDB();
 
   const user = await User.findById(userId)
-    .select('profile.timezone settings.reminderSchedule.timezone')
+    .select('profile.timezone profile.age profile.dateOfBirth profile.gender profile.height profile.weight settings.reminderSchedule.timezone')
     .lean() as {
-    profile?: { timezone?: string };
+    profile?: {
+      timezone?: string;
+      age?: number;
+      dateOfBirth?: Date;
+      gender?: 'male' | 'female' | 'other';
+      height?: number;
+      weight?: number;
+    };
     settings?: { reminderSchedule?: { timezone?: string } };
   } | null;
   const timezone = user?.profile?.timezone || user?.settings?.reminderSchedule?.timezone || undefined;
@@ -76,7 +83,13 @@ export async function GET() {
     .lean();
 
   const days = (logs as Array<Parameters<typeof toDayInput>[0]>).map(toDayInput);
-  const vitals = computeVitals(days, today, TREND_DAYS);
+  const vitals = computeVitals(days, today, TREND_DAYS, {
+    age: user?.profile?.age,
+    dateOfBirth: user?.profile?.dateOfBirth,
+    gender: user?.profile?.gender,
+    heightCm: user?.profile?.height,
+    weightKg: user?.profile?.weight,
+  });
 
   return maskedResponse(vitals);
 }

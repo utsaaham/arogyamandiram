@@ -29,13 +29,13 @@ const mainNavItems = [
   { href: '/home', icon: LayoutGrid, label: 'Home' },
   { href: '/coach', icon: Sparkles, label: 'Ciel' },
   { href: '/vitals', icon: VitalsIcon, label: 'Vitals' },
-  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/water', icon: Droplets, label: 'Water' },
+  { href: '/todays-plan', icon: CheckSquare, label: 'Checklist' },
   { href: '/food', icon: Utensils, label: 'Food' },
   { href: '/workout', icon: Dumbbell, label: 'Workout' },
   { href: '/weight', icon: Scale, label: 'Weight' },
+  { href: '/sleep', icon: Moon, label: 'Sleep' },
   { href: '/achievements', icon: Star, label: 'Achievements' },
-  { href: '/todays-plan', icon: CheckSquare, label: 'Checklist' },
 ];
 
 const extraNavItems: { href: string; icon: React.ElementType; label: string }[] = [];

@@ -1,25 +1,37 @@
-// Care-item reminder cadences: how often a care routine (haircut, dentist,
-// filter change...) should come around again. Shared by the settings form,
-// the checklist Care tab, and the todos API.
+// Per-item schedules for checklist items: how often something should come
+// around again (daily habits, weekly care, custom "every N days" cycles).
+// Shared by the settings form, the checklist page, and the todos API.
 
 export const CARE_CADENCES = [
+  { value: 'daily',     label: 'Daily',          days: 1 },
   { value: 'weekly',    label: 'Weekly',         days: 7 },
   { value: 'biweekly',  label: 'Every 2 weeks',  days: 14 },
   { value: 'monthly',   label: 'Monthly',        days: 30 },
   { value: 'quarterly', label: 'Every 3 months', days: 91 },
   { value: 'yearly',    label: 'Yearly',         days: 365 },
+  { value: 'custom',    label: 'Custom',         days: 30 },
 ] as const;
 
 export type CareCadence = (typeof CARE_CADENCES)[number]['value'];
 
-export const DEFAULT_CARE_CADENCE: CareCadence = 'monthly';
+export const DEFAULT_CARE_CADENCE: CareCadence = 'daily';
+export const DEFAULT_CUSTOM_DAYS = 3;
 
 export function isCareCadence(value: unknown): value is CareCadence {
   return typeof value === 'string' && CARE_CADENCES.some((c) => c.value === value);
 }
 
-export function cadenceInfo(value: string | undefined) {
-  return CARE_CADENCES.find((c) => c.value === value) ?? CARE_CADENCES[2];
+export function cadenceInfo(value: string | undefined, customDays?: number | null) {
+  if (value === 'custom') {
+    const days = typeof customDays === 'number' && customDays >= 2 ? Math.round(customDays) : DEFAULT_CUSTOM_DAYS;
+    return { value: 'custom' as const, label: `Every ${days} days`, days };
+  }
+  return CARE_CADENCES.find((c) => c.value === value) ?? CARE_CADENCES[0];
+}
+
+/** Daily items behave like classic to-dos (fresh every morning); everything else cycles. */
+export function isDailyCadence(cadence: string | undefined): boolean {
+  return !cadence || cadence === 'daily';
 }
 
 /** Whole days between a YYYY-MM-DD date and today (positive = in the past). */
@@ -35,14 +47,15 @@ export type CareStatus =
   | { state: 'due'; daysAgo: number }
   | { state: 'overdue'; daysAgo: number; overdueBy: number };
 
-/** Where a care item stands in its cycle, given its last completion date. */
+/** Where a cycling item stands, given its last completion date. */
 export function careStatus(
   lastDone: string | null | undefined,
   cadence: string | undefined,
-  today: string
+  today: string,
+  customDays?: number | null
 ): CareStatus {
   if (!lastDone) return { state: 'never' };
-  const info = cadenceInfo(cadence);
+  const info = cadenceInfo(cadence, customDays);
   const ago = daysSince(lastDone, today);
   if (ago < info.days) return { state: 'done', daysAgo: ago, nextInDays: info.days - ago };
   const overdueBy = ago - info.days;
