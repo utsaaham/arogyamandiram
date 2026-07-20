@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"feature/vercel-01\" ]; then exit 1; else exit 0; fi",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"vercel-01\" ]; then exit 1; else exit 0; fi",
   "crons": [
     {
       "path": "/api/cron/cleanup-guest-accounts",
