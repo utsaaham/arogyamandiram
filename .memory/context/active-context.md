@@ -1,8 +1,8 @@
 ---
 name: active-context
 type: context
-last_updated: 2026-07-19
-updated_by: claude-fable-5
+last_updated: 2026-07-21
+updated_by: codex-gpt-5
 staleness_days: 3
 ---
 
@@ -12,7 +12,9 @@ staleness_days: 3
 
 `feature/dev-01-minmial-changes-sprint-apr-22-26`
 
-## What's Being Worked On (as of 2026-07-19)
+## What's Being Worked On (as of 2026-07-21)
+
+**Food-photo recognition correction (2026-07-21, codex-gpt-5)** - Kept the existing orchestrator and confirmation UI unchanged. The food-logger vision step now scans the complete image, returns every detected solid food directly as an estimated total gram quantity (drinks in ml), then passes those items into the existing nutrition step. Fixed the unit-mismatch safeguard that divided a `1 serving` quantity by a model-returned gram quantity and produced near-zero calories. Added guards that refuse partial-item or implausibly low image nutrition instead of showing/logging it. No new review features, schemas, or controls were added.
 
 **iOS Notifications page (2026-07-19, claude-fable-5, iterated 3x with user)** - `Features/Notifications/NotificationsView.swift`, in Browse after Achievements (`MoreDestination.notifications`). FINAL FORM (ASCII-approved): the phone's EDITABLE nudge control panel, distinct from web email reminders. Water toggle + start/end DatePickers + interval menu (30m-3h), Meals toggle + 4 time pickers, Checklist toggle + explainer, permission banner deep-linking to iOS Settings. All bound to `NotificationService.shared.settings` (didSet persists + reschedules instantly). NO already-fired history, NO raw upcoming feed, NO per-item rules list (all three were earlier iterations the user rejected). `Features/Reminders/RemindersView.swift` DELETED - it was the same controls; the Settings "Reminders" card now pushes NotificationsView and is titled "Notifications". Web: Reminder-schedule card retitled "Reminder schedule (email only)" with subtitle pointing phone users to the iOS app - explicitly NO master email switch (user rejected). Gotchas: pbxproj is PBXFileSystemSynchronizedRootGroup (file deletes/adds need no project edits). xcodebuild + tsc + next build green.
 

@@ -104,11 +104,17 @@ items hidden from view) - the text always wins over the image when they conflict
 
 Rules:
 - Identify each dish/side/drink as its own item ("burger with fries and a coke" → 3 items).
+- Scan the full image systematically: main plate, bowls, cups, packages, sauces, garnishes,
+  and partially hidden side dishes. Never stop after finding the most prominent item.
 - Keep ingredients that are part of one dish as a single item
   ("rice bowl with chicken and avocado" → 1 item, named with its key ingredients).
-- Estimate realistic portion quantities from visual cues (plate size, container, count of pieces).
-  Prefer weight/volume units when the portion is clear (g, ml, cup, bowl), otherwise use
-  piece counts or quantity = 1 with unit = "serving".
+- Estimate the TOTAL visible weight of EVERY solid food item and return quantity in grams with
+  unit = "g". Estimate drinks in milliliters with unit = "ml". Use plate size, bowls, utensils,
+  packages, and counted pieces as visual scale references.
+- Do not return "1 serving" or "1 bowl" for a visible food when a gram estimate can be made.
+  The next nutrition step depends on receiving the estimated total weight directly as quantity.
+- For counted foods, still return their total estimated weight in grams; describe the count in
+  the name when useful (for example "6 pan-fried potato slices").
 - Include visible brand names in item names (e.g. McDonald's, Amul, Dunkin, Haldiram's).
 - If the photo contains NO food or drink at all, return an empty items array.
 - Units: piece, bowl, serving, cup, g, ml, tbsp, tsp.
@@ -265,6 +271,8 @@ Units will already be normalized to one of: piece, bowl, serving, cup, g, ml, tb
    - confidence: "high" | "medium" | "low"
    - sourceType: "brand_label" | "restaurant_db" | "ifct_usda_estimate"
    - preparationType: "homemade" | "restaurant" | "packaged" | "unknown"
+11. Return exactly one nutrition item for EVERY input item. Never omit, merge, or silently
+    discard a detected side, drink, sauce, or condiment. Preserve the input item count.
 
 Return JSON only using tool: get_meal_nutrition
 `;
@@ -1059,8 +1067,11 @@ export async function POST(req: NextRequest) {
           typeof x.each_weight_g === 'number' && !Number.isNaN(x.each_weight_g)
             ? Math.max(0, x.each_weight_g)
             : 0;
-        const total_weight_g =
-          unit === 'piece' && each_weight_g > 0 ? quantity * each_weight_g : null;
+        const total_weight_g = unit === 'g'
+          ? quantity
+          : unit === 'piece' && each_weight_g > 0
+            ? quantity * each_weight_g
+            : null;
 
         return {
           name,
@@ -1217,7 +1228,11 @@ export async function POST(req: NextRequest) {
         };
       }
 
-      const scale = current.quantity > 0 ? parsed.quantity / current.quantity : 1;
+      // Quantities are comparable only when their units match. A vision model may describe
+      // the same 150 g portion as "1 serving" in one step and "150 g" in the next; dividing
+      // 1 by 150 was the source of near-zero rice/dal calories in image results.
+      const sameUnit = current.unit.trim().toLowerCase() === parsed.unit.trim().toLowerCase();
+      const scale = sameUnit && current.quantity > 0 ? parsed.quantity / current.quantity : 1;
       const protein = Number((current.protein * scale).toFixed(2));
       const carbs = Number((current.carbs * scale).toFixed(2));
       const fat = Number((current.fat * scale).toFixed(2));
@@ -1286,6 +1301,26 @@ export async function POST(req: NextRequest) {
         } else {
           items.push(expected);
         }
+      }
+    }
+
+    if (items.length < parsedItems.length) {
+      return errorResponse(
+        `I detected ${parsedItems.length} food items but could only estimate nutrition for ${items.length}. Please retry or add a clearer angle so every item can be reviewed.`,
+        422
+      );
+    }
+
+    if (imageBase64) {
+      const implausiblyLowItem = items.find((item) => {
+        const parsed = parsedItems.find((candidate) => isLikelySameFood(candidate.name, item.name));
+        return parsed?.unit === 'g' && parsed.quantity >= 20 && item.calories < parsed.quantity * 0.05;
+      });
+      if (implausiblyLowItem) {
+        return errorResponse(
+          `Nutrition estimation was implausibly low for ${implausiblyLowItem.name}. Please retry the photo instead of logging an inaccurate result.`,
+          422
+        );
       }
     }
 
