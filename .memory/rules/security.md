@@ -1,7 +1,7 @@
 ---
 name: Security Rules
 type: rule
-last_updated: 2026-03-26
+last_updated: 2026-08-04
 applies_to: Fullstack Agent
 ---
 
@@ -28,9 +28,24 @@ applies_to: Fullstack Agent
 
 ## Session Validation
 
-- Every protected API route checks `getServerSession(authOptions)` first
-- Do not use `req.headers` or cookies directly for auth - use NextAuth session
+- Every protected API route resolves the caller through a `lib/session.ts` helper - never read `req.headers` or cookies for auth inside a route
 - JWT tokens expire after 30 days
+
+### Which helper to use
+
+| Helper | Accepts | Use on |
+|--------|---------|--------|
+| `getAuthUserId()` | session cookie only | default for anything session-only |
+| `getAuthUserIdWithBypass(req)` | cron secret, then session | routes the cron fan-out calls |
+| `getAuthUserIdWithBearer(req)` | cron secret, then session, then bearer key | routes headless clients call (iOS app) |
+
+### Bearer keys (headless clients)
+
+- The credential is the per-user health-data key at `settings.healthData.apiKeyEncrypted`, AES-256 encrypted and `select: false`
+- It is never queryable directly. The caller must send `x-arogyam-username` alongside `Authorization: Bearer <key>`; the username scopes the lookup to one row, which is then decrypted and compared
+- Always compare through `verifyHealthDataKey()` - it applies the revoke check and a constant-time compare. Do not hand-roll the decrypt-and-compare
+- `settings.healthData.apiKeyRevokedAt` is the kill switch. It is deliberately separate from `settings.healthData.enabled`, which only gates the pull cron - do not conflate them
+- Never enable bearer auth on `/api/auth/*`, `/api/user/upgrade`, or any route that can change a credential. A key that can set a password can take the account
 
 ## Input Validation
 

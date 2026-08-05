@@ -303,6 +303,8 @@ function SettingsInner() {
   const [hdApiKey, setHdApiKey] = useState('');
   const [hdShowApiKey, setHdShowApiKey] = useState(false);
   const [hdHasApiKey, setHdHasApiKey] = useState(false);
+  const [hdRevokedAt, setHdRevokedAt] = useState<string | null>(null);
+  const [hdRevoking, setHdRevoking] = useState(false);
   const [hdEnabled, setHdEnabled] = useState(false);
   const [hdInterval, setHdInterval] = useState(60);
   const [hdLastSyncAt, setHdLastSyncAt] = useState<string | null>(null);
@@ -444,6 +446,7 @@ function SettingsInner() {
       if (res.success && res.data) {
         setHdEndpoint(res.data.endpoint || '');
         setHdHasApiKey(res.data.hasApiKey ?? false);
+        setHdRevokedAt(res.data.apiKeyRevokedAt ?? null);
         setHdEnabled(res.data.enabled ?? false);
         setHdInterval(res.data.syncIntervalMinutes ?? 60);
         setHdLastSyncAt(res.data.lastSyncAt ?? null);
@@ -798,13 +801,30 @@ function SettingsInner() {
       if (res.success) {
         showToast('Mobile app connector saved', 'success');
         setHdApiKey('');
-        if (hdApiKey) setHdHasApiKey(true);
+        if (hdApiKey) { setHdHasApiKey(true); setHdRevokedAt(null); }
         setHdLoaded(false);
       } else {
         showToast(res.error || 'Failed to save', 'error');
       }
     } catch { showToast('Failed to save mobile app connector', 'error'); }
     finally { setHdSaving(false); }
+  };
+
+  // Kill switch for the connector token. Applies on click rather than on Save -
+  // a leaked credential should stop working the moment you say so.
+  const setHealthDataRevoked = async (revoked: boolean) => {
+    setHdRevoking(true);
+    try {
+      const res = await api.saveHealthDataConfig({ revoked });
+      if (res.success) {
+        setHdRevokedAt(revoked ? new Date().toISOString() : null);
+        showToast(revoked ? 'Connector token revoked' : 'Connector token restored', 'success');
+        setHdLoaded(false);
+      } else {
+        showToast(res.error || 'Failed to update token status', 'error');
+      }
+    } catch { showToast('Failed to update token status', 'error'); }
+    finally { setHdRevoking(false); }
   };
 
   const triggerHealthSync = async () => {
@@ -989,7 +1009,7 @@ function SettingsInner() {
   const fdcActive = !!user?.hasFdcKey;
   const hasSmtp = smtpConfigured || (user?.hasSmtp ?? false);
   const hasImap = imapConfigured || (user?.hasImap ?? false);
-  const connectorConfigured = Boolean(hdEndpoint.trim()) && hdHasApiKey;
+  const connectorConfigured = Boolean(hdEndpoint.trim()) && hdHasApiKey && !hdRevokedAt;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -2127,8 +2147,11 @@ function SettingsInner() {
                 <div>
                   <label className="text-xs font-medium text-text-muted">
                     Connector API token
-                    {hdHasApiKey && !hdApiKey && (
+                    {hdHasApiKey && !hdApiKey && !hdRevokedAt && (
                       <span className="ml-2 text-emerald-400">● Saved</span>
+                    )}
+                    {hdRevokedAt && (
+                      <span className="ml-2 text-rose-400">● Revoked</span>
                     )}
                   </label>
                   <div className="relative mt-1">
@@ -2147,6 +2170,31 @@ function SettingsInner() {
                       {hdShowApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+
+                  {hdHasApiKey && (
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => void setHealthDataRevoked(!hdRevokedAt)}
+                        disabled={hdRevoking}
+                        className={cn(
+                          'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50',
+                          hdRevokedAt
+                            ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                            : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'
+                        )}
+                      >
+                        {hdRevoking
+                          ? 'Working...'
+                          : hdRevokedAt ? 'Restore token' : 'Revoke token'}
+                      </button>
+                      <span className="text-xs text-text-muted">
+                        {hdRevokedAt
+                          ? 'This token is rejected on every request. Restore it or save a new one.'
+                          : 'Stops the token working immediately, without changing auto-sync.'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]">

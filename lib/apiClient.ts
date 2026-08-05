@@ -379,6 +379,7 @@ export const api = {
     apiFetch<{
       endpoint: string;
       hasApiKey: boolean;
+      apiKeyRevokedAt: string | null;
       enabled: boolean;
       syncIntervalMinutes: number;
       lastSyncAt: string | null;
@@ -392,6 +393,7 @@ export const api = {
     endpoint?: string;
     apiKey?: string;
     clearApiKey?: boolean;
+    revoked?: boolean;
     enabled?: boolean;
     syncIntervalMinutes?: number;
   }) =>

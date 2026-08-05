@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
-import { getAuthUserId, isUserId } from '@/lib/session';
+import { getAuthUserIdWithBearer, isUserId } from '@/lib/session';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { generateTargets } from '@/lib/health';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
@@ -29,9 +29,9 @@ function isValidTimeString(value: string): boolean {
 }
 
 // GET /api/user - Get current user profile (masked)
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const userId = await getAuthUserId();
+    const userId = await getAuthUserIdWithBearer(req);
     if (!isUserId(userId)) return userId; // Returns error response
 
     await connectDB();
@@ -72,7 +72,7 @@ export async function GET() {
 // PUT /api/user - Update user profile, settings, or targets
 export async function PUT(req: NextRequest) {
   try {
-    const userId = await getAuthUserId();
+    const userId = await getAuthUserIdWithBearer(req);
     if (!isUserId(userId)) return userId;
 
     const body = await req.json();

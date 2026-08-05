@@ -1,10 +1,10 @@
 ---
 state: populated
 created: 2026-03-26
-last_updated: 2026-07-21
-last_read: 2026-07-21
-updated_by: codex-gpt-5
-staleness_days: 3
+last_updated: 2026-08-04
+last_read: 2026-08-04
+updated_by: claude-opus-5
+staleness_days: 0
 ---
 
 # Project Memory
@@ -22,7 +22,7 @@ staleness_days: 3
 | context/ | 2026-07-21 | codex-gpt-5 | 3 days | Current |
 | agents/ | 2026-04-15 | codex-gpt-5 | 7 days | Current |
 | skills/ | 2026-04-15 | codex-gpt-5 | 10 days | Current |
-| rules/ | 2026-03-26 | claude-sonnet-4-6 | 14 days | Current |
+| rules/ | 2026-08-04 | claude-opus-5 | 14 days | Current |
 | commands/ | 2026-03-26 | claude-sonnet-4-6 | 14 days | Current |
 
 ---
@@ -37,7 +37,8 @@ staleness_days: 3
 ## Key Things Every Agent Must Know
 
 - All API responses go through **`lib/apiMask.ts`** - never return raw DB documents
-- API routes typically gate access through **`lib/session.ts`** helpers (`getAuthUserId`, `getAuthUserIdWithBypass`)
+- API routes typically gate access through **`lib/session.ts`** helpers (`getAuthUserId`, `getAuthUserIdWithBypass`, `getAuthUserIdWithBearer`)
+- Headless clients (iOS app) authenticate with `Authorization: Bearer <key>` **plus** `x-arogyam-username` - see `.memory/rules/security.md`
 - Protected app navigation is enforced in **`components/layout/DashboardLayoutClient.tsx`**; there is currently no root `middleware.ts`
 - Food search is **Mongo cache first + USDA FoodData Central fallback**, not Edamam
 - AI flows use **OpenAI Responses API** and power the orchestrator, daily plans, meal ideas, recommendations, and loggers
