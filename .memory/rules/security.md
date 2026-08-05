@@ -35,9 +35,15 @@ applies_to: Fullstack Agent
 
 | Helper | Accepts | Use on |
 |--------|---------|--------|
-| `getAuthUserId()` | session cookie only | default for anything session-only |
+| `getAuthUserId()` | session cookie only | the default - anything a browser calls |
 | `getAuthUserIdWithBypass(req)` | cron secret, then session | routes the cron fan-out calls |
-| `getAuthUserIdWithBearer(req)` | cron secret, then session, then bearer key | routes headless clients call (iOS app) |
+| `getAuthUserIdWithBearer(req)` | session, then bearer key | routes headless clients call (iOS app) |
+| `getAuthUserIdWithBypassAndBearer(req)` | cron secret, then session, then bearer | only routes that already had the cron bypass *before* bearer existed |
+
+The cron bypass grants "act as any user by ID", so it never rides along with bearer
+support - adding a key to a route must not quietly widen what the cron secret reaches.
+Current split: `/api/user` GET and `/api/daily-log/meal` DELETE are session+bearer;
+`/api/daily-log/meal` POST is the only bypass+bearer route.
 
 ### Bearer keys (headless clients)
 
@@ -46,6 +52,8 @@ applies_to: Fullstack Agent
 - Always compare through `verifyHealthDataKey()` - it applies the revoke check and a constant-time compare. Do not hand-roll the decrypt-and-compare
 - `settings.healthData.apiKeyRevokedAt` is the kill switch. It is deliberately separate from `settings.healthData.enabled`, which only gates the pull cron - do not conflate them
 - Never enable bearer auth on `/api/auth/*`, `/api/user/upgrade`, or any route that can change a credential. A key that can set a password can take the account
+- Same reasoning keeps bearer off `PUT /api/user`: it can change the username, and the username is what scopes the key's own lookup. A credential must not be able to invalidate what it authenticates by
+- The key's total reach is deliberately: read your own user, write health data, write meals. Widen it only when a client actually needs more
 
 ## Input Validation
 

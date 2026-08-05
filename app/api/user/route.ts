@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import { maskedResponse, errorResponse, maskUser } from '@/lib/apiMask';
-import { getAuthUserIdWithBearer, isUserId } from '@/lib/session';
+import { getAuthUserId, getAuthUserIdWithBearer, isUserId } from '@/lib/session';
 import { getAgeFromDateOfBirth } from '@/lib/utils';
 import { generateTargets } from '@/lib/health';
 import { getLatestLoggedWeight } from '@/lib/latestWeight';
@@ -70,9 +70,12 @@ export async function GET(req: NextRequest) {
 }
 
 // PUT /api/user - Update user profile, settings, or targets
+// Session-only on purpose. A bearer key is scoped by x-arogyam-username, and
+// this route can change the username - a credential must not be able to
+// invalidate what it is authenticated by. No client writes a profile with a key.
 export async function PUT(req: NextRequest) {
   try {
-    const userId = await getAuthUserIdWithBearer(req);
+    const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
 
     const body = await req.json();
