@@ -219,6 +219,10 @@ const UserSchema = new Schema<IUserDocument>(
       healthData: {
         endpoint:            { type: String, default: '' },
         apiKeyEncrypted:     { type: String, default: '', select: false }, // AES-256 encrypted
+        // Kill switch for the bearer credential. Distinct from `enabled`, which
+        // only gates the scheduled pull cron - revoking must not depend on, or
+        // interfere with, whether auto-sync is switched on.
+        apiKeyRevokedAt:     { type: Date, default: null },
         enabled:             { type: Boolean, default: false },
         syncIntervalMinutes: { type: Number, default: 60, min: 5, max: 1440 },
         lastSyncAt:          { type: Date },

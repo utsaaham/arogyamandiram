@@ -9,9 +9,8 @@ import { type NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import HealthSnapshot from '@/models/HealthSnapshot';
-import { decrypt } from '@/lib/encryption';
 import { applyHealthRecords } from '@/lib/healthDataSync';
-import { getAuthUserId, isUserId } from '@/lib/session';
+import { getAuthUserId, isUserId, verifyHealthDataKey } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,13 +24,16 @@ async function resolveUser(username: string, bearer: string, sessionUserId?: str
     _id: { toString(): string };
     profile?: { timezone?: string };
     settings?: {
-      healthData?: { apiKeyEncrypted?: string };
+      healthData?: { apiKeyEncrypted?: string; apiKeyRevokedAt?: Date | null };
       reminderSchedule?: { timezone?: string };
     };
   } | null;
   try {
     user = await User.findOne({ username })
-      .select('+settings.healthData.apiKeyEncrypted profile.timezone settings.reminderSchedule.timezone')
+      .select(
+        '+settings.healthData.apiKeyEncrypted settings.healthData.apiKeyRevokedAt '
+        + 'profile.timezone settings.reminderSchedule.timezone'
+      )
       .lean() as typeof user;
   } catch {
     return null;
@@ -43,15 +45,9 @@ async function resolveUser(username: string, bearer: string, sessionUserId?: str
   // remains supported for headless connector pulls and older app builds.
   if (sessionUserId && user._id.toString() === sessionUserId) return user;
 
-  const encrypted = user.settings?.healthData?.apiKeyEncrypted;
-  if (!bearer || !encrypted) return null;
-
-  try {
-    const key = decrypt(encrypted);
-    return key === bearer ? user : null;
-  } catch {
-    return null;
-  }
+  // Shared with lib/session.ts so the revoke check can never drift between
+  // this route and the generic bearer resolver.
+  return verifyHealthDataKey(user, bearer) ? user : null;
 }
 
 function extractBearer(req: NextRequest): string {

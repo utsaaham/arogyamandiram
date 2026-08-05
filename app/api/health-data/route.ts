@@ -32,6 +32,7 @@ export async function GET() {
   return maskedResponse({
     endpoint: (hd?.endpoint as string) || '',
     hasApiKey: !!(hd?.apiKeyEncrypted as string),
+    apiKeyRevokedAt: (hd?.apiKeyRevokedAt as Date | null) ?? null,
     enabled: (hd?.enabled as boolean) ?? false,
     syncIntervalMinutes: (hd?.syncIntervalMinutes as number) ?? 60,
     lastSyncAt: (hd?.lastSyncAt as Date | null) ?? null,
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
     endpoint?: string;
     apiKey?: string;
     clearApiKey?: boolean;
+    revoked?: boolean;
     enabled?: boolean;
     syncIntervalMinutes?: number;
   };
@@ -64,8 +66,16 @@ export async function POST(req: NextRequest) {
   }
   if (body.clearApiKey) {
     update['settings.healthData.apiKeyEncrypted'] = '';
+    update['settings.healthData.apiKeyRevokedAt'] = null;
   } else if (typeof body.apiKey === 'string' && body.apiKey.trim()) {
     update['settings.healthData.apiKeyEncrypted'] = encrypt(body.apiKey.trim());
+    // A newly issued key starts live; saving one un-revokes.
+    update['settings.healthData.apiKeyRevokedAt'] = null;
+  }
+  // Kill switch. Independent of `enabled`, which only gates the pull cron.
+  // Applied after the key writes above so an explicit revoke always wins.
+  if (typeof body.revoked === 'boolean') {
+    update['settings.healthData.apiKeyRevokedAt'] = body.revoked ? new Date() : null;
   }
   if (typeof body.enabled === 'boolean') {
     update['settings.healthData.enabled'] = body.enabled;
