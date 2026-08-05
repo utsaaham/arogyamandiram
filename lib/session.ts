@@ -136,8 +136,12 @@ export async function getAuthUserIdWithBypass(
 }
 
 /**
- * Get userId from cron bypass headers, session cookie, or bearer key - in that
- * order. Use this on routes the iOS app and other headless clients call.
+ * Get userId from session cookie or bearer key - no cron bypass.
+ *
+ * This is the default for routes the iOS app and other headless clients call.
+ * The cron bypass grants "act as any user by ID", so it is added only where a
+ * route genuinely needs it (see getAuthUserIdWithBypassAndBearer) rather than
+ * riding along with bearer support.
  *
  * Deliberately NOT for /api/auth/*, /api/user/upgrade, or anything that can
  * change credentials: a bearer key that can set a password can take the account.
@@ -145,9 +149,6 @@ export async function getAuthUserIdWithBypass(
 export async function getAuthUserIdWithBearer(
   req: NextRequest
 ): Promise<string | ReturnType<typeof errorResponse>> {
-  const fromBypass = resolveUserIdFromRequest(req);
-  if (fromBypass) return fromBypass;
-
   const session = await getServerSession(authOptions);
   const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
   if (sessionUserId) return sessionUserId;
@@ -156,6 +157,18 @@ export async function getAuthUserIdWithBearer(
   if (fromBearer) return fromBearer;
 
   return errorResponse('Unauthorized', 401);
+}
+
+/**
+ * Get userId from cron bypass headers, session cookie, or bearer key.
+ * Only for routes that already accepted the cron bypass before bearer existed.
+ */
+export async function getAuthUserIdWithBypassAndBearer(
+  req: NextRequest
+): Promise<string | ReturnType<typeof errorResponse>> {
+  const fromBypass = resolveUserIdFromRequest(req);
+  if (fromBypass) return fromBypass;
+  return getAuthUserIdWithBearer(req);
 }
 
 /**
