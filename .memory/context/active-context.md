@@ -1,8 +1,8 @@
 ---
 name: active-context
 type: context
-last_updated: 2026-07-21
-updated_by: codex-gpt-5
+last_updated: 2026-09-07
+updated_by: codex
 staleness_days: 3
 ---
 
@@ -12,7 +12,15 @@ staleness_days: 3
 
 `feature/dev-01-minmial-changes-sprint-apr-22-26`
 
-## What's Being Worked On (as of 2026-07-21)
+## What's Being Worked On (as of 2026-09-07)
+
+**IDE inspection cleanup (2026-09-07, codex)** - Removed unsupported WebKit autofill-control pseudo selectors and their now-unused recovery-form class hooks, deleted the unused IMAP debug-summary/outcome bookkeeping left after debugger removal, removed the unused Daily Outlook request body/parameter, dropped the unused food-logger `source` input, and localized orchestrator endpoint payloads to the branches that consume them. TypeScript and the full production build pass.
+
+**Password-reset link state fix (2026-09-07, codex)** - Fixed `/reset-password` discarding its one-time token after cleaning `?token=` from the address bar. The page now saves the token in tab-scoped `sessionStorage`, preserves Next.js history state while removing the query string, restores the token after the URL update/remount, and deletes it after a successful reset. TypeScript and the full production build pass.
+
+**Pydantic Logfire observability + debugger removal (2026-09-07, codex)** - Removed the `/debug` dashboard page, debugger navigation, debug React context/viewers, `/api/debug-logs`, local filesystem writers, and AI debug response payloads. Added server-wide Pydantic Logfire Node/OpenTelemetry instrumentation through `instrumentation.ts`, uncaught Next.js error reporting, automatic Node dependency/request tracing, a secret-safe same-origin browser OTLP proxy, browser request/navigation tracing, unhandled error reporting, session correlation, Web Vitals, and sampled long-animation-frame diagnostics. Telemetry uses the US Logfire region, reads the server-only `LOGFIRE_TOKEN`, and applies extra secret/identity scrubbing. `NEXT_PUBLIC_LOGFIRE_BROWSER_ENABLED=true` opts the browser in. Refreshed `caniuse-lite`, reconciled Next.js SWC lockfile entries with `npm install`, and replaced `.env.example` with a clean categorized template. TypeScript, the Logfire runtime smoke test, and a warning-free full production build pass. Live export still requires a real Logfire token in `.env.local` or Vercel.
+
+**Authentication hardening + password recovery (2026-09-06, codex)** - Preserved the existing login design and added a small Forgot password entry point plus matching recovery pages. Credentials auth now normalizes/validates email, uses a dummy bcrypt comparison for unknown accounts, returns generic errors, rejects unsafe callback targets, and applies durable Mongo-backed throttling keyed with HMAC-protected network/account identifiers. Added one-time 20-minute password-reset tokens stored only as SHA-256 hashes, atomic password replacement with bcrypt 12 rounds, reset-request throttling, session-version revocation, and recovery email delivery through a dedicated `AUTH_SMTP_*` sender with a fallback to the user’s existing encrypted SMTP configuration. New signup and guest-upgrade emails must now be proven with a mailed six-digit OTP before an account can attach them: codes are HMAC-protected at rest, expire after 10 minutes, allow five guesses, are one-use, have resend/network throttles, and exchange for a 15-minute one-use proof kept only in a Secure/SameSite/HttpOnly path-scoped cookie; successful accounts persist `emailVerifiedAt`. Security headers now cover the full app and the framework signature header is disabled. Registration and guest-upgrade credential validation share the hardened limits. Auth inputs now use a quiet neutral focus border instead of the double green halo; green hover shadows and supported WebKit contact/credential autofill controls were removed across sign-in, registration, onboarding, and recovery forms. The complete four-step onboarding and both recovery pages were moved off the legacy violet/glass theme onto the current black, warm-neutral, and bright-emerald auth theme; all selection states, progress indicators, cards, fields, and primary actions now match login/registration. A repository-wide legacy-primary-color sweep also changed generic focus/selection styles, elevated cards, shared inputs/buttons, loading states, guided-tour controls, Settings selections, the default stat-card accent, and the guest-account upgrade banner/modal from purple to neutral/emerald. Violet remains intentionally available for semantic categories such as protein, sleep, strength, and AI insights. Verified with TypeScript, a full production build before the final theme-only sweep, live password-recovery requests against configured port 30000, and TypeScript again after the email verification and theme sweeps.
 
 **Food-photo recognition correction (2026-07-21, codex-gpt-5)** - Kept the existing orchestrator and confirmation UI unchanged. The food-logger vision step now scans the complete image, returns every detected solid food directly as an estimated total gram quantity (drinks in ml), then passes those items into the existing nutrition step. Fixed the unit-mismatch safeguard that divided a `1 serving` quantity by a model-returned gram quantity and produced near-zero calories. Added guards that refuse partial-item or implausibly low image nutrition instead of showing/logging it. No new review features, schemas, or controls were added.
 

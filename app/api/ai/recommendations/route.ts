@@ -421,9 +421,7 @@ export async function POST(req: NextRequest) {
       .filter(Boolean)
       .join('\n');
 
-    const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
     let result: Record<string, unknown>;
-    let debugLog: Record<string, unknown> | undefined;
 
     switch (type) {
       case 'meal': {
@@ -448,27 +446,6 @@ Rules:
         const userPrompt = `${buildProfileContext('workout')}\n${recentContext}\n${context.focusArea ? `Focus area: ${context.focusArea}` : ''}\n${context.duration ? `Duration: ${context.duration} minutes` : 'Use their recommended daily workout duration if provided'}`;
         const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
         result = ai.parsed;
-        if (isDebugMode) {
-          debugLog = {
-            userRequest: {
-              type: 'workout',
-              focusArea: typeof context.focusArea === 'string' ? context.focusArea : '',
-              duration: typeof context.duration === 'string' ? context.duration : '',
-              requestedAt: ai.timestamp,
-            },
-            systemPrompt,
-            userPrompt,
-            response: ai.rawText,
-            parsedResult: ai.parsed,
-            metadata: {
-              model: ai.model,
-              usage: ai.usage,
-              latencyMs: ai.latencyMs,
-              timestamp: ai.timestamp,
-              status: 'success',
-            },
-          };
-        }
         break;
       }
 
@@ -559,28 +536,6 @@ Rules:
         const userPrompt = `${buildProfileContext('insights')}\n${insightContext}\nProvide ${periodLabel} insights and recommendations.`;
         const ai = await callOpenAI(apiKey, systemPrompt, userPrompt);
         result = { ...ai.parsed, generatedAt: new Date().toISOString() };
-        if (isDebugMode) {
-          debugLog = {
-            userRequest: {
-              type: 'insights',
-              period,
-              startDate,
-              endDate,
-              requestedAt: ai.timestamp,
-            },
-            systemPrompt,
-            userPrompt,
-            response: ai.rawText,
-            parsedResult: ai.parsed,
-            metadata: {
-              model: ai.model,
-              usage: ai.usage,
-              latencyMs: ai.latencyMs,
-              timestamp: ai.timestamp,
-              status: 'success',
-            },
-          };
-        }
         break;
       }
 
@@ -596,9 +551,6 @@ Rules:
         return errorResponse('Invalid recommendation type. Use: meal, workout, insights, or sleep', 400);
     }
 
-    if (isDebugMode && debugLog) {
-      return maskedResponse({ ...result, debugLog });
-    }
     return maskedResponse(result);
   } catch (err) {
     console.error('[AI Recommendations Error]:', err);

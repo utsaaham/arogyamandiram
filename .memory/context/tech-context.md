@@ -1,8 +1,8 @@
 ---
 name: tech-context
 type: context
-last_updated: 2026-04-15
-updated_by: codex-gpt-5
+last_updated: 2026-09-07
+updated_by: codex
 staleness_days: 7
 ---
 
@@ -27,6 +27,7 @@ staleness_days: 7
 | Validation | Zod | 3.24 |
 | Dates | date-fns | 4.1 |
 | Deployment | Vercel | nextjs framework |
+| Observability | Pydantic Logfire + OpenTelemetry | Node and browser SDKs |
 
 ## Directory Map
 
@@ -36,7 +37,7 @@ app/
   (dashboard)/      # protected pages + layout with sidebar/mobile nav
     dashboard, food, water, weight, workout, sleep, ai, ai-insights,
     achievements, settings, api-keys, preferences, targets, more, project,
-    debug, health-data, todos
+    health-data, todos
   api/
     ai/             # daily-plan, food-logger, health-plan, insights-eligibility,
                     # meal-ideas, orchestrator, recommendations, workout-logger
@@ -47,7 +48,7 @@ app/
     daily-log/      # core meals/log APIs + recent foods
     foods/          # local cache + USDA fallback food search
     workouts/       # workout CRUD + exercise helpers
-    water, weight, sleep, todos, achievements, debug-logs, health-data, health-metrics
+    water, weight, sleep, todos, achievements, health-data, health-metrics, logfire
   globals.css       # dark theme, glassmorphism, animations, layout utilities
   layout.tsx        # root layout with fonts
   page.tsx          # landing page
@@ -61,7 +62,6 @@ components/
   achievements/     # BadgeCard, BadgeGrid, StreakCard, StreakBar, BadgeIcon, etc.
   orchestrator/     # chat/history/confirmation UI for AI command routing
   tour/             # DashboardTour
-  debug/            # DebugLogsPage, DebuggerPanel, typed AI log viewers
 
 lib/
   auth.ts           # NextAuth config
@@ -82,7 +82,6 @@ lib/
   latestWeight.ts
   aiHealthPlan.ts
   mealIdeasService.ts
-  debugLogsConfig.ts
   healthDataSync.ts
   utils.ts
   constants.ts
@@ -129,8 +128,10 @@ CRON_SECRET             # required for /api/cron/* auth and internal cron fan-ou
 OPENAI_API_KEY          # server-wide AI fallback
 FDC_API_KEY             # USDA FoodData Central fallback key
 FOOD_CACHE_TTL_DAYS     # cache freshness window for imported foods
-PORT                    # local dev server port; .env.example defaults to 3000
-NEXT_PUBLIC_DEBUG_MODE  # true = enable debug logging
+PORT                    # local dev server port; .env.example defaults to 30000
+LOGFIRE_TOKEN                        # server-only Logfire write token
+LOGFIRE_ENVIRONMENT                  # deployment label (development/preview/production)
+NEXT_PUBLIC_LOGFIRE_BROWSER_ENABLED  # true = browser traces, errors, and Web Vitals
 NEXT_PUBLIC_DASHBOARD_TOUR_VERSION
 SMTP_HOST / SMTP_PORT
 IMAP_HOST / IMAP_PORT
@@ -138,7 +139,7 @@ IMAP_HOST / IMAP_PORT
 
 ## Dev Port
 
-Port is **environment-driven**. `.env.example` currently defaults to **3000** and `next.config.js` falls back `NEXTAUTH_URL` to `http://localhost:30000` only when the env var is missing, so local env values should be kept consistent.
+Port is **environment-driven**. `.env.example`, the local cron runner, and the development `NEXTAUTH_URL` fallback all default to **30000**, so local env values should be kept consistent.
 
 ## How to Run
 
@@ -160,4 +161,5 @@ npm run dev
 - **Cron fan-out pattern**: cron routes authenticate with `x-cron-secret`, then may call internal routes with `x-internal-user-id`
 - **Food cache-first search**: search Mongo first, then hydrate from USDA and persist
 - **OpenAI Responses API**: AI routes frequently use direct `fetch('https://api.openai.com/v1/responses')`
-- **Debug surfaces are productized**: AI/debug logs have dedicated UI viewers under `/debug` and `components/debug/*`
+- **Centralized observability**: `instrumentation.ts` configures Pydantic Logfire for server requests, dependencies, and uncaught errors; browser telemetry uses `/api/logfire/v1/traces` so the write token never reaches the client
+- **Telemetry privacy boundary**: do not attach prompts, health payloads, credentials, raw emails, cookies, or authorization headers to Logfire spans

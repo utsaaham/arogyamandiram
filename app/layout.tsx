@@ -3,6 +3,7 @@ import { Bebas_Neue, Outfit, JetBrains_Mono } from 'next/font/google';
 import AuthProvider from '@/components/AuthProvider';
 import { SafeAreaProvider } from '@/components/SafeAreaProvider';
 import ToastContainer from '@/components/ui/Toast';
+import { LogfireBrowser } from '@/components/LogfireBrowser';
 import './globals.css';
 
 // ---------- Fonts ----------
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="font-body bg-bg-primary text-text-primary antialiased">
+        <LogfireBrowser />
         <SafeAreaProvider />
         <AuthProvider>
           {children}

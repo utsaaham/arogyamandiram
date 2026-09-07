@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react';
 import { showToast } from '@/components/ui/Toast';
 
 export default function RegisterPage() {
@@ -16,12 +16,89 @@ export default function RegisterPage() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationChallengeId, setVerificationChallengeId] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verificationBusy, setVerificationBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated' && session) router.replace('/home');
   }, [session, status, router]);
+
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    setVerificationCode('');
+    setVerificationChallengeId('');
+    setEmailVerified(false);
+  }
+
+  async function requestVerificationCode() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      return showToast('Enter a valid email address first', 'error');
+    }
+
+    setVerificationBusy(true);
+    try {
+      const res = await fetch('/api/auth/email-verification/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail, purpose: 'register' }),
+      });
+      const data = await res.json() as {
+        success?: boolean;
+        data?: { challengeId?: string };
+        error?: string;
+      };
+      if (!res.ok || !data.data?.challengeId) {
+        return showToast(data.error || 'Could not send verification code', 'error');
+      }
+      setEmail(normalizedEmail);
+      setVerificationChallengeId(data.data.challengeId);
+      setVerificationCode('');
+      setEmailVerified(false);
+      showToast('Verification code sent to your email', 'success');
+    } catch {
+      showToast('Could not send verification code. Please try again.', 'error');
+    } finally {
+      setVerificationBusy(false);
+    }
+  }
+
+  async function verifyEmailCode() {
+    if (!verificationChallengeId || !/^\d{6}$/.test(verificationCode)) {
+      return showToast('Enter the 6-digit code', 'error');
+    }
+
+    setVerificationBusy(true);
+    try {
+      const res = await fetch('/api/auth/email-verification/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          purpose: 'register',
+          challengeId: verificationChallengeId,
+          code: verificationCode,
+        }),
+      });
+      const data = await res.json() as {
+        data?: { verified?: boolean };
+        error?: string;
+      };
+      if (!res.ok || !data.data?.verified) {
+        return showToast(data.error || 'The verification code is incorrect', 'error');
+      }
+      setEmailVerified(true);
+      showToast('Email verified', 'success');
+    } catch {
+      showToast('Could not verify the code. Please try again.', 'error');
+    } finally {
+      setVerificationBusy(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,13 +133,22 @@ export default function RegisterPage() {
     if (password !== confirmPassword) {
       return showToast('Passwords do not match', 'error');
     }
+    if (!emailVerified) {
+      return showToast('Verify your email before creating the account', 'error');
+    }
 
     setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username: un, email, dateOfBirth, password }),
+        body: JSON.stringify({
+          name,
+          username: un,
+          email: email.trim().toLowerCase(),
+          dateOfBirth,
+          password,
+        }),
       });
 
       const data = await res.json();
@@ -74,12 +160,12 @@ export default function RegisterPage() {
 
       // Auto sign-in after registration
       const signInRes = await signIn('credentials', {
-        email,
+        email: email.trim().toLowerCase(),
         password,
         redirect: false,
       });
 
-      if (signInRes?.error) {
+      if (!signInRes?.ok || signInRes.error) {
         showToast('Account created but sign-in failed. Please sign in manually.', 'error');
         router.push('/login');
       } else {
@@ -111,10 +197,22 @@ export default function RegisterPage() {
         @keyframes auth-f3 { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(10px,-35px) scale(1.2); } }
         .auth-input { width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:9px; padding:13px 14px; min-height:44px; font-size:14px; color:#F0EEEB; outline:none; transition:border-color 0.2s, background 0.2s; font-family:inherit; }
         .auth-input::placeholder { color:rgba(255,255,255,0.2); }
-        .auth-input:focus { border-color:rgba(30,221,139,0.35); background:rgba(30,221,139,0.03); outline:2px solid rgba(30,221,139,0.2); outline-offset:2px; }
+        .auth-input::-webkit-contacts-auto-fill-button,
+        .auth-input::-webkit-credentials-auto-fill-button,
+        .auth-input::-webkit-caps-lock-indicator {
+          display:none!important;
+          visibility:hidden!important;
+          opacity:0!important;
+          pointer-events:none!important;
+          position:absolute!important;
+          right:0!important;
+        }
+        .auth-input:focus { border-color:rgba(255,255,255,0.18); background:rgba(255,255,255,0.04); outline:none; }
+        .auth-input::-webkit-contacts-auto-fill-button,
+        .auth-input::-webkit-credentials-auto-fill-button { visibility:hidden; display:none!important; pointer-events:none; }
         .auth-input-pw { padding-right:42px; }
         .auth-btn { background:#1EDD8B; color:#060806; border:none; border-radius:9px; padding:13px 24px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px; font-family:inherit; }
-        .auth-btn:hover:not(:disabled) { background:#25F09A; transform:translateY(-2px); box-shadow:0 6px 30px rgba(30,221,139,0.25); }
+        .auth-btn:hover:not(:disabled) { background:#25F09A; transform:translateY(-2px); }
         .auth-btn:disabled { opacity:0.65; cursor:not-allowed; }
         .auth-link { color:#1EDD8B; text-decoration:none; }
         .auth-link:hover { text-decoration:underline; }
@@ -197,16 +295,54 @@ export default function RegisterPage() {
                   <label htmlFor="email" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#9B9990', marginBottom: 6 }}>
                     Email
                   </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="auth-input"
-                    autoComplete="email"
-                    required
-                  />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => handleEmailChange(e.target.value)}
+                      placeholder="you@example.com"
+                      className="auth-input"
+                      autoComplete="email"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={requestVerificationCode}
+                      disabled={verificationBusy || emailVerified}
+                      style={{ minWidth: 92, border: '1px solid rgba(30,221,139,0.35)', borderRadius: 9, padding: '0 12px', background: 'rgba(30,221,139,0.08)', color: '#1EDD8B', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {verificationBusy && !verificationChallengeId ? 'Sending…' : verificationChallengeId ? 'Resend' : 'Send code'}
+                    </button>
+                  </div>
+                  {verificationChallengeId && !emailVerified && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="6-digit code"
+                        aria-label="Email verification code"
+                        className="auth-input"
+                        maxLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={verifyEmailCode}
+                        disabled={verificationBusy || verificationCode.length !== 6}
+                        style={{ minWidth: 92, border: 'none', borderRadius: 9, padding: '0 12px', background: '#1EDD8B', color: '#060806', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        {verificationBusy ? 'Checking…' : 'Verify'}
+                      </button>
+                    </div>
+                  )}
+                  {emailVerified && (
+                    <p className="auth-hint" style={{ color: '#1EDD8B', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <CheckCircle2 style={{ width: 13, height: 13 }} /> Email verified
+                    </p>
+                  )}
                 </div>
 
                 <div>

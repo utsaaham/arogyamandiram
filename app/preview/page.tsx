@@ -9,7 +9,7 @@ import { StreakCard as AchievementStreakCard } from '@/components/achievements/S
 import StatMini from '@/components/ui/StatMini';
 import {
   LayoutGrid, Moon, Droplets, Utensils, Dumbbell, Scale, Star,
-  CalendarDays, CheckSquare, Activity, Bug, Settings, Code2,
+  CalendarDays, CheckSquare, Activity, Settings, Code2,
   Flame, HeartPulse, Footprints, MapPin, LogOut,
 } from 'lucide-react';
 import type { UserBadge } from '@/types';
@@ -33,9 +33,6 @@ const NAV_ITEMS = [
   { href: '/achievements', icon: Star,          label: 'Achievements' },
   { href: '/todays-plan',  icon: CalendarDays,  label: 'Checklist' },
   { href: '/todos',        icon: CheckSquare,   label: 'Todos' },
-  ...(process.env.NEXT_PUBLIC_DEBUG_MODE === 'true'
-    ? [{ href: '/debug', icon: Bug, label: 'Debugger' }]
-    : []),
 ];
 
 const BOTTOM_NAV = [

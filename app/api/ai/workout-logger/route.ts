@@ -264,7 +264,6 @@ function normalizeWorkout(raw: RawWorkout) {
 
 export async function POST(req: NextRequest) {
   try {
-    const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
     const userId = await getAuthUserIdWithBypass(req);
     if (!isUserId(userId)) return userId;
 
@@ -282,8 +281,6 @@ export async function POST(req: NextRequest) {
     }
 
     const userMessage = `The user describes completed workouts: "${text.trim()}". Parse this into structured workout entries that can be logged.`;
-    const requestedAt = new Date().toISOString();
-    const startedAt = Date.now();
 
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -388,30 +385,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (isDebugMode) {
-      const timestamp = new Date().toISOString();
-      const debugLog = {
-        userRequest: {
-          text: text.trim(),
-          requestedAt,
-        },
-        instructions: INSTRUCTIONS,
-        userMessage,
-        response: JSON.stringify(data, null, 2),
-        parsedResult: {
-          workouts,
-        },
-        metadata: {
-          model: typeof data.model === 'string' ? data.model : 'gpt-4o',
-          usage: data.usage ?? {},
-          latencyMs: Math.max(0, Date.now() - startedAt),
-          timestamp,
-          status: 'success',
-        },
-      };
-      return maskedResponse({ workouts, debugLog });
-    }
-
     return maskedResponse({ workouts });
   } catch (err) {
     console.error('[AI Workout Logger Error]:', err);
@@ -420,4 +393,3 @@ export async function POST(req: NextRequest) {
     return errorResponse(message, 500);
   }
 }
-

@@ -1,10 +1,9 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CURRENT_DASHBOARD_TOUR_VERSION } from '@/lib/constants';
-import { DebugLogsProvider } from '@/contexts/DebugLogsContext';
 import { OrchestratorSidebarProvider, useOrchestratorSidebar } from '@/contexts/OrchestratorSidebarContext';
 import { UserProvider, useUserContext } from '@/contexts/UserContext';
 import Sidebar from '@/components/layout/Sidebar';
@@ -56,10 +55,14 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
   }, [rightOpen, isXl]);
 
   useEffect(() => {
+    if (session?.authError === 'SessionRevoked') {
+      void signOut({ callbackUrl: '/login' });
+      return;
+    }
     if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [status, router]);
+  }, [session?.authError, status, router]);
 
   useEffect(() => {
     if (!user) return;
@@ -113,7 +116,7 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
         className="fixed inset-0 flex items-center justify-center"
         style={{ paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))' }}
       >
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-emerald border-t-transparent" />
       </div>
     );
   }
@@ -161,12 +164,10 @@ function DashboardLayoutInner({ children }: { children: ReactNode }) {
 
 export default function DashboardLayoutClient({ children }: { children: ReactNode }) {
   return (
-    <DebugLogsProvider>
-      <OrchestratorSidebarProvider>
-        <UserProvider>
-          <DashboardLayoutInner>{children}</DashboardLayoutInner>
-        </UserProvider>
-      </OrchestratorSidebarProvider>
-    </DebugLogsProvider>
+    <OrchestratorSidebarProvider>
+      <UserProvider>
+        <DashboardLayoutInner>{children}</DashboardLayoutInner>
+      </UserProvider>
+    </OrchestratorSidebarProvider>
   );
 }

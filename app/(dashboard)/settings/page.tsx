@@ -810,60 +810,20 @@ function SettingsInner() {
   const triggerHealthSync = async () => {
     if (!hdEndpoint.trim()) { showToast('Enter an endpoint URL first', 'error'); return; }
     setHdSyncing(true);
-    const requestedAt = new Date().toISOString();
     try {
       const res = await api.triggerHealthDataSync({ source: 'manual' });
       if (res.success && res.data) {
-        const { schema, rowCount, syncActions } = res.data;
+        const { rowCount } = res.data;
         setHdLastSyncAt(new Date().toISOString());
         setHdLastSyncSource('manual');
         setHdLastStatus('ok');
         setHdLastError('');
         showToast(`Synced ${rowCount} row${rowCount !== 1 ? 's' : ''} successfully`, 'success');
-        if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-          fetch('/api/debug-logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              page: 'health-data',
-              agent: 'sync',
-              log: {
-                userRequest: { endpoint: hdEndpoint, requestedAt },
-                syncResult: { schema, rowCount, syncActions },
-                metadata: {
-                  timestamp: new Date().toISOString(),
-                  status: 'success',
-                },
-              },
-            }),
-          }).catch(() => {});
-        }
       } else {
         setHdLastSyncSource('manual');
         setHdLastStatus('error');
         setHdLastError(res.error || 'Unknown error');
         showToast(res.error || 'Sync failed', 'error');
-        if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-          fetch('/api/debug-logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              page: 'health-data',
-              agent: 'sync',
-              log: {
-                userRequest: { endpoint: hdEndpoint, requestedAt },
-                syncResult: null,
-                metadata: {
-                  timestamp: new Date().toISOString(),
-                  status: 'error',
-                  error: res.error || 'Unknown error',
-                },
-              },
-            }),
-          }).catch(() => {});
-        }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sync failed';
@@ -1385,7 +1345,7 @@ function SettingsInner() {
                   </button>
                   {user?.hasOpenAiKey && (
                     <button type="button" onClick={regenerateHealthPlan} disabled={regeneratingPlan}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-accent-violet/40 bg-accent-violet/10 px-2.5 py-1 text-xs text-accent-violet hover:bg-accent-violet/20 transition-colors disabled:opacity-50">
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-accent-emerald/40 bg-accent-emerald/10 px-2.5 py-1 text-xs text-accent-emerald hover:bg-accent-emerald/20 transition-colors disabled:opacity-50">
                       {regeneratingPlan ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                       Regenerate plan
                     </button>
@@ -1719,7 +1679,7 @@ function SettingsInner() {
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-accent-violet" />
+                  <Bell className="h-4 w-4 text-accent-emerald" />
                   <h2 className="text-base font-semibold text-text-primary">Reminder schedule (email only)</h2>
                 </div>
                 <button onClick={savePreferences} disabled={prefSaving}
@@ -1736,7 +1696,7 @@ function SettingsInner() {
                   <label className="text-xs font-medium text-text-muted">Timezone</label>
                   <button type="button"
                     onClick={() => setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)}
-                    className="text-[10px] text-accent-violet hover:underline">
+                    className="text-[10px] text-accent-emerald hover:underline">
                     Auto-detect
                   </button>
                 </div>
@@ -1769,7 +1729,7 @@ function SettingsInner() {
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-text-primary">Water reminders</p>
                   <button type="button" onClick={() => setWaterReminderEnabled(!waterReminderEnabled)}
-                    className={cn('relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200', waterReminderEnabled ? 'bg-accent-violet' : 'bg-white/[0.1]')}
+                    className={cn('relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200', waterReminderEnabled ? 'bg-accent-emerald' : 'bg-white/[0.1]')}
                     aria-pressed={waterReminderEnabled}>
                     <span className={cn('absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200', waterReminderEnabled && 'translate-x-5')} />
                   </button>
@@ -1863,7 +1823,7 @@ function SettingsInner() {
               <div className="glass-card rounded-2xl p-6">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <Smile className="h-4 w-4 text-accent-violet" />
+                    <Smile className="h-4 w-4 text-accent-emerald" />
                     <h2 className="text-base font-semibold text-text-primary">Dashboard mascot</h2>
                   </div>
                   <button onClick={saveCustomizations} disabled={customizationsSaving}
@@ -1881,11 +1841,11 @@ function SettingsInner() {
                     <button key={m.value} type="button" onClick={() => setMascot(m.value)}
                       className={cn('rounded-2xl border p-3 flex flex-col items-center gap-2 transition-all',
                         mascot === m.value
-                          ? 'border-accent-violet/40 bg-accent-violet/10'
+                          ? 'border-accent-emerald/40 bg-accent-emerald/10'
                           : 'border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05]')}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={m.src} alt={m.label} className="w-20 h-20 object-contain" />
-                      <span className={cn('text-xs font-medium', mascot === m.value ? 'text-accent-violet' : 'text-text-muted')}>{m.label}</span>
+                      <span className={cn('text-xs font-medium', mascot === m.value ? 'text-accent-emerald' : 'text-text-muted')}>{m.label}</span>
                     </button>
                   ))}
                 </div>
@@ -1910,7 +1870,7 @@ function SettingsInner() {
                 {(['metric', 'imperial'] as const).map((u) => (
                   <button key={u} type="button" onClick={() => setUnits(u)}
                     className={cn('rounded-2xl border px-4 py-3 text-left transition-all',
-                      units === u ? 'border-accent-violet/30 bg-accent-violet/10 text-accent-violet'
+                      units === u ? 'border-accent-emerald/30 bg-accent-emerald/10 text-accent-emerald'
                         : 'border-white/[0.06] bg-white/[0.03] text-text-muted hover:bg-white/[0.05]')}>
                     <p className="text-sm font-semibold capitalize">{u}</p>
                     <p className="mt-0.5 text-[11px] opacity-80">{u === 'metric' ? 'kg, cm' : 'lbs, in'}</p>

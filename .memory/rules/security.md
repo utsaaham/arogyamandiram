@@ -1,7 +1,8 @@
 ---
 name: Security Rules
 type: rule
-last_updated: 2026-03-26
+last_updated: 2026-09-07
+updated_by: codex
 applies_to: Fullstack Agent
 ---
 
@@ -41,8 +42,8 @@ applies_to: Fullstack Agent
 ## Environment Secrets
 
 - Never commit `.env.local` or any file containing real secrets
-- Never log API keys, passwords, or encryption keys - check debug logging code
-- `NEXT_PUBLIC_DEBUG_MODE=true` must never be set in production
+- Never log API keys, passwords, encryption keys, prompts, raw health records, cookies, authorization headers, or reset/verification tokens
+- `LOGFIRE_TOKEN` is server-only and must never use a `NEXT_PUBLIC_` name
 
 ## Forbidden
 

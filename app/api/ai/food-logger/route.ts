@@ -21,7 +21,6 @@ import { normalizeGoal } from '@/lib/goals';
 import { getWeightTrendForUser } from '@/lib/weightTrend';
 import { deriveTargetGap } from '@/app/api/ai/daily-plan/shared';
 import { COACH_TONE } from '@/lib/tone';
-import { writeDebugLog } from '@/lib/debugLogWriter';
 
 export const dynamic = 'force-dynamic';
 
@@ -927,12 +926,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({})) as {
       text?: unknown;
-      source?: unknown;
       imageBase64?: unknown;
       imageMimeType?: unknown;
     };
     const text = typeof body.text === 'string' ? body.text : '';
-    const source = typeof body.source === 'string' ? body.source : '';
     const imageBase64 = typeof body.imageBase64 === 'string' && body.imageBase64.length > 0
       ? body.imageBase64
       : null;
@@ -952,8 +949,6 @@ export async function POST(req: NextRequest) {
     }
 
     const mealText = text.trim();
-    const requestedAt = new Date().toISOString();
-    const startMs = Date.now();
 
     // --- STEP 1: Parse meal text and/or photo → structured food items only ---
     const parseInstructions = imageBase64 ? IMAGE_PARSE_INSTRUCTIONS : PARSE_INSTRUCTIONS;
@@ -1376,71 +1371,15 @@ export async function POST(req: NextRequest) {
     // --- STEP 3: Personalized feedback using the user's targets + today's log ---
     const feedback = await generateMealFeedback(userId, apiKey, items, total);
 
-    const latencyMs = Date.now() - startMs;
-
     const payload: {
       items: NormalizedItem[];
       total: ReturnType<typeof computeTotal>;
       feedback?: string;
-      debugLog?: unknown;
     } = {
       items,
       total,
       ...(feedback ? { feedback } : {}),
     };
-    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-      const step1Usage = parseData.usage;
-      const step2Usage = data.usage;
-      const pt = (u: typeof step1Usage) => (u?.prompt_tokens ?? u?.input_tokens ?? 0);
-      const ct = (u: typeof step1Usage) => (u?.completion_tokens ?? u?.output_tokens ?? 0);
-      const combinedUsage = step1Usage && step2Usage
-        ? {
-            prompt_tokens: pt(step1Usage) + pt(step2Usage),
-            completion_tokens: ct(step1Usage) + ct(step2Usage),
-          }
-        : step2Usage ?? step1Usage;
-
-      payload.debugLog = {
-        userRequest: { text: mealText, source: source || 'direct', requestedAt },
-        step1: {
-          prompt: `User text: ${mealText}`,
-          instructions: PARSE_INSTRUCTIONS,
-          response: JSON.stringify({ items: parsedItems }, null, 2),
-          parsedItems,
-          usage: step1Usage,
-        },
-        step1_5: {
-          brandedItems: brandedItems.map((i) => i.name),
-          externalNutritionData: hasExternalData ? externalNutritionData : null,
-          cacheHits: brandedItems.filter((i) => brandNutritionCache.has(i.name.toLowerCase().trim())).map((i) => i.name),
-        },
-        step2: {
-          prompt: nutritionInput,
-          instructions: NUTRITION_INSTRUCTIONS,
-          response: toolCall.arguments,
-          finalItems: items,
-          total,
-          usage: step2Usage,
-        },
-        metadata: {
-          model: 'gpt-4o',
-          usage: combinedUsage,
-          step1Usage,
-          step2Usage,
-          latencyMs,
-          timestamp: new Date().toISOString(),
-          status: 'success',
-          pipeline: hasExternalData ? 'three-step-brand' : 'two-step',
-        },
-      };
-
-      await writeDebugLog({
-        userId,
-        page: source === 'settings-todos' ? 'settings' : 'food',
-        agent: source === 'settings-todos' ? 'todos-food-parser' : 'ai-logger',
-        payload: payload.debugLog as Record<string, unknown>,
-      });
-    }
     return maskedResponse(payload);
   } catch (err) {
     console.error('[AI Food Logger Error]:', err);

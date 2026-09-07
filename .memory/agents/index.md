@@ -18,18 +18,18 @@
 - `models/` - `User.ts`, `DailyLog.ts`, `DailyPlan.ts`, `Food.ts`
 - `lib/auth.ts`, `lib/session.ts`, `lib/db.ts`, `lib/encryption.ts`, `lib/apiMask.ts`
 - `lib/openaiKey.ts`, `lib/aiHealthPlan.ts`, `lib/mealIdeasService.ts`, `lib/healthDataSync.ts`
-- `lib/health.ts`, `lib/gamification.ts`, `lib/calorieBurn.ts`, `lib/debugLogsConfig.ts`
+- `lib/health.ts`, `lib/gamification.ts`, `lib/calorieBurn.ts`
 
 ### Mateo (UI Frontend)
 - `app/(dashboard)/` and `app/(auth)/`
-- `components/` - including orchestrator and debug viewers
+- `components/` - including orchestrator views and browser telemetry initialization
 - `app/globals.css`, `tailwind.config.ts`
 - `hooks/`, `contexts/`
 - `lib/apiClient.ts`
 
 ### Kevin (DevOps)
 - `vercel.json`, `next.config.js`, `.env.local`
-- `package.json`
+- `package.json`, `instrumentation.ts`, `instrumentation-node.ts`
 - `scripts/local-cron.mjs`
 
 ## Actions

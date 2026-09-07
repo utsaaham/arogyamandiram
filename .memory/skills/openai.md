@@ -1,8 +1,8 @@
 ---
 name: OpenAI API
 type: skill
-last_updated: 2026-04-15
-updated_by: codex-gpt-5
+last_updated: 2026-09-07
+updated_by: codex
 ---
 
 # OpenAI Responses API (`gpt-4o-mini`)
@@ -48,14 +48,14 @@ const response = await fetch('https://api.openai.com/v1/responses', {
 })
 ```
 
-## Debug Logging
+## Observability
 
-When debug mode is enabled, AI flows surface in `/debug` with typed viewers under `components/debug/*`.
+AI route duration, outbound HTTP, failures, and request status are captured by the server's Pydantic Logfire/OpenTelemetry instrumentation. Never attach prompts, completions, API keys, images, or raw health data to telemetry.
 
 ## Gotchas
 
 - Keep prompts concise for larger history windows
 - Key resolution is async
 - Prefer service wrappers like `mealIdeasService.ts` and `aiHealthPlan.ts` when they already exist
-- If you add a new AI workflow, think about how it will appear in `/debug`
+- If you add a new AI workflow, keep it inside the existing server trace and add only low-cardinality, non-sensitive attributes when needed
 - The orchestrator route forwards auth/cron headers to internal sub-routes; do not break that header propagation

@@ -1,7 +1,7 @@
 // ============================================
 // /api/ai/meal-ideas - Meal Ideas (history + single AI call)
 // ============================================
-// POST: selectedMealTypes, preferences. Returns suggestions + optional debugLog when DEBUG_MODE.
+// POST: selectedMealTypes, preferences. Returns generated meal suggestions.
 
 import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
@@ -42,13 +42,8 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
-    const { suggestions, debugLog } = await getMealIdeas(userId, valid, preferences);
-
-    const payload: { suggestions: typeof suggestions; debugLog?: typeof debugLog } = { suggestions };
-    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-      payload.debugLog = debugLog;
-    }
-    return maskedResponse(payload);
+    const { suggestions } = await getMealIdeas(userId, valid, preferences);
+    return maskedResponse({ suggestions });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Meal ideas request failed';
     if (message.includes('OpenAI API key required')) {

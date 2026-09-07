@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <Suspense
       fallback={
         <div className="fixed inset-0 flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-violet border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-emerald border-t-transparent" />
         </div>
       }
     >

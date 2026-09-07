@@ -279,7 +279,7 @@ export const api = {
     apiFetch('/ai/insights-eligibility'),
 
   getInsights: (params?: { period?: 'yesterday' | 'week' | 'month' | 'year'; startDate?: string; endDate?: string }) =>
-    apiFetch<{ insights?: Record<string, unknown>[]; generatedAt?: string; debugLog?: unknown }>('/ai/recommendations', {
+    apiFetch<{ insights?: Record<string, unknown>[]; generatedAt?: string }>('/ai/recommendations', {
       method: 'POST',
       body: JSON.stringify({ type: 'insights', ...params }),
     }),
@@ -300,7 +300,6 @@ export const api = {
     apiFetch<{
       user?: Record<string, unknown>;
       explanations?: Record<string, string>;
-      debugLog?: unknown;
     }>('/ai/health-plan', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -368,7 +367,6 @@ export const api = {
     apiFetch<{
       tool: string;
       result: Record<string, unknown>;
-      debugLog: Record<string, unknown>;
     }>('/ai/orchestrator', {
       method: 'POST',
       body: JSON.stringify({ text, imageBase64, imageMimeType }),

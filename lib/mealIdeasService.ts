@@ -57,21 +57,6 @@ export interface UserContext {
 /** Normalized for LLM: activity as low|moderate|high */
 type ActivityForPrompt = 'low' | 'moderate' | 'high';
 
-export interface AIDebugLog {
-  userRequest: { selectedMealTypes: string[]; preferences: string; requestedAt: string };
-  mealHistoryByDay: MealHistoryByDay;
-  userContext?: UserContext;
-  systemPrompt: string;
-  userPrompt: string;
-  response: string;
-  metadata: {
-    model: string;
-    usage?: UsageInfo;
-    latencyMs: number;
-    timestamp: string;
-  };
-}
-
 export interface MealHistoryResultWithDates {
   aggregated: MealHistoryResult;
   byDay: MealHistoryByDay;
@@ -538,8 +523,7 @@ export async function getMealIdeas(
   userId: string,
   selectedMealTypes: string[],
   preferences: string
-): Promise<{ suggestions: MealSuggestion[]; debugLog: AIDebugLog }> {
-  const requestedAt = new Date().toISOString();
+): Promise<{ suggestions: MealSuggestion[] }> {
   const apiKey = await resolveOpenAIKey(userId);
   if (!apiKey) {
     throw new Error(
@@ -572,20 +556,5 @@ export async function getMealIdeas(
     // keep suggestions [] if parse failed
   }
 
-  const debugLog: AIDebugLog = {
-    userRequest: { selectedMealTypes, preferences, requestedAt },
-    mealHistoryByDay,
-    userContext,
-    systemPrompt: SYSTEM_PROMPT,
-    userPrompt,
-    response: JSON.stringify(result.content),
-    metadata: {
-      model: MODEL,
-      usage: result.usage,
-      latencyMs: result.latencyMs,
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  return { suggestions, debugLog };
+  return { suggestions };
 }

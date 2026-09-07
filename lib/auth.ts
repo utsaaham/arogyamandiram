@@ -9,6 +9,14 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
+import {
+  clearLoginFailures,
+  DUMMY_PASSWORD_HASH,
+  getClientIp,
+  inspectLoginLimit,
+  loginCredentialsSchema,
+  recordLoginFailure,
+} from '@/lib/authSecurity';
 
 function hashDeviceId(deviceId: string): string {
   const secret = process.env.NEXTAUTH_SECRET ?? 'dev-secret-min-32-chars-for-jwt-signing';
@@ -27,31 +35,39 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
-        }
-
+      async authorize(credentials, request) {
+        const parsed = loginCredentialsSchema.safeParse(credentials);
+        const ip = getClientIp(request.headers);
         await connectDB();
 
-        const user = await User.findOne({ email: credentials.email.toLowerCase() })
-          .select('+password')
+        if (!parsed.success) {
+          await recordLoginFailure('invalid-credentials', ip);
+          throw new Error('INVALID_CREDENTIALS');
+        }
+
+        const { email, password } = parsed.data;
+        const limit = await inspectLoginLimit(email, ip);
+        if (!limit.allowed) throw new Error('RATE_LIMITED');
+
+        const user = await User.findOne({ email })
+          .select('+password +authSecurity.sessionVersion')
           .lean();
 
-        if (!user) {
-          throw new Error('Invalid email or password');
+        const storedPassword = typeof user?.password === 'string' ? user.password : DUMMY_PASSWORD_HASH;
+        const isMatch = await bcrypt.compare(password, storedPassword);
+        if (!user || typeof user.password !== 'string' || !isMatch) {
+          await recordLoginFailure(email, ip);
+          throw new Error('INVALID_CREDENTIALS');
         }
 
-        const isMatch = await bcrypt.compare(credentials.password, user.password as string);
-        if (!isMatch) {
-          throw new Error('Invalid email or password');
-        }
+        await clearLoginFailures(email, ip);
 
         // Return minimal data for the session token
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.profile?.name || '',
+          sessionVersion: user.authSecurity?.sessionVersion ?? 0,
         };
       },
     }),
@@ -131,19 +147,43 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: { id?: string; isGuest?: boolean } }) {
+    async jwt({ token, user }: { token: JWT; user?: { id?: string; isGuest?: boolean; sessionVersion?: number } }) {
       if (user?.id) {
         token.userId = user.id;
+        token.authError = undefined;
+        token.sessionVersion = user.sessionVersion ?? 0;
+        token.sessionVersionCheckedAt = Date.now();
         if (user.isGuest) token.isGuest = true;
+        return token;
+      }
+
+      const shouldCheckVersion = token.userId
+        && (!token.sessionVersionCheckedAt || Date.now() - token.sessionVersionCheckedAt >= 60_000);
+
+      if (shouldCheckVersion) {
+        await connectDB();
+        const currentUser = await User.findById(token.userId)
+          .select('+authSecurity.sessionVersion')
+          .lean();
+        const currentVersion = currentUser?.authSecurity?.sessionVersion ?? 0;
+
+        if (!currentUser || (token.sessionVersion !== undefined && token.sessionVersion !== currentVersion)) {
+          token.userId = undefined;
+          token.authError = 'SessionRevoked';
+        } else {
+          token.sessionVersion = currentVersion;
+          token.sessionVersionCheckedAt = Date.now();
+        }
       }
       return token;
     },
 
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
-        (session.user as { id?: string; isGuest?: boolean }).id = token.userId as string;
+        (session.user as { id?: string; isGuest?: boolean }).id = token.userId ?? '';
         (session.user as { isGuest?: boolean }).isGuest = token.isGuest ?? false;
       }
+      if (token.authError) session.authError = token.authError;
       return session;
     },
   },

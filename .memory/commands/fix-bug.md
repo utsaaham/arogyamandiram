@@ -1,7 +1,8 @@
 ---
 name: Fix Bug Command
 type: command
-last_updated: 2026-03-26
+last_updated: 2026-09-07
+updated_by: codex
 ---
 
 # Fix a Bug
@@ -27,14 +28,9 @@ When a feature is broken, data isn't saving/loading correctly, or the UI is beha
 
 If data is missing from the API response, check if `maskUser()` in `lib/apiMask.ts` is stripping it. It intentionally removes: `password`, `apiKeys`, `__v`, `_id`.
 
-### 3. For AI bugs - use debug mode
+### 3. For runtime and AI bugs - use Logfire
 
-Set `NEXT_PUBLIC_DEBUG_MODE=true` and view `/debug` page. Debug panels show:
-- OpenAI request/response
-- Food logger parsing
-- Meal ideas generation
-- Workout planner calls
-- Insights (daily, weekly, monthly, yearly)
+Filter the `arogyamandiram-server` service by route, status, exception, or outbound request. Browser failures and Web Vitals use the `arogyamandiram-browser` service. Do not add prompts, completions, health records, or credentials to spans while diagnosing a bug.
 
 ### 4. For auth bugs
 

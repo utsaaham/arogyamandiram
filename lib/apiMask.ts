@@ -12,6 +12,7 @@ import { getAgeFromDateOfBirth } from '@/lib/utils';
 // Fields that must NEVER leave the server
 const SENSITIVE_FIELDS = [
   'password',
+  'authSecurity',
   'apiKeys',
   '__v',
   'apiKeys.openai',

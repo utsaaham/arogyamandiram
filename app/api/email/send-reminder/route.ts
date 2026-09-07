@@ -134,33 +134,6 @@ export async function POST(req: NextRequest) {
       await User.findByIdAndUpdate(userId, { $set: checklistUpdate });
     }
 
-    // Write SMTP debug log (dev/debug only - filesystem not writable in production)
-    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-      try {
-        const { promises: fsp } = await import('fs');
-        const pathMod = await import('path');
-        const userLogId = (user.username as string | undefined)?.trim() || userId;
-        const dir = pathMod.join(process.cwd(), '.debug-logs', userLogId, 'email', 'smtp');
-        await fsp.mkdir(dir, { recursive: true });
-        const now = new Date();
-        const ts = now.toISOString().replace(/[:.]/g, '-').slice(0, 24);
-        const id = `${ts}-${Math.random().toString(36).slice(2, 6)}`;
-        await fsp.writeFile(
-          pathMod.join(dir, `${id}.json`),
-          JSON.stringify({
-            userId,
-            metadata: { timestamp: now.toISOString(), username: userLogId },
-            userRequest: {
-              requestedAt: now.toISOString(),
-              reminderType: testMode ? undefined : (reminderType ?? null),
-              testMode: testMode ?? null,
-            },
-            result: { messageId, to: sendTo, sent: true },
-          }, null, 2)
-        );
-      } catch { /* non-fatal */ }
-    }
-
     return maskedResponse({ sent: true, messageId }, { message: testMode ? 'Test email sent' : 'Reminder sent' });
   } catch (err) {
     console.error('[Send Reminder Error]:', err);

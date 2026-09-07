@@ -300,6 +300,13 @@ export interface IUser {
   username?: string;
   email?: string;
   password?: string;
+  authSecurity?: {
+    passwordResetTokenHash?: string;
+    passwordResetExpiresAt?: Date;
+    passwordChangedAt?: Date;
+    emailVerifiedAt?: Date;
+    sessionVersion?: number;
+  };
   isGuest?: boolean;
   guestFingerprint?: string;
   profile: UserProfile;

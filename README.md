@@ -88,9 +88,10 @@ You'll need:
 | `MONGODB_URI` | Yes | [MongoDB Atlas](https://www.mongodb.com/cloud/atlas), create a free cluster and copy the connection string | Use the same cluster for local and Vercel if you want shared data. |
 | `NEXTAUTH_SECRET` | Yes | `openssl rand -base64 32` | Keep it stable per environment. |
 | `ENCRYPTION_KEY` | Yes | `openssl rand -hex 32` | If local and Vercel share a database, this must be the same value in both places. Changing it makes stored API keys unreadable until users re-enter them. |
-| `NEXTAUTH_URL` | Yes | `http://localhost:3000` for local dev | Your Vercel URL in production. |
+| `NEXTAUTH_URL` | Yes | `http://localhost:30000` for local dev | Your Vercel URL in production. |
 | `CRON_SECRET` | For cron | Any random string | Authenticates calls to `/api/cron/*`. |
 | `OPENAI_API_KEY` | Optional | [OpenAI](https://platform.openai.com/api-keys) | Server-wide fallback. Users can also bring their own key in Settings. |
+| `LOGFIRE_TOKEN` | Optional | [Pydantic Logfire](https://logfire.pydantic.dev/) | Server-only write token for request, database, outbound HTTP, error, and browser telemetry. |
 | `FDC_API_KEY` | Optional | [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/) | Fallback for food lookups beyond the built-in catalog. |
 
 ### Install
@@ -108,7 +109,7 @@ Then edit `.env.local`:
 # Required
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/arogyamandiram
 MONGO_DB=arogyamandiram
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://localhost:30000
 NEXTAUTH_SECRET=your-secret-key-min-32-characters-long
 ENCRYPTION_KEY=your-32-byte-hex-string-for-aes256
 CRON_SECRET=any-random-string
@@ -117,12 +118,27 @@ CRON_SECRET=any-random-string
 OPENAI_API_KEY=sk-...
 FDC_API_KEY=your-usda-fooddata-central-api-key
 
+# Optional, Pydantic Logfire observability
+LOGFIRE_TOKEN=your-logfire-write-token
+LOGFIRE_ENVIRONMENT=development
+NEXT_PUBLIC_LOGFIRE_BROWSER_ENABLED=true
+
 # Optional, email reminders (Gmail defaults)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 IMAP_HOST=imap.gmail.com
 IMAP_PORT=993
+
+# Required for signup email verification and logged-out password recovery
+AUTH_SMTP_HOST=smtp.gmail.com
+AUTH_SMTP_PORT=587
+AUTH_SMTP_SECURE=false
+AUTH_SMTP_USER=security@example.com
+AUTH_SMTP_PASS=your-smtp-app-password
+AUTH_EMAIL_FROM="Arogyamandiram Security <security@example.com>"
 ```
+
+New accounts and guest-account upgrades must confirm a six-digit email code before an email can be attached. Codes expire after 10 minutes, verification proofs expire after 15 minutes, and repeated sends or guesses are rate-limited.
 
 ### Run it
 
@@ -130,7 +146,7 @@ IMAP_PORT=993
 npm run dev
 ```
 
-This starts Next.js and a local cron runner together, with their logs interleaved. Open [http://localhost:3000](http://localhost:3000). The port can be changed with `PORT` in `.env.local`.
+This starts Next.js and a local cron runner together, with their logs interleaved. Open [http://localhost:30000](http://localhost:30000). The port can be changed with `PORT` in `.env.local`.
 
 For a production build:
 
@@ -191,7 +207,7 @@ arogyamandiram/
 │   └── page.tsx                  # landing page
 ├── components/                   # ui, food, water, workout, layout,
 │                                 # achievements, landing, tour, orchestrator
-├── contexts/                     # user, orchestrator sidebar, debug logs
+├── contexts/                     # user and orchestrator sidebar state
 ├── hooks/                        # useUser, useDailyLog, useAchievements, usePlanAutoRefresh
 ├── lib/                          # apiClient, apiMask, auth, db, encryption,
 │                                 # health, gamification, xp, level, adherence,
@@ -199,6 +215,7 @@ arogyamandiram/
 ├── models/                       # User, DailyLog, DailyPlan, Food,
 │                                 # CoachMemory, HealthSnapshot, WeeklySummary
 ├── scripts/                      # dev.mjs, local-cron.mjs, logger.mjs
+├── instrumentation.ts            # Pydantic Logfire server instrumentation
 ├── types/
 └── public/                       # icons, badges, manifest.json (PWA)
 ```

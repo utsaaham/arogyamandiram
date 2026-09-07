@@ -53,7 +53,7 @@ After deploy:
 - Check that login works
 - Check the dashboard loads
 - Check AI features (if OpenAI key is set)
-- Confirm `NEXT_PUBLIC_DEBUG_MODE` is NOT set to `true` in prod
+- Confirm `LOGFIRE_TOKEN` is configured as a server-only secret and `NEXT_PUBLIC_LOGFIRE_BROWSER_ENABLED=true` only when browser telemetry is intended
 
 ### 6. Update memory
 

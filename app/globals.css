@@ -2,6 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Current auth theme: shared by onboarding and account-recovery pages. */
+.auth-theme-page {
+  background: #060806;
+  color: #f0eeeb;
+}
+
+.auth-theme-card {
+  background: #0c0f0d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.auth-theme-wordmark {
+  color: #1edd8b;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.auth-theme-secondary {
+  color: #9b9990;
+}
+
+.auth-theme-muted {
+  color: #5c5a53;
+}
+
+.auth-theme-input {
+  min-height: 44px;
+  color: #f0eeeb;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.auth-theme-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.auth-theme-input:focus {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+.auth-theme-choice {
+  color: #9b9990;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.auth-theme-choice:hover {
+  color: #f0eeeb;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-theme-choice-selected {
+  color: #1edd8b;
+  background: rgba(30, 221, 139, 0.08);
+  border-color: rgba(30, 221, 139, 0.28);
+}
+
+.auth-theme-primary {
+  color: #060806;
+  background: #1edd8b;
+  border: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.auth-theme-primary:hover:not(:disabled) {
+  background: #25f09a;
+  transform: translateY(-1px);
+}
+
+.auth-theme-accent-surface {
+  color: #060806;
+  background: #1edd8b;
+}
+
+.auth-theme-accent-bar {
+  background: #1edd8b;
+}
+
+.auth-theme-accent-text {
+  color: #1edd8b;
+}
+
+.auth-theme-accent-soft {
+  background: rgba(30, 221, 139, 0.1);
+}
+
+.auth-theme-spinner {
+  border-color: #060806;
+  border-top-color: transparent;
+}
+
 /* ============================================
    AROGYAMANDIRAM - Global Styles
    ============================================ */
@@ -150,7 +246,7 @@ body {
 
 /* ---------- Focus Styles ---------- */
 *:focus-visible {
-  outline: 2px solid var(--accent-violet);
+  outline: 2px solid rgba(255, 255, 255, 0.42);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -158,7 +254,7 @@ body {
 
 /* ---------- Selection ---------- */
 ::selection {
-  background: rgba(139, 92, 246, 0.3);
+  background: rgba(30, 221, 139, 0.28);
   color: var(--text-primary);
 }
 
@@ -828,9 +924,9 @@ body {
     @apply flex flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] py-2.5 text-[11px] font-semibold text-text-muted;
   }
   .m-sdot-today {
-    border-color: rgba(139, 92, 246, 0.5);
-    background: rgba(139, 92, 246, 0.12);
-    color: var(--accent-violet);
+    border-color: rgba(30, 221, 139, 0.35);
+    background: rgba(30, 221, 139, 0.08);
+    color: #1edd8b;
   }
 
   /* Mobile dashboard – design system (fade-up, calorie card, stat cards) */
@@ -1058,7 +1154,7 @@ body {
 
   .glass-card-elevated {
     @apply relative overflow-hidden rounded-2xl border border-white/[0.06];
-    background: rgba(22, 22, 42, 0.7);
+    background: rgba(12, 15, 13, 0.82);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
@@ -1066,7 +1162,7 @@ body {
   .glass-input {
     @apply w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm
            text-white placeholder-white/30 transition-all duration-200
-           focus:border-violet-500/40 focus:bg-white/[0.05] focus:outline-none focus:ring-1 focus:ring-violet-500/20;
+           focus:border-white/[0.18] focus:bg-white/[0.05] focus:outline-none focus:ring-0;
   }
 
   /* Food page: search input – normal focus, no glow */
@@ -1100,7 +1196,7 @@ body {
   }
 
   .glass-button-primary {
-    @apply glass-button bg-violet-600 text-white hover:bg-violet-500 shadow-glow;
+    @apply glass-button bg-emerald-400 text-bg-primary hover:bg-emerald-300;
   }
 
   .glass-button-secondary {

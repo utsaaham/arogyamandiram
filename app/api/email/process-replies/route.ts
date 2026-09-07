@@ -114,8 +114,6 @@ export async function POST(req: NextRequest) {
     }
 
     let imapTestReplyVerified = false;
-    const imapReplySummary: Array<{ reminderType: string; replyBody: string; action: string; outcome: Record<string, unknown> }> = [];
-
     for (const reply of replies) {
       const isImapTestReply = reply.subject.toLowerCase().includes('imap test');
       const trackedUserId = extractTrackedUserId(reply.inReplyTo);
@@ -148,7 +146,6 @@ export async function POST(req: NextRequest) {
 
           if (!foodJson.success || !foodJson.data?.items?.length) {
             errors.push(`${userId}: food-logger failed for ${reminderType} - ${foodJson.error ?? 'no items'}`);
-            imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'failed', outcome: { error: foodJson.error ?? 'no items' } });
             continue;
           }
 
@@ -169,7 +166,6 @@ export async function POST(req: NextRequest) {
           }
 
           processed++;
-          imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'logged', outcome: { itemsLogged: foodJson.data.items.length, mealType } });
         } else if (reminderType === 'workout') {
           // Step 1: Parse workout via workout-logger
           const woRes = await fetch(`${origin}/api/ai/workout-logger`, {
@@ -185,7 +181,6 @@ export async function POST(req: NextRequest) {
 
           if (!woJson.success || !woJson.data?.workouts?.length) {
             errors.push(`${userId}: workout-logger failed - ${woJson.error ?? 'no workouts'}`);
-            imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'failed', outcome: { error: woJson.error ?? 'no workouts' } });
             continue;
           }
 
@@ -203,7 +198,6 @@ export async function POST(req: NextRequest) {
           }
 
           processed++;
-          imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'logged', outcome: { workoutsLogged: woJson.data.workouts.length } });
         } else {
           // water, weighIn or sleep - route through orchestrator (handles parsing + logging)
           const orchRes = await fetch(`${origin}/api/ai/orchestrator`, {
@@ -219,13 +213,11 @@ export async function POST(req: NextRequest) {
 
           if (!orchJson.success) {
             errors.push(`${userId}: orchestrator failed for ${reminderType} - ${orchJson.error}`);
-            imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'failed', outcome: { error: orchJson.error } });
             continue;
           }
 
           const orchTool = orchJson.data?.tool;
           const orchResult = orchJson.data?.result ?? {};
-          let logOutcome: Record<string, unknown> = { orchTool };
 
           // Auto-confirm water/weight/sleep pending actions
           if (orchTool === 'water' && orchResult.pendingWater) {
@@ -235,7 +227,6 @@ export async function POST(req: NextRequest) {
               headers: userBypassHeaders,
               body: JSON.stringify({ amount: amountMl }),
             });
-            logOutcome = { orchTool, amountMl };
           } else if (orchTool === 'weight' && orchResult.pendingWeight) {
             const { weightKg } = orchResult.pendingWeight as { weightKg: number };
             await fetch(`${origin}/api/weight`, {
@@ -243,7 +234,6 @@ export async function POST(req: NextRequest) {
               headers: userBypassHeaders,
               body: JSON.stringify({ weight: weightKg }),
             });
-            logOutcome = { orchTool, weightKg };
           } else if (orchTool === 'sleep' && orchResult.pendingSleep) {
             const { durationHours, quality, bedtime, wakeTime } = orchResult.pendingSleep as {
               durationHours: number;
@@ -261,11 +251,9 @@ export async function POST(req: NextRequest) {
                 wakeTime,
               }),
             });
-            logOutcome = { orchTool, durationHours, quality };
           }
 
           processed++;
-          imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'logged', outcome: logOutcome });
           if (isImapTestReply) imapTestReplyVerified = true;
         }
 
@@ -273,7 +261,6 @@ export async function POST(req: NextRequest) {
         await markMessageSeen(imapConfig, reply.uid);
       } catch (err) {
         errors.push(`${userId}: unhandled error for ${reminderType} - ${err instanceof Error ? err.message : String(err)}`);
-        imapReplySummary.push({ reminderType, replyBody: reply.textBody.slice(0, 200), action: 'error', outcome: { error: err instanceof Error ? err.message : String(err) } });
       }
     }
 
@@ -286,33 +273,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Write IMAP debug log (dev/debug only - filesystem not writable in production)
-    if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-      try {
-        const { promises: fsp } = await import('fs');
-        const pathMod = await import('path');
-        const userLogId = (user.username as string | undefined)?.trim() || userId;
-        const dir = pathMod.join(process.cwd(), '.debug-logs', userLogId, 'email', 'imap');
-        await fsp.mkdir(dir, { recursive: true });
-        const now = new Date();
-        const ts = now.toISOString().replace(/[:.]/g, '-').slice(0, 24);
-        const id = `${ts}-${Math.random().toString(36).slice(2, 6)}`;
-        await fsp.writeFile(
-          pathMod.join(dir, `${id}.json`),
-          JSON.stringify({
-            userId,
-            metadata: { timestamp: now.toISOString(), username: userLogId },
-            userRequest: { requestedAt: now.toISOString(), imapUser: imapConfig.user },
-            result: {
-              repliesFound: replies.length,
-              processed: imapReplySummary.filter((r) => r.action === 'logged').length,
-              errors: errors.filter((e) => e.startsWith(userId)),
-            },
-            replies: imapReplySummary,
-          }, null, 2)
-        );
-      } catch { /* non-fatal */ }
-    }
   }
 
   return maskedResponse({ processed, errors, usersScanned: users.length });

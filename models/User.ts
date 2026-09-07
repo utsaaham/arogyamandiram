@@ -40,6 +40,13 @@ const UserSchema = new Schema<IUserDocument>(
       minlength: [8, 'Password must be at least 8 characters'],
       select: false, // Never returned in queries by default
     },
+    authSecurity: {
+      passwordResetTokenHash: { type: String, select: false },
+      passwordResetExpiresAt: { type: Date, select: false },
+      passwordChangedAt: { type: Date, select: false },
+      emailVerifiedAt: { type: Date, select: false },
+      sessionVersion: { type: Number, default: 0, select: false },
+    },
     profile: {
       name: { type: String, default: '' },
       dateOfBirth: { type: Date },
@@ -317,7 +324,7 @@ const UserSchema = new Schema<IUserDocument>(
     toJSON: {
       transform(_doc, ret: Record<string, unknown>) {
         // Always strip sensitive fields on JSON serialization (omit instead of delete for strict TS)
-        const { password, apiKeys, __v, guestFingerprint: _gf, ...safe } = ret;
+        const { password, apiKeys, authSecurity, __v, guestFingerprint: _gf, ...safe } = ret;
         // Strip email passwords from nested settings
         const settings = safe.settings as Record<string, unknown> | undefined;
         if (settings) {

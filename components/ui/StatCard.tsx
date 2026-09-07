@@ -32,7 +32,7 @@ export default function StatCard({
   label,
   value,
   subtitle,
-  iconColor = 'text-accent-violet',
+  iconColor = 'text-accent-emerald',
   trend,
   className,
   onClick,
