@@ -423,6 +423,108 @@ export const api = {
       summary: string;
       tips: string[];
     }>('/ai/health-check'),
+
+  // Week plan import: paste the plan HTML, preview it, then write it to DailyPlan.
+  previewPlanImport: (html: string, weekStart?: string) =>
+    apiFetch<PlanImportPreview>('/plan-import', {
+      method: 'POST',
+      body: JSON.stringify({ html, weekStart, mode: 'preview' }),
+    }),
+
+  importPlan: (html: string, weekStart: string) =>
+    apiFetch<{
+      weekStart: string;
+      datedSource: boolean;
+      rolledWeeks: number;
+      dates: string[];
+      days: { date: string; dayName: string; short: string }[];
+    }>(
+      '/plan-import',
+      { method: 'POST', body: JSON.stringify({ html, weekStart, mode: 'import' }) }
+    ),
+
+  // Health export import: paste the export JSON (or the whole dashboard file),
+  // preview the days, then store them and map them into DailyLog.
+  previewHealthImport: (text: string) =>
+    apiFetch<HealthImportPreview>('/health-import', {
+      method: 'POST',
+      body: JSON.stringify({ text, mode: 'preview' }),
+    }),
+
+  importHealthPaste: (text: string) =>
+    apiFetch<HealthImportResult>('/health-import', {
+      method: 'POST',
+      body: JSON.stringify({ text, mode: 'import' }),
+    }),
 };
+
+export interface HealthImportDay {
+  date: string;
+  restingBpm: number | null;
+  hrvSdnnMs: number | null;
+  steps: number | null;
+  activeCalories: number | null;
+  sleepHours: number | null;
+  workoutCount: number;
+  workoutNames: string[];
+}
+
+export interface HealthImportPreview {
+  source: 'json' | 'html';
+  extractedAt: string | null;
+  skipped: number;
+  days: HealthImportDay[];
+}
+
+export interface HealthImportResult extends HealthImportPreview {
+  dates: string[];
+}
+
+export interface PlanImportPreviewDay {
+  date: string;
+  dayName: string;
+  short: string;
+  focus: string;
+  coach: string;
+  totals: {
+    calories: number; protein: number; carbs: number; fat: number;
+    fiber: number; sugar: number; sodium: number; iron: number; calcium: number;
+  };
+  mealCount: number;
+  itemCount: number;
+  exerciseCount: number;
+  mainCount: number;
+  meals: {
+    slot: string;
+    mealType: string;
+    name: string;
+    items: { name: string; calories: number; protein: number }[];
+  }[];
+  exercises: {
+    block: string;
+    name: string;
+    sets: number | null;
+    reps: string | null;
+    repsMax: number | null;
+    weightKg: number | null;
+    loadNote: string;
+    bodyweight: boolean;
+    durationMinutes: number | null;
+  }[];
+}
+
+export interface PlanImportPreview {
+  weekStart: string;
+  /** The file stamps its own dates, so the week picker does not apply. */
+  datedSource: boolean;
+  /** Whole weeks the file's written dates were rolled forward by. */
+  rolledWeeks: number;
+  weekStarting: string | null;
+  sourceUnit: 'lb' | 'kg';
+  sessionMinutes: number | null;
+  guide: { key: string; label: string; size: number }[];
+  hasProfile: boolean;
+  days: PlanImportPreviewDay[];
+}
 
 export default api;

@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { getTargetsForUser } from '@/lib/health';
 import { GOAL_OPTIONS } from '@/lib/goals';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
+import PlanImportCard from './PlanImportCard';
+import HealthImportCard from './HealthImportCard';
 import Image from 'next/image';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -2027,9 +2029,14 @@ function SettingsInner() {
             <div>
               <h2 className="text-base font-semibold text-text-primary">Connectors</h2>
               <p className="mt-1 text-xs text-text-muted">
-                Connect the ArogyaM mobile app to sync health snapshots into your account.
+                Connect the ArogyaM mobile app to sync health snapshots into your account, or paste
+                an export by hand.
               </p>
             </div>
+
+            <HealthImportCard />
+
+            <PlanImportCard />
 
             <div className="glass-card rounded-2xl p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

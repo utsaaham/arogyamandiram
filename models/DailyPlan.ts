@@ -56,8 +56,26 @@ export interface IDailyPlanDocument extends Document {
       protein: number;
       carbs: number;
       fat: number;
+      fiber?: number;
+      sugar?: number;
+      sodium?: number;
+      iron?: number;
+      calcium?: number;
       mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
       ingredients: string[];
+      /** Per-ingredient nutrition; imported plans only. `ingredients` keeps just the names. */
+      items?: {
+        name: string;
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+        fiber: number;
+        sugar: number;
+        sodium: number;
+        iron: number;
+        calcium: number;
+      }[];
       steps: string[];
       prepMinutes?: number;
       cookMinutes?: number;
@@ -88,6 +106,11 @@ export interface IDailyPlanDocument extends Document {
       intensity?: 'low' | 'medium' | 'high';
       category?: string;
       muscleGroup?: 'legs' | 'push' | 'pull' | 'core';
+      /** Prescribed load in kg. Source units are preserved in `loadNote`. */
+      weightKg?: number;
+      loadNote?: string;
+      repsMax?: number;
+      bodyweight?: boolean;
     }[];
     estimatedCalories: number;
     durationMinutes: number;
@@ -122,6 +145,24 @@ export interface IDailyPlanDocument extends Document {
 
 }
 
+// Per-ingredient nutrition. `ingredients` above is only names, which loses the
+// per-item numbers an imported plan carries. Imported plans populate this instead.
+const MealItemSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    fat: { type: Number, default: 0 },
+    fiber: { type: Number, default: 0 },
+    sugar: { type: Number, default: 0 },
+    sodium: { type: Number, default: 0 },
+    iron: { type: Number, default: 0 },
+    calcium: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
 const MealSuggestionSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -130,8 +171,16 @@ const MealSuggestionSchema = new Schema(
     protein: { type: Number, default: 0 },
     carbs: { type: Number, default: 0 },
     fat: { type: Number, default: 0 },
+    // Micronutrient totals for the meal. Optional so AI-generated plans, which
+    // do not estimate these, stay unchanged.
+    fiber: { type: Number, default: 0 },
+    sugar: { type: Number, default: 0 },
+    sodium: { type: Number, default: 0 },
+    iron: { type: Number, default: 0 },
+    calcium: { type: Number, default: 0 },
     mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack'], default: 'snack' },
     ingredients: { type: [String], default: [] },
+    items: { type: [MealItemSchema], default: undefined },
     steps: { type: [String], default: [] },
     prepMinutes: { type: Number, min: 0, max: 600 },
     cookMinutes: { type: Number, min: 0, max: 600 },
@@ -208,6 +257,14 @@ const ExerciseSchema = new Schema(
     intensity: { type: String, enum: ['low', 'medium', 'high'] },
     category: { type: String },
     muscleGroup: { type: String, enum: ['legs', 'push', 'pull', 'core'] },
+    // Prescribed load. Stored in kg to match the workout UI, which renders a bare
+    // "kg" suffix. `loadNote` keeps the source wording ("45 lb, the empty bar")
+    // so the original units survive the conversion.
+    weightKg: { type: Number, min: 0 },
+    loadNote: { type: String },
+    // Top of a rep range: reps "6", repsMax "8" for a prescribed 6 to 8.
+    repsMax: { type: Number, min: 0 },
+    bodyweight: { type: Boolean },
   },
   { _id: false }
 );

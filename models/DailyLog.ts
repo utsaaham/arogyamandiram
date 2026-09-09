@@ -20,6 +20,9 @@ const MealEntrySchema = new Schema(
     sodium: { type: Number, default: 0, min: 0 },
     saturatedFat: { type: Number, default: 0, min: 0 },
     cholesterol: { type: Number, default: 0, min: 0 },
+    // Carried by imported plans, which track both per item.
+    iron: { type: Number, default: 0, min: 0 },
+    calcium: { type: Number, default: 0, min: 0 },
     quantity: { type: Number, default: 1, min: 0 },
     unit: { type: String, default: 'serving' },
     mealType: {
@@ -162,13 +165,18 @@ DailyLogSchema.index({ 'meals.name': 'text' });
 // Note: meal.calories (and macros) are already the total for the logged quantity from the frontend
 DailyLogSchema.pre('save', function (next) {
   if (this.meals && this.meals.length > 0) {
-    this.totalCalories = this.meals.reduce((sum, m) => sum + m.calories, 0);
-    this.totalProtein = this.meals.reduce((sum, m) => sum + m.protein, 0);
-    this.totalCarbs = this.meals.reduce((sum, m) => sum + m.carbs, 0);
-    this.totalFat = this.meals.reduce((sum, m) => sum + m.fat, 0);
-    this.totalFiber = this.meals.reduce((sum, m) => sum + (m.fiber ?? 0), 0);
-    this.totalSugar = this.meals.reduce((sum, m) => sum + (m.sugar ?? 0), 0);
-    this.totalSodium = this.meals.reduce((sum, m) => sum + (m.sodium ?? 0), 0);
+    // Round each total: summing one-decimal macros in binary floating point
+    // otherwise persists values like 145.10000000000002.
+    const sum = (pick: (m: (typeof this.meals)[number]) => number | undefined) =>
+      Math.round(this.meals.reduce((acc, m) => acc + (pick(m) ?? 0), 0) * 10) / 10;
+
+    this.totalCalories = sum((m) => m.calories);
+    this.totalProtein = sum((m) => m.protein);
+    this.totalCarbs = sum((m) => m.carbs);
+    this.totalFat = sum((m) => m.fat);
+    this.totalFiber = sum((m) => m.fiber);
+    this.totalSugar = sum((m) => m.sugar);
+    this.totalSodium = sum((m) => m.sodium);
   } else {
     this.totalCalories = 0;
     this.totalProtein = 0;
