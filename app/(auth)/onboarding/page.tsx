@@ -31,11 +31,11 @@ const activityLevels = [
 ];
 
 const goalOptions = [
-  { value: 'lose_fat', label: 'Lose Fat', desc: 'Healthy calorie deficit, high protein to keep muscle', emoji: '📉', color: 'border-accent-cyan/30 bg-accent-cyan/5' },
-  { value: 'build_muscle', label: 'Build Muscle', desc: 'Calorie surplus focused on strength training', emoji: '💪', color: 'border-accent-amber/30 bg-accent-amber/5' },
-  { value: 'recomp', label: 'Recomposition', desc: 'Lose fat and build muscle at the same time', emoji: '🔄', color: 'border-accent-violet/30 bg-accent-violet/5' },
-  { value: 'improve_fitness', label: 'Improve Fitness', desc: 'Conditioning and performance at maintenance calories', emoji: '🏃', color: 'border-accent-rose/30 bg-accent-rose/5' },
-  { value: 'maintain', label: 'Maintain', desc: 'Hold your current weight and stay consistent', emoji: '⚖️', color: 'border-accent-emerald/30 bg-accent-emerald/5' },
+  { value: 'lose_fat', label: 'Lose Fat', desc: 'Healthy calorie deficit, high protein to keep muscle', emoji: '📉' },
+  { value: 'build_muscle', label: 'Build Muscle', desc: 'Calorie surplus focused on strength training', emoji: '💪' },
+  { value: 'recomp', label: 'Recomposition', desc: 'Lose fat and build muscle at the same time', emoji: '🔄' },
+  { value: 'improve_fitness', label: 'Improve Fitness', desc: 'Conditioning and performance at maintenance calories', emoji: '🏃' },
+  { value: 'maintain', label: 'Maintain', desc: 'Hold your current weight and stay consistent', emoji: '⚖️' },
 ];
 
 export default function OnboardingPage() {
@@ -115,18 +115,16 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-x-hidden overflow-y-auto">
+    <div className="auth-theme-page fixed inset-0 overflow-x-hidden overflow-y-auto">
       <div className="auth-viewport-min-height flex items-center justify-center px-4 py-6">
         <div className="mx-auto w-full max-w-lg">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-violet to-accent-emerald text-lg font-bold">
-            A
-          </div>
-          <h1 className="font-heading text-xl font-bold">
-            Arogya<span className="text-accent-violet">mandiram</span>
+          <h1 className="auth-theme-wordmark text-[clamp(28px,7vw,40px)] leading-none">
+            AROGYAMANDIRAM
           </h1>
-          <p className="mt-1 text-sm text-text-muted">Let&apos;s set up your health profile</p>
+          <p className="auth-theme-muted mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]">Health &amp; Wellness</p>
+          <p className="auth-theme-secondary mt-4 text-sm">Let&apos;s set up your health profile</p>
         </div>
 
         {/* Step Indicators */}
@@ -135,16 +133,16 @@ export default function OnboardingPage() {
             <div key={i} className="flex items-center gap-2">
               <div className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all',
-                i < step ? 'bg-accent-emerald text-white'
-                  : i === step ? 'bg-accent-violet text-white'
-                  : 'bg-white/[0.06] text-text-muted'
+                i < step ? 'auth-theme-accent-surface'
+                  : i === step ? 'auth-theme-accent-surface'
+                  : 'auth-theme-muted bg-white/[0.06]'
               )}>
                 {i < step ? <Check className="h-4 w-4" /> : i + 1}
               </div>
               {i < steps.length - 1 && (
                 <div className={cn(
                   'h-0.5 w-8 rounded-full transition-all',
-                  i < step ? 'bg-accent-emerald' : 'bg-white/[0.08]'
+                  i < step ? 'auth-theme-accent-bar' : 'bg-white/[0.08]'
                 )} />
               )}
             </div>
@@ -152,9 +150,9 @@ export default function OnboardingPage() {
         </div>
 
         {/* Card */}
-        <div className="glass-card rounded-2xl p-6">
+        <div className="auth-theme-card rounded-2xl p-6">
           <h2 className="mb-1 text-lg font-semibold text-text-primary">{steps[step].title}</h2>
-          <p className="mb-6 text-xs text-text-muted">Step {step + 1} of {steps.length}</p>
+          <p className="auth-theme-muted mb-6 text-xs">Step {step + 1} of {steps.length}</p>
 
           {/* Scrollable step content so step 2 (fitness goals) is usable on small screens */}
           <div className={cn('min-h-0', step === 2 && 'max-h-[50vh] overflow-y-auto overscroll-contain sm:max-h-[55vh]')}>
@@ -162,20 +160,20 @@ export default function OnboardingPage() {
           {step === 0 && (
             <div className="space-y-4 animate-fade-in">
               <div>
-                <label className="text-xs font-medium text-text-muted">Your Name</label>
+                <label className="auth-theme-secondary text-xs font-medium">Your Name</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="auth-theme-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
                   placeholder="Enter your name" autoFocus />
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Date of birth</label>
+                <label className="auth-theme-secondary text-xs font-medium">Date of birth</label>
                 <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="glass-input date-input mt-1 w-full rounded-xl px-3 py-2.5 text-left text-sm"
+                  className="auth-theme-input date-input mt-1 w-full rounded-xl px-3 py-2.5 text-left text-sm"
                   max={new Date().toISOString().split('T')[0]} />
-                <p className="mt-1 text-[10px] text-text-muted">Age is calculated automatically</p>
+                <p className="auth-theme-muted mt-1 text-[10px]">Age is calculated automatically</p>
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Gender</label>
+                <label className="auth-theme-secondary text-xs font-medium">Gender</label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   {[
                     { value: 'male', label: 'Male', emoji: '👨' },
@@ -186,8 +184,8 @@ export default function OnboardingPage() {
                       className={cn(
                         'flex flex-col items-center gap-1 rounded-xl py-3 text-sm font-medium transition-all',
                         gender === g.value
-                          ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/30'
-                          : 'bg-white/[0.04] text-text-muted hover:bg-white/[0.06]'
+                          ? 'auth-theme-choice-selected'
+                          : 'auth-theme-choice'
                       )}>
                       <span className="text-xl">{g.emoji}</span>
                       {g.label}
@@ -202,24 +200,24 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-4 animate-fade-in">
               <div>
-                <label className="text-xs font-medium text-text-muted">Height (cm)</label>
+                <label className="auth-theme-secondary text-xs font-medium">Height (cm)</label>
                 <input type="number" value={height} onChange={(e) => setHeight(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="auth-theme-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
                   placeholder="170" autoFocus />
-                <p className="mt-1 text-[10px] text-text-muted">
+                <p className="auth-theme-muted mt-1 text-[10px]">
                   {height ? `${(parseFloat(height) / 30.48).toFixed(0)}'${Math.round((parseFloat(height) / 2.54) % 12)}"` : ''}
                 </p>
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Current Weight (kg)</label>
+                <label className="auth-theme-secondary text-xs font-medium">Current Weight (kg)</label>
                 <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="auth-theme-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
                   placeholder="70" step={0.1} />
               </div>
               <div>
-                <label className="text-xs font-medium text-text-muted">Target Weight (kg) <span className="text-text-muted/70">(optional)</span></label>
+                <label className="auth-theme-secondary text-xs font-medium">Target Weight (kg) <span className="auth-theme-muted">(optional)</span></label>
                 <input type="number" value={targetWeight} onChange={(e) => setTargetWeight(e.target.value)}
-                  className="glass-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
+                  className="auth-theme-input mt-1 w-full rounded-xl px-3 py-2.5 text-sm"
                   placeholder={weight || '65'} step={0.1} />
               </div>
             </div>
@@ -229,22 +227,22 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-5 animate-fade-in">
               <div>
-                <label className="text-xs font-medium text-text-muted">Activity Level</label>
+                <label className="auth-theme-secondary text-xs font-medium">Activity Level</label>
                 <div className="mt-2 space-y-2">
                   {activityLevels.map((al) => (
                     <button key={al.value} onClick={() => setActivityLevel(al.value)}
                       className={cn(
                         'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all',
                         activityLevel === al.value
-                          ? 'bg-accent-violet/15 ring-1 ring-accent-violet/30'
-                          : 'bg-white/[0.04] hover:bg-white/[0.06]'
+                          ? 'auth-theme-choice-selected'
+                          : 'auth-theme-choice'
                       )}>
                       <span className="text-xl">{al.emoji}</span>
                       <div>
-                        <p className={cn('text-sm font-medium', activityLevel === al.value ? 'text-accent-violet' : 'text-text-primary')}>
+                        <p className={cn('text-sm font-medium', activityLevel === al.value ? 'auth-theme-accent-text' : 'text-text-primary')}>
                           {al.label}
                         </p>
-                        <p className="text-[11px] text-text-muted">{al.desc}</p>
+                        <p className="auth-theme-muted text-[11px]">{al.desc}</p>
                       </div>
                     </button>
                   ))}
@@ -252,18 +250,18 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-text-muted">Goal</label>
+                <label className="auth-theme-secondary text-xs font-medium">Goal</label>
                 <div className="mt-2 space-y-2">
                   {goalOptions.map((g) => (
                     <button key={g.value} onClick={() => setGoal(g.value)}
                       className={cn(
                         'flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all',
-                        goal === g.value ? g.color : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'
+                        goal === g.value ? 'auth-theme-choice-selected' : 'auth-theme-choice'
                       )}>
                       <span className="text-xl">{g.emoji}</span>
                       <div>
                         <p className="text-sm font-medium text-text-primary">{g.label}</p>
-                        <p className="text-[11px] text-text-muted">{g.desc}</p>
+                        <p className="auth-theme-muted text-[11px]">{g.desc}</p>
                       </div>
                     </button>
                   ))}
@@ -279,7 +277,7 @@ export default function OnboardingPage() {
                 <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-emerald/15">
                   <Sparkles className="h-8 w-8 text-accent-emerald" />
                 </div>
-                <p className="text-sm text-text-secondary">
+                <p className="auth-theme-secondary text-sm">
                   We&apos;ll calculate your personalized daily targets based on your profile.
                 </p>
               </div>
@@ -308,7 +306,7 @@ export default function OnboardingPage() {
                   { label: 'Goal', value: goalOptions.find((g) => g.value === goal)?.label || goal },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between text-xs">
-                    <span className="text-text-muted">{item.label}</span>
+                    <span className="auth-theme-muted">{item.label}</span>
                     <span className="font-medium capitalize text-text-primary">{item.value}</span>
                   </div>
                 ))}
@@ -322,21 +320,21 @@ export default function OnboardingPage() {
           <div className="mt-6 flex items-center justify-between">
             {step > 0 ? (
               <button onClick={handleBack}
-                className="flex items-center gap-1 text-sm font-medium text-text-muted hover:text-text-primary">
+                className="auth-theme-muted flex items-center gap-1 text-sm font-medium hover:text-text-primary">
                 <ChevronLeft className="h-4 w-4" /> Back
               </button>
             ) : <div />}
 
             {step < steps.length - 1 ? (
               <button onClick={handleNext} disabled={!canProceed()}
-                className="glass-button-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold disabled:opacity-40">
+                className="auth-theme-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold disabled:opacity-40">
                 Next <ChevronRight className="h-4 w-4" />
               </button>
             ) : (
               <button onClick={handleComplete} disabled={saving}
-                className="glass-button-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50">
+                className="auth-theme-primary flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold disabled:opacity-50">
                 {saving ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="auth-theme-spinner h-4 w-4 animate-spin rounded-full border-2" />
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
@@ -352,7 +350,7 @@ export default function OnboardingPage() {
         {step < 3 && (
           <div className="mt-4 text-center">
             <button onClick={() => setStep(3)}
-              className="text-xs text-text-muted hover:text-text-secondary hover:underline">
+              className="auth-theme-muted text-xs hover:text-white hover:underline">
               Skip for now
             </button>
           </div>

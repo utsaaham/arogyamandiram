@@ -144,13 +144,20 @@ export function recalcTotalsFromMeals(meals: Array<MealForRecalc>): {
       totalSodium: 0,
     };
   }
+  // Meals carry one-decimal macros, and adding those in binary floating point
+  // leaves noise (32.6 + 44.2 + 35.8 + 32.5 = 145.10000000000002). Round each
+  // total so the artifact is never displayed or persisted. Whole-number inputs
+  // are unaffected.
+  const sum = (pick: (m: MealForRecalc) => unknown) =>
+    Math.round(meals.reduce((s, m) => s + (Number(pick(m)) || 0), 0) * 10) / 10;
+
   return {
-    totalCalories: meals.reduce((s, m) => s + (Number(m.calories) || 0), 0),
-    totalProtein: meals.reduce((s, m) => s + (Number(m.protein) || 0), 0),
-    totalCarbs: meals.reduce((s, m) => s + (Number(m.carbs) || 0), 0),
-    totalFat: meals.reduce((s, m) => s + (Number(m.fat) || 0), 0),
-    totalFiber: meals.reduce((s, m) => s + (Number(m.fiber) || 0), 0),
-    totalSugar: meals.reduce((s, m) => s + (Number(m.sugar) || 0), 0),
-    totalSodium: meals.reduce((s, m) => s + (Number(m.sodium) || 0), 0),
+    totalCalories: sum((m) => m.calories),
+    totalProtein: sum((m) => m.protein),
+    totalCarbs: sum((m) => m.carbs),
+    totalFat: sum((m) => m.fat),
+    totalFiber: sum((m) => m.fiber),
+    totalSugar: sum((m) => m.sugar),
+    totalSodium: sum((m) => m.sodium),
   };
 }

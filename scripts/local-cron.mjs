@@ -30,7 +30,7 @@ function loadEnv() {
 
 loadEnv();
 
-const PORT = process.env.PORT ?? '3000';
+const PORT = process.env.PORT ?? '30000';
 const BASE = `http://localhost:${PORT}`;
 const SECRET = process.env.CRON_SECRET ?? '';
 

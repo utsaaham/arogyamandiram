@@ -14,7 +14,7 @@ import { errorResponse } from '@/lib/apiMask';
 export async function getAuthUserId(): Promise<string | ReturnType<typeof errorResponse>> {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user || !(session.user as { id?: string }).id) {
+  if (session?.authError === 'SessionRevoked' || !session?.user || !(session.user as { id?: string }).id) {
     return errorResponse('Unauthorized', 401);
   }
 

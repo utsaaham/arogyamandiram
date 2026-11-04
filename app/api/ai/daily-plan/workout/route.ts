@@ -11,8 +11,6 @@ import { getToday } from '@/lib/utils';
 import { getWeightTrendForUser } from '@/lib/weightTrend';
 import { computeWorkoutAdherence } from '@/lib/adherence';
 import { getCoachMemoryLines } from '@/lib/intelligence/coachMemory';
-import { writeDebugLog } from '@/lib/debugLogWriter';
-import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
 import { COACH_TONE } from '@/lib/tone';
 import {
   buildWorkoutPrompt,
@@ -260,27 +258,6 @@ Return JSON only with this exact shape:
       { $set: { workoutPlan, status: 'ready', generatedAt: new Date() } },
       { new: true, upsert: true }
     ).lean();
-
-    await writeDebugLog({
-      userId,
-      page: 'today-plan',
-      agent: 'workout',
-      payload: {
-        userRequest: {
-          requestedAt: new Date().toISOString(),
-          action: 'generate',
-          date: today,
-          body,
-        },
-        systemPrompt,
-        userPrompt,
-        parsedResult: { workoutPlan },
-        metadata: {
-          status: 'success',
-          model: OPENAI_BEST_MODEL,
-        },
-      },
-    });
 
     return maskedResponse({ workoutPlan: (plan as { workoutPlan?: unknown } | null)?.workoutPlan ?? null });
   } catch (err) {

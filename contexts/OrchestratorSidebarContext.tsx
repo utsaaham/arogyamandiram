@@ -8,7 +8,6 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { useDebugLogs } from '@/contexts/DebugLogsContext';
 import api from '@/lib/apiClient';
 import { getToday } from '@/lib/utils';
 
@@ -136,7 +135,6 @@ export function OrchestratorSidebarProvider({ children }: { children: ReactNode 
   });
   const [sidebarWidth, setSidebarWidth] = useState(464);
   const [conversation, setConversation] = useState<ConversationEntry[]>([]);
-  const { addOrchestratorLog } = useDebugLogs();
   const idCounterRef = useRef(0);
 
   const genId = () => {
@@ -183,24 +181,10 @@ export function OrchestratorSidebarProvider({ children }: { children: ReactNode 
           return;
         }
 
-        const { tool, result, debugLog } = res.data as unknown as {
+        const { tool, result } = res.data as unknown as {
           tool: OrchestratorTool;
           result: ToolResult;
-          debugLog: import('@/contexts/DebugLogsContext').OrchestratorLog;
         };
-
-        if (debugLog) {
-          addOrchestratorLog({ ...debugLog, id });
-          if (process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-            const logWithId = { ...debugLog, id };
-            fetch('/api/debug-logs', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ page: 'orchestrator', agent: tool, log: logWithId }),
-            }).catch(() => {});
-          }
-        }
 
         // Tools that need confirmation before logging
         const needsConfirm =
@@ -226,7 +210,7 @@ export function OrchestratorSidebarProvider({ children }: { children: ReactNode 
         });
       }
     },
-    [updateEntry, addOrchestratorLog]
+    [updateEntry]
   );
 
   const confirmSimpleEntry = useCallback(

@@ -1,7 +1,7 @@
 ---
 name: UI Frontend Agent - Skills
-last_updated: 2026-04-15
-updated_by: codex-gpt-5
+last_updated: 2026-09-07
+updated_by: codex
 ---
 
 # Skills
@@ -15,7 +15,7 @@ updated_by: codex-gpt-5
 - **Lucide React 0.468** - icons
 - **CSS keyframe animations** - in `app/globals.css`
 - **UI state-heavy settings flows** - `app/(dashboard)/settings/page.tsx`
-- **Orchestrator + debug UI** - `components/orchestrator/*`, `components/debug/*`
+- **Orchestrator UI** - `components/orchestrator/*`
 
 ## Design System
 
