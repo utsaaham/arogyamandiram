@@ -1,8 +1,8 @@
 ---
 name: Next.js
 type: skill
-last_updated: 2026-04-15
-updated_by: codex-gpt-5
+last_updated: 2026-09-07
+updated_by: codex
 ---
 
 # Next.js 15 (App Router)
@@ -45,7 +45,7 @@ import { something } from '@/lib/something'
 
 - `/settings` is a large client page with tab/query state
 - `/dashboard` renders different desktop and mobile compositions in one file
-- `/ai` and `/debug` are interactive app surfaces
+- `/ai` is an interactive app surface; operational diagnostics live in Logfire rather than a dashboard debugger page
 
 ## Gotchas
 

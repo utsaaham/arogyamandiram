@@ -300,6 +300,13 @@ export interface IUser {
   username?: string;
   email?: string;
   password?: string;
+  authSecurity?: {
+    passwordResetTokenHash?: string;
+    passwordResetExpiresAt?: Date;
+    passwordChangedAt?: Date;
+    emailVerifiedAt?: Date;
+    sessionVersion?: number;
+  };
   isGuest?: boolean;
   guestFingerprint?: string;
   profile: UserProfile;
@@ -328,6 +335,8 @@ export interface MealEntry {
   sodium?: number;        // mg
   saturatedFat?: number; // g
   cholesterol?: number;   // mg
+  iron?: number;          // mg
+  calcium?: number;       // mg
   quantity: number;
   unit: string;           // g, ml, piece, cup, tbsp, etc.
   mealType: MealType;

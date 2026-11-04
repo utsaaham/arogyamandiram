@@ -231,15 +231,25 @@ export default function FoodTab() {
     return MEAL_ORDER.filter((t) => groups.has(t)).map((t) => ({ type: t, meals: groups.get(t)! }));
   })();
   const hasFoodPlanContent = mealGroups.length > 0;
-  const totals = (currentFoodPlan?.suggestions ?? []).reduce(
-    (sum, meal) => ({
-      calories: sum.calories + (meal.calories || 0),
-      protein: sum.protein + (meal.protein || 0),
-      carbs: sum.carbs + (meal.carbs || 0),
-      fat: sum.fat + (meal.fat || 0),
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
+  const totals = (() => {
+    const sum = (currentFoodPlan?.suggestions ?? []).reduce(
+      (acc, meal) => ({
+        calories: acc.calories + (meal.calories || 0),
+        protein: acc.protein + (meal.protein || 0),
+        carbs: acc.carbs + (meal.carbs || 0),
+        fat: acc.fat + (meal.fat || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+    // Adding one-decimal macros accumulates binary float error, so 32.6 + 44.2 +
+    // 35.8 + 32.5 renders as 145.10000000000002 unless it is rounded here.
+    return {
+      calories: Math.round(sum.calories),
+      protein: Math.round(sum.protein * 10) / 10,
+      carbs: Math.round(sum.carbs * 10) / 10,
+      fat: Math.round(sum.fat * 10) / 10,
+    };
+  })();
 
   if (loading) return null;
 

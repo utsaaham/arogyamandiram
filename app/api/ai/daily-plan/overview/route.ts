@@ -6,7 +6,6 @@
 // sleep / stress vs personal baselines), 30-day trends, habit insights, the
 // last 7 days of logs, targets, and today's generated food/workout plans.
 
-import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
 import DailyLog from '@/models/DailyLog';
 import DailyPlan from '@/models/DailyPlan';
@@ -19,10 +18,8 @@ import { getToday } from '@/lib/utils';
 import { normalizeGoal } from '@/lib/goals';
 import { getWeightTrendForUser } from '@/lib/weightTrend';
 import { getCoachMemoryLines } from '@/lib/intelligence/coachMemory';
-import { writeDebugLog } from '@/lib/debugLogWriter';
 import { computeVitals, toDayInput, type VitalsResult } from '@/lib/scores';
 import { normalizeOutlook, deriveTargetGap, type OutlookData } from '../shared';
-import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
 
 export const dynamic = 'force-dynamic';
 
@@ -170,12 +167,11 @@ Hard rules:
 - No em dashes anywhere. No medical claims or diagnoses. No "consider" or "try to"; give direct actions.
 - Keep the whole thing tight: this is a briefing they read in 30 seconds with their coffee.`;
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const userId = await getAuthUserId();
     if (!isUserId(userId)) return userId;
 
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     const apiKey = await resolveOpenAIKey(userId);
     if (!apiKey) return errorResponse('OpenAI API key required. Add your key in Settings to generate plans.', 403);
 
@@ -269,28 +265,6 @@ export async function POST(req: NextRequest) {
       },
       { upsert: true }
     );
-
-    await writeDebugLog({
-      userId,
-      page: 'coach',
-      agent: 'outlook',
-      payload: {
-        userRequest: {
-          requestedAt: new Date().toISOString(),
-          action: 'generate',
-          date: today,
-          body,
-        },
-        promptContext: inputs,
-        systemPrompt: SYSTEM_PROMPT,
-        userPrompt,
-        parsedResult: outlook,
-        metadata: {
-          status: 'success',
-          model: OPENAI_BEST_MODEL,
-        },
-      },
-    });
 
     return maskedResponse({ outlook });
   } catch (err) {

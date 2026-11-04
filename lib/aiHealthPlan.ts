@@ -183,7 +183,6 @@ For water consider weight and activity. For calories use TDEE-based estimate for
 export interface GenerateHealthPlanResult {
   targets: UserTargets;
   explanations: Record<string, string> | null;
-  debugLog?: Record<string, unknown>;
 }
 
 /**
@@ -222,7 +221,6 @@ export async function generateHealthPlanTargets(userId: string): Promise<Generat
 
   const weightTrend = await getWeightTrendForUser(userId);
 
-  const requestedAt = new Date().toISOString();
   const userPrompt = `User: ${profile.name ?? 'User'}, ${age} years, ${gender}, ${height} cm, ${weight} kg. Activity: ${activityLevel}. Goal: ${goal} (user-chosen).${targetWeight != null ? ` Target weight: ${targetWeight} kg.` : ''} Weight trend: ${weightTrend.trend}${weightTrend.slopeKgPerWeek != null ? ` (${weightTrend.slopeKgPerWeek} kg/week)` : ''}. Generate the health plan JSON.`;
 
   const ai = await callOpenAI(apiKey, SYSTEM_PROMPT, userPrompt);
@@ -243,36 +241,5 @@ export async function generateHealthPlanTargets(userId: string): Promise<Generat
             .map(([key, value]) => [key, value as string])
         )
       : null;
-  const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
-  const debugLog = isDebugMode
-    ? {
-        userRequest: {
-          requestedAt,
-          profile: {
-            age,
-            gender,
-            height,
-            weight,
-            activityLevel,
-            goal,
-            ...(targetWeight != null ? { targetWeight } : {}),
-          },
-        },
-        systemPrompt: SYSTEM_PROMPT,
-        userPrompt,
-        response: ai.rawText,
-        parsedResult: result,
-        clampedTargets: targets,
-        explanations,
-        metadata: {
-          model: ai.model,
-          usage: ai.usage,
-          latencyMs: ai.latencyMs,
-          timestamp: ai.timestamp,
-          status: 'success',
-        },
-      }
-    : undefined;
-
-  return { targets, explanations, ...(debugLog ? { debugLog } : {}) };
+  return { targets, explanations };
 }

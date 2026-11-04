@@ -7,9 +7,7 @@ import { createOpenAiJson } from '@/lib/openaiJson';
 import { maskedResponse, errorResponse } from '@/lib/apiMask';
 import { getAuthUserId, isUserId } from '@/lib/session';
 import { getToday } from '@/lib/utils';
-import { writeDebugLog } from '@/lib/debugLogWriter';
 import { buildFoodPrompt, type FoodRequestBody, normalizeFoodPlan } from '../shared';
-import { OPENAI_BEST_MODEL } from '@/lib/aiModel';
 import { COACH_TONE } from '@/lib/tone';
 
 export const dynamic = 'force-dynamic';
@@ -109,16 +107,6 @@ Keep suggestions realistic and easy to follow. Ciel should explain how to make e
       targetProteinG,
       targetCalories,
     }, today);
-    let openAiDebug:
-      | {
-          endpoint: string;
-          requestBody: Record<string, unknown>;
-          rawResponse: unknown;
-          usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
-          status: number;
-        }
-      | undefined;
-
     const runFoodGeneration = async (prompt: string) => {
       const ai = await createOpenAiJson<{
         foodPlan?: { suggestions?: unknown[]; reasoning?: string };
@@ -127,9 +115,6 @@ Keep suggestions realistic and easy to follow. Ciel should explain how to make e
         systemPrompt,
         userPrompt: prompt,
         maxTokens: 3000,
-        onDebug: (debug) => {
-          openAiDebug = debug;
-        },
       });
       return normalizeFoodPlan(ai.foodPlan ?? ai);
     };
@@ -173,36 +158,6 @@ Keep suggestions realistic and easy to follow. Ciel should explain how to make e
       },
       { new: true, upsert: true }
     ).lean();
-
-    await writeDebugLog({
-      userId,
-      page: 'today-plan',
-      agent: 'food',
-      payload: {
-        userRequest: {
-          requestedAt: new Date().toISOString(),
-          action: 'generate',
-          date: today,
-          body,
-        },
-        systemPrompt,
-        userPrompt,
-        openAiRequest: openAiDebug
-          ? {
-              endpoint: openAiDebug.endpoint,
-              body: openAiDebug.requestBody,
-              status: openAiDebug.status,
-            }
-          : null,
-        openAiResponse: openAiDebug?.rawResponse ?? null,
-        parsedResult: { foodPlan },
-        metadata: {
-          status: 'success',
-          model: (typeof openAiDebug?.requestBody?.model === 'string' ? openAiDebug.requestBody.model : OPENAI_BEST_MODEL),
-          usage: openAiDebug?.usage,
-        },
-      },
-    });
 
     return maskedResponse({ foodPlan });
   } catch (err) {

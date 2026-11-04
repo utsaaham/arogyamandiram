@@ -183,7 +183,7 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
                 onClick={() => setStepIndex(idx)}
                 className={cn(
                   'h-1.5 rounded-full bg-white/10 transition-all',
-                  idx === stepIndex ? 'w-6 bg-accent-violet' : 'w-2 hover:bg-white/20',
+                  idx === stepIndex ? 'w-6 bg-accent-emerald' : 'w-2 hover:bg-white/20',
                 )}
               />
             ))}
@@ -211,7 +211,7 @@ export default function DashboardTour({ onClose }: DashboardTourProps) {
                 }
               }}
               disabled={finishing}
-              className="inline-flex items-center gap-1 rounded-full bg-accent-violet px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-accent-violet/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-full bg-accent-emerald px-3.5 py-1.5 text-xs font-semibold text-bg-primary hover:bg-emerald-300 disabled:opacity-50"
             >
               {finishing ? (
                 <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />

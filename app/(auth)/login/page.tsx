@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
@@ -16,8 +16,29 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated' && session) router.replace('/home');
+    if (status !== 'authenticated' || !session) return;
+    if (session.authError === 'SessionRevoked') {
+      void signOut({ redirect: false });
+      return;
+    }
+    router.replace('/home');
   }, [session, status, router]);
+
+  function getSafeDestination(): string {
+    if (typeof window === 'undefined') return '/home';
+    const requested = new URLSearchParams(window.location.search).get('callbackUrl');
+    if (!requested) return '/home';
+
+    try {
+      const url = new URL(requested, window.location.origin);
+      const blockedPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+      const isBlockedPath = blockedPaths.some((path) => url.pathname === path || url.pathname.startsWith(`${path}/`));
+      if (url.origin !== window.location.origin || isBlockedPath || url.pathname.startsWith('/api/')) return '/home';
+      return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+      return '/home';
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,16 +47,19 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await signIn('credentials', {
-        email,
+        email: email.trim().toLowerCase(),
         password,
         redirect: false,
       });
 
-      if (res?.error) {
-        showToast(res.error, 'error');
+      if (!res?.ok || res.error) {
+        const message = res?.error === 'RATE_LIMITED'
+          ? 'Too many sign-in attempts. Please wait 15 minutes and try again.'
+          : 'Email or password is incorrect.';
+        showToast(message, 'error');
       } else {
         showToast('Welcome back!', 'success');
-        router.push('/home');
+        router.push(getSafeDestination());
         router.refresh();
       }
     } catch {
@@ -63,10 +87,22 @@ export default function LoginPage() {
         @keyframes auth-f3 { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(10px,-35px) scale(1.2); } }
         .auth-input { width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:9px; padding:13px 14px; min-height:44px; font-size:14px; color:#F0EEEB; outline:none; transition:border-color 0.2s, background 0.2s; font-family:inherit; }
         .auth-input::placeholder { color:rgba(255,255,255,0.2); }
-        .auth-input:focus { border-color:rgba(30,221,139,0.35); background:rgba(30,221,139,0.03); outline:2px solid rgba(30,221,139,0.2); outline-offset:2px; }
+        .auth-input::-webkit-contacts-auto-fill-button,
+        .auth-input::-webkit-credentials-auto-fill-button,
+        .auth-input::-webkit-caps-lock-indicator {
+          display:none!important;
+          visibility:hidden!important;
+          opacity:0!important;
+          pointer-events:none!important;
+          position:absolute!important;
+          right:0!important;
+        }
+        .auth-input:focus { border-color:rgba(255,255,255,0.18); background:rgba(255,255,255,0.04); outline:none; }
+        .auth-input::-webkit-contacts-auto-fill-button,
+        .auth-input::-webkit-credentials-auto-fill-button { visibility:hidden; display:none!important; pointer-events:none; }
         .auth-input-pw { padding-right:42px; }
         .auth-btn { background:#1EDD8B; color:#060806; border:none; border-radius:9px; padding:13px 24px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px; font-family:inherit; }
-        .auth-btn:hover:not(:disabled) { background:#25F09A; transform:translateY(-2px); box-shadow:0 6px 30px rgba(30,221,139,0.25); }
+        .auth-btn:hover:not(:disabled) { background:#25F09A; transform:translateY(-2px); }
         .auth-btn:disabled { opacity:0.65; cursor:not-allowed; }
         .auth-link { color:#1EDD8B; text-decoration:none; }
         .auth-link:hover { text-decoration:underline; }
@@ -124,9 +160,14 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#9B9990', marginBottom: 6 }}>
-                    Password
-                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label htmlFor="password" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#9B9990' }}>
+                      Password
+                    </label>
+                    <Link href="/forgot-password" className="auth-link" style={{ fontSize: 12 }}>
+                      Forgot password?
+                    </Link>
+                  </div>
                   <div style={{ position: 'relative' }}>
                     <input
                       id="password"

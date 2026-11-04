@@ -155,8 +155,6 @@ async function callInternalRoute(
 // ─── Main Handler ────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const startMs = Date.now();
-
   try {
     // Allow cron-originated calls to bypass session auth using an internal header.
     // Only accepted when X-Cron-Secret matches the CRON_SECRET env var.
@@ -190,7 +188,6 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Step 1: Intent Classification ──────────────────────────────────────
-    const classifyStart = Date.now();
     const classifySystemPrompt = imageBase64
       ? `${ORCHESTRATOR_SYSTEM}\nThe user has also attached an image. Use it to help identify food items, workout equipment, or other health-relevant content. If the image shows food or drink, choose food-ai-logger - the food tool will analyze the photo itself, so params.text only needs the user's own words (or "" if they wrote nothing).`
       : ORCHESTRATOR_SYSTEM;
@@ -237,8 +234,6 @@ export async function POST(req: NextRequest) {
       }>;
       usage?: { input_tokens?: number; output_tokens?: number };
     };
-    const classifyLatencyMs = Date.now() - classifyStart;
-
     // Extract tool call result
     const toolCallItem = classifyData.output?.find(
       (o) => o.type === 'function_call' && o.name === 'classify_intent'
@@ -254,37 +249,25 @@ export async function POST(req: NextRequest) {
       return errorResponse('Failed to parse intent classification', 422);
     }
 
-    const rawClassifyResponse = toolCallItem.arguments;
-
     // ── Step 2: Tool Execution ───────────────────────────────────────────────
     const { tool, params } = classified;
     let result: Record<string, unknown>;
-    let toolEndpoint = '';
-    let toolPayload: unknown = null;
-    let toolResponseStatus = 200;
-    let toolResponseBody: unknown = null;
 
     if (tool === 'water') {
       const amountMl = Math.round(Number(params.amount_ml) || 250);
-      toolEndpoint = '/api/water';
-      toolPayload = { amount: amountMl };
       result = {
         summary: `${amountMl}ml of hydration goodness coming up 💧 shall I pour it into your log?`,
         pendingWater: { amountMl },
       };
-      toolResponseBody = result;
     } else if (tool === 'weight') {
       const weightKg = Number(params.weight_kg) || 0;
       if (!weightKg || weightKg <= 0) {
         return errorResponse('Could not extract a valid weight value', 422);
       }
-      toolEndpoint = '/api/weight';
-      toolPayload = { weight: weightKg };
       result = {
         summary: `Noting you at ${weightKg} kg, looking good 😉 want me to save it?`,
         pendingWeight: { weightKg },
       };
-      toolResponseBody = result;
     } else if (tool === 'sleep') {
       const durationHours = Number(params.duration_hours) || 0;
       if (!durationHours || durationHours <= 0 || durationHours > 24) {
@@ -294,24 +277,16 @@ export async function POST(req: NextRequest) {
       const qualityLabel = quality === 1 ? 'Very Poor' : quality === 2 ? 'Poor' : quality === 3 ? 'Fair' : quality === 4 ? 'Good' : 'Excellent';
       const wakeTime = nowTimeString();
       const bedtime = subtractHoursFromNow(durationHours);
-      toolEndpoint = '/api/sleep';
-      toolPayload = { duration_hours: durationHours, quality };
       result = {
         summary: `${durationHours}h of beauty sleep, ${qualityLabel.toLowerCase()} quality 😴 shall I tuck it into your log?`,
         pendingSleep: { durationHours, quality, bedtime, wakeTime },
       };
-      toolResponseBody = result;
     } else if (tool === 'food-ai-logger') {
-      toolEndpoint = '/api/ai/food-logger';
       const foodText = params.text || userInput;
-      // Keep the debug-log payload small: never echo the base64 image into logs.
-      toolPayload = { text: foodText, imageAttached: Boolean(imageBase64) };
-      const { status, json } = await callInternalRoute(req, toolEndpoint, {
+      const { status, json } = await callInternalRoute(req, '/api/ai/food-logger', {
         text: foodText,
         ...(imageBase64 ? { imageBase64, imageMimeType } : {}),
       });
-      toolResponseStatus = status;
-      toolResponseBody = json;
       const d = (json as { data?: { items?: unknown[]; total?: unknown; feedback?: string } }).data;
       if (!json.success || !d?.items?.length) {
         return errorResponse((json as { error?: string }).error || 'Food logging failed', status);
@@ -325,14 +300,11 @@ export async function POST(req: NextRequest) {
         ...(d.feedback ? { feedback: d.feedback } : {}),
       };
     } else if (tool === 'meal-ideas') {
-      toolEndpoint = '/api/ai/meal-ideas';
       const mealTypes = Array.isArray(params.meal_types) && params.meal_types.length > 0
         ? params.meal_types
         : ['lunch'];
-      toolPayload = { selectedMealTypes: mealTypes, preferences: params.preferences ?? '' };
-      const { status, json } = await callInternalRoute(req, toolEndpoint, toolPayload as Record<string, unknown>);
-      toolResponseStatus = status;
-      toolResponseBody = json;
+      const toolPayload = { selectedMealTypes: mealTypes, preferences: params.preferences ?? '' };
+      const { status, json } = await callInternalRoute(req, '/api/ai/meal-ideas', toolPayload);
       const d2 = (json as { data?: { suggestions?: unknown[] } }).data;
       if (!json.success || !d2?.suggestions) {
         return errorResponse((json as { error?: string }).error || 'Meal ideas failed', status);
@@ -342,11 +314,8 @@ export async function POST(req: NextRequest) {
         mealSuggestions: d2.suggestions,
       };
     } else if (tool === 'workout-ai-logger') {
-      toolEndpoint = '/api/ai/workout-logger';
-      toolPayload = { text: params.text || userInput };
-      const { status, json } = await callInternalRoute(req, toolEndpoint, toolPayload as Record<string, unknown>);
-      toolResponseStatus = status;
-      toolResponseBody = json;
+      const toolPayload = { text: params.text || userInput };
+      const { status, json } = await callInternalRoute(req, '/api/ai/workout-logger', toolPayload);
       const d3 = (json as { data?: { workouts?: unknown[] } }).data;
       if (!json.success || !d3?.workouts?.length) {
         return errorResponse((json as { error?: string }).error || 'Workout logging failed', status);
@@ -356,13 +325,10 @@ export async function POST(req: NextRequest) {
         workoutItems: d3.workouts,
       };
     } else if (tool === 'workout-plan') {
-      toolEndpoint = '/api/ai/recommendations';
       const focusArea = params.focus_area || 'full body';
       const durationMinutes = Number(params.duration_minutes) || 30;
-      toolPayload = { type: 'workout', focusArea, duration: durationMinutes };
-      const { status, json } = await callInternalRoute(req, toolEndpoint, toolPayload as Record<string, unknown>);
-      toolResponseStatus = status;
-      toolResponseBody = json;
+      const toolPayload = { type: 'workout', focusArea, duration: durationMinutes };
+      const { status, json } = await callInternalRoute(req, '/api/ai/recommendations', toolPayload);
       const d4 = (json as { data?: { plan?: unknown } }).data;
       if (!json.success || !d4?.plan) {
         return errorResponse((json as { error?: string }).error || 'Workout plan failed', status);
@@ -372,55 +338,20 @@ export async function POST(req: NextRequest) {
         workoutPlan: d4.plan as Record<string, unknown>,
       };
     } else if (tool === 'custom-food') {
-      toolEndpoint = 'inline';
       result = {
         summary: 'Opening the kitchen for you 😋',
         openCustomFood: true,
       };
     } else {
       // unknown - not a health command
-      toolEndpoint = 'none';
       result = {
         summary: "Hmm, that one went over my head 🙈 whisper me things like \"I drank 500ml of water\" or \"had rice for lunch\" and I'll take care of the rest 💛",
       };
     }
 
-    const totalLatencyMs = Date.now() - startMs;
-
-    // ── Debug Log ─────────────────────────────────────────────────────────────
-    const debugLog = {
-      id: `orch-${Date.now()}`,
-      userInput,
-      toolName: tool,
-      intentClassification: {
-        systemPrompt: classifySystemPrompt,
-        userPrompt: classifyUserPrompt,
-        rawResponse: rawClassifyResponse,
-        parsedTool: tool,
-      },
-      toolCall: {
-        endpoint: toolEndpoint,
-        payload: toolPayload,
-        responseStatus: toolResponseStatus,
-        responseBody: toolResponseBody,
-      },
-      metadata: {
-        model: OPENAI_ORCHESTRATOR_MODEL,
-        usage: {
-          prompt_tokens: classifyData.usage?.input_tokens,
-          completion_tokens: classifyData.usage?.output_tokens,
-        },
-        latencyMs: totalLatencyMs,
-        intentLatencyMs: classifyLatencyMs,
-        timestamp: new Date().toISOString(),
-        status: 'success' as const,
-      },
-    };
-
     return maskedResponse({
       tool,
       result,
-      debugLog,
     });
   } catch (err) {
     console.error('[Orchestrator Error]:', err);
