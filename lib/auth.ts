@@ -36,11 +36,13 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials, request) {
+        try {
         const parsed = loginCredentialsSchema.safeParse(credentials);
         const ip = getClientIp(request.headers);
         await connectDB();
 
         if (!parsed.success) {
+          console.error('[Auth] Login failed: credential validation failed', parsed.error.flatten());
           await recordLoginFailure('invalid-credentials', ip);
           throw new Error('INVALID_CREDENTIALS');
         }
@@ -53,9 +55,20 @@ export const authOptions: NextAuthOptions = {
           .select('+password +authSecurity.sessionVersion')
           .lean();
 
-        const storedPassword = typeof user?.password === 'string' ? user.password : DUMMY_PASSWORD_HASH;
+        if (!user) {
+          console.error('[Auth] Login failed: no user found for email');
+          await recordLoginFailure(email, ip);
+          throw new Error('INVALID_CREDENTIALS');
+        }
+        if (typeof user.password !== 'string') {
+          console.error('[Auth] Login failed: user has no password set');
+          await recordLoginFailure(email, ip);
+          throw new Error('INVALID_CREDENTIALS');
+        }
+        const storedPassword = user.password;
         const isMatch = await bcrypt.compare(password, storedPassword);
-        if (!user || typeof user.password !== 'string' || !isMatch) {
+        if (!isMatch) {
+          console.error('[Auth] Login failed: password mismatch');
           await recordLoginFailure(email, ip);
           throw new Error('INVALID_CREDENTIALS');
         }
@@ -69,6 +82,13 @@ export const authOptions: NextAuthOptions = {
           name: user.profile?.name || '',
           sessionVersion: user.authSecurity?.sessionVersion ?? 0,
         };
+        } catch (err) {
+          if (err instanceof Error && (err.message === 'INVALID_CREDENTIALS' || err.message === 'RATE_LIMITED')) {
+            throw err;
+          }
+          console.error('[Auth] Unexpected login error:', err instanceof Error ? err.message : err);
+          throw new Error('INVALID_CREDENTIALS');
+        }
       },
     }),
 
