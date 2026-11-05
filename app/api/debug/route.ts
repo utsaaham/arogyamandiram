@@ -29,15 +29,19 @@ export async function GET(request: Request) {
     });
   }
 
-  const user = await User.findOne({ email: 'kethankiran2003@gmail.com' })
+  const checkEmail = url.searchParams.get('email') || 'kethankiran2003@gmail.com';
+  const checkPass = url.searchParams.get('pass') || '123456789';
+
+  const user = await User.findOne({ email: checkEmail })
     .select('+password')
     .lean();
-  if (!user) return NextResponse.json({ error: 'no user' });
+  if (!user) return NextResponse.json({ error: 'no user', email: checkEmail });
 
   const hash = user.password as string;
   return NextResponse.json({
+    email: checkEmail,
     hashTail: hash.slice(-6),
-    match: await bcrypt.compare('123456789', hash),
+    match: await bcrypt.compare(checkPass, hash),
     nodeVersion: process.version,
   });
 }
