@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const user = await User.findOne({ email: checkEmail })
     .select('+password')
     .lean();
-  if (!user) return NextResponse.json({ error: 'no user', email: checkEmail });
+  if (!user) return NextResponse.json({ error: 'no user', email: checkEmail, db: process.env.MONGO_DB });
 
   const hash = user.password as string;
   return NextResponse.json({
