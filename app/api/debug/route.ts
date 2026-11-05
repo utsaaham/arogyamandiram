@@ -6,30 +6,38 @@ import User from '@/models/User';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const action = url.searchParams.get('action');
   await connectDB();
+
+  if (action === 'reset') {
+    const newHash = await bcrypt.hash('123456789', 12);
+    await User.updateOne(
+      { email: 'kethankiran2003@gmail.com' },
+      { $set: { password: newHash } },
+    );
+    const verify = await User.findOne({ email: 'kethankiran2003@gmail.com' })
+      .select('+password')
+      .lean();
+    const readBack = verify?.password as string;
+    return NextResponse.json({
+      action: 'reset',
+      hashSet: newHash.slice(-6),
+      hashReadBack: readBack?.slice(-6),
+      match: await bcrypt.compare('123456789', readBack),
+    });
+  }
+
   const user = await User.findOne({ email: 'kethankiran2003@gmail.com' })
     .select('+password')
     .lean();
-
   if (!user) return NextResponse.json({ error: 'no user' });
 
-  const testPassword = '123456789';
   const hash = user.password as string;
-  const match = await bcrypt.compare(testPassword, hash);
-
-  // Also create a fresh hash and verify it works
-  const freshHash = await bcrypt.hash(testPassword, 12);
-  const freshMatch = await bcrypt.compare(testPassword, freshHash);
-
   return NextResponse.json({
-    hashPrefix: hash.substring(0, 7),
-    hashLength: hash.length,
     hashTail: hash.slice(-6),
-    match,
-    freshHash: freshHash.substring(0, 7),
-    freshMatch,
+    match: await bcrypt.compare('123456789', hash),
     nodeVersion: process.version,
-    bcryptjsVersion: require('bcryptjs/package.json').version,
   });
 }
