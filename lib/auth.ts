@@ -66,7 +66,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error('INVALID_CREDENTIALS');
         }
         const storedPassword = user.password;
+        console.error(`[Auth] Debug: password length=${password.length}, hash prefix=${storedPassword.substring(0, 7)}, hash length=${storedPassword.length}`);
         const isMatch = await bcrypt.compare(password, storedPassword);
+        console.error(`[Auth] Debug: bcrypt.compare result=${isMatch}`);
         if (!isMatch) {
           console.error('[Auth] Login failed: password mismatch');
           await recordLoginFailure(email, ip);
